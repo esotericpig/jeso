@@ -1,0 +1,131 @@
+/**
+ * This file is part of jeso.
+ * Copyright (c) 2019 Jonathan Bradley Whited (@esotericpig)
+ * 
+ * jeso is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * jeso is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with jeso. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/**
+ * Plugins
+ */
+plugins {
+  id 'java-library'
+}
+
+/**
+ * Properties
+ */
+version                 = '0.0.1'
+ext.author              = 'Jonathan Bradley Whited (@esotericpig)'
+ext.license             = 'LGPL-3.0-or-later'
+
+ext.homepage            = 'https://github.com/esotericpig/jeso'
+ext.summary             = 'Java utils'
+description             = 'Java utils to make Java less verbose.'
+
+group                   = "com.esotericpig.${project.name}"
+sourceCompatibility     = '1.8' // Source language to interpret (*.java)
+targetCompatibility     = '1.8' // Bytecode to output (*.class)
+
+ext.charset             = 'UTF-8'
+ext.encoding            = 'UTF-8'
+ext.locale              = 'en_US'
+
+// Dependencies
+ext.junitJupiterVersion = '5.4.2'
+
+// Javadoc
+javadoc.title           = "${project.name} v${project.version}"
+
+/**
+ * Repositories and Dependencies
+ */
+repositories {
+  jcenter()
+}
+
+dependencies {
+  // External Dependencies (put on user's classpath)
+  //api ':'
+  
+  // Internal Dependencies (not put on user's classpath)
+  //implementation ':'
+  
+  // Test Dependencies
+  testImplementation "org.junit.jupiter:junit-jupiter:${project.ext.junitJupiterVersion}"
+}
+
+/**
+ * Tasks
+ */
+defaultTasks 'clean','build'
+
+compileJava {
+  encoding = project.ext.encoding
+}
+
+compileTestJava {
+  encoding = project.ext.encoding
+}
+
+jar {
+  manifest {
+    attributes(
+      // Add dependencies to classpath
+      // - Commented out, as a user should have the dependencies in their classpath
+      //'Class-Path':                 configurations.compile.collect { it.getName() }.join(' '),
+      
+      'Specification-Title':    project.name,
+      'Specification-Version':  project.version,
+      'Specification-Author':   project.ext.author,
+      'Specification-Vendor':   project.ext.author,
+      'Specification-License':  project.ext.license,
+      
+      'Implementation-Title':   project.group,
+      'Implementation-Version': project.version,
+      'Implementation-Author':  project.ext.author,
+      'Implementation-Vendor':  project.ext.author,
+      'Implementation-License': project.ext.license,
+      
+      'Lib-Homepage':           project.ext.homepage,
+      'Lib-Summary':            project.ext.summary,
+      'Lib-Description':        project.description,
+    )
+  }
+  
+  // Include dependencies (jars) to final jar; a "fat jar"
+  // - Commented out, as a user should add the dependencies to their project
+  /*from configurations.compile.collect {
+    it.isDirectory() ? it : zipTree(it)
+  }*/
+}
+
+javadoc {
+  options {
+    author      = true
+    charSet     = project.ext.charset
+    encoding    = project.ext.encoding
+    locale      = project.ext.locale
+    memberLevel = JavadocMemberLevel.PROTECTED // Show public & protected (don't show private)
+    version     = true
+  }
+}
+
+test {
+  useJUnitPlatform()
+  
+  testLogging {
+    events 'passed','skipped','failed'
+  }
+}
