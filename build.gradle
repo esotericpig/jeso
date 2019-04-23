@@ -80,12 +80,12 @@ task(buildRelease,type: GradleBuild) {
   group       'Build'
   description 'Assembles everything necessary for a release: Jar, Javadoc Zip, Sources Jar, etc.'
   
-  tasks = ['clean','jar','javadocZip','sourcesJar']
+  tasks = ['jar','javadocZip','sourcesJar']
 }
 
 task(checkGradleW) {
   group       'Checksum'
-  description "Check the SHA-256 sum of the Gradle Wrapper Jar (${project.ext.gradlewJarPath.replaceAll("${projectDir}",'')})."
+  description "Check the SHA-256 sum of the Gradle Wrapper Jar (${project.ext.gradlewJarPath.replace("${projectDir}",'')})."
   
   doLast {
     ant.checksum(file: project.ext.gradlewJarPath,algorithm: 'SHA-256',property: 'gradlewJarSum')
@@ -93,8 +93,8 @@ task(checkGradleW) {
     String gradlewJarSum = ant.properties['gradlewJarSum']
     String gradlewSumSum = new File(project.ext.gradlewSumPath).getText('UTF-8').split('\\s+')[0]
     
-    String gradlewJarPath = project.ext.gradlewJarPath.replaceAll("${projectDir}",'') + ':'
-    String gradlewSumPath = project.ext.gradlewSumPath.replaceAll("${projectDir}",'') + ':'
+    String gradlewJarPath = project.ext.gradlewJarPath.replace("${projectDir}",'') + ':'
+    String gradlewSumPath = project.ext.gradlewSumPath.replace("${projectDir}",'') + ':'
     
     int maxLen = -Math.max(gradlewJarPath.length(),gradlewSumPath.length())
     
@@ -119,9 +119,9 @@ task(wgetGradleWSums) {
   
   doLast{
     String checksums = new URL('https://gradle.org/release-checksums/').getText('UTF-8')
-    String version = project.gradle.gradleVersion
+    String version = "v${project.gradle.gradleVersion}"
     
-    int index = checksums.indexOf("v${version}")
+    int index = checksums.indexOf(version)
     int gradlebIndex = checksums.indexOf('Binary-only',index)
     int gradlecIndex = checksums.indexOf('Complete',index)
     int gradlewIndex = checksums.indexOf('Wrapper',index)
@@ -132,11 +132,13 @@ task(wgetGradleWSums) {
     String gradlecSum = pattern.split(checksums.substring(gradlecIndex,gradlecIndex + 200))[1]
     String gradlewSum = pattern.split(checksums.substring(gradlewIndex,gradlewIndex + 200))[1]
     
-    println '[Gradle Checksums]'
-    println "Put this in " + project.ext.gradlewPropPath.replaceAll("${projectDir}",'') + ':'
+    println "[Gradle Checksums for ${version}]"
+    println "Put this in " + project.ext.gradlewPropPath.replace("${projectDir}",'') + ':'
     println "  distributionSha256Sum=${gradlebSum}"
-    println "Save this to " + project.ext.gradlewSumPath.replaceAll("${projectDir}",'') + ':'
+    println "Save this to " + project.ext.gradlewSumPath.replace("${projectDir}",'') + ':'
     println "  ${gradlewSum} ${new File(gradlewJarPath).getName()}"
+    println 'Complete (-all) Zip:'
+    println "  ${gradlecSum}"
   }
 }
 
