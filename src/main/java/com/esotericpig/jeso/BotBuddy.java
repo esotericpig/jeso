@@ -401,7 +401,7 @@ public class BotBuddy implements Cloneable {
     return clip;
   }
   
-  public Point getCoords() {
+  public static Point getCoords() {
     // DO NOT store PointerInfo!
     // - If you store PointerInfo in an instance variable, #getLocation() will not be up-to-date.
     return MouseInfo.getPointerInfo().getLocation();
@@ -427,11 +427,11 @@ public class BotBuddy implements Cloneable {
     return tool;
   }
   
-  public int getXCoord() {
+  public static int getXCoord() {
     return getCoords().x;
   }
   
-  public int getYCoord() {
+  public static int getYCoord() {
     return getCoords().y;
   }
   

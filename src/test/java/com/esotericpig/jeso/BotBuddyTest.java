@@ -155,8 +155,8 @@ public class BotBuddyTest {
     buddy.beginSafeMode().endSafeMode();
     
     // Don't do assertEquals(), as the mouse might have moved in that time
-    System.out.println("Coords:  " + buddy.getCoords());
-    System.out.println("X coord: " + buddy.getXCoord());
-    System.out.println("Y coord: " + buddy.getYCoord());
+    System.out.println("Coords:  " + BotBuddy.getCoords());
+    System.out.println("X coord: " + BotBuddy.getXCoord());
+    System.out.println("Y coord: " + BotBuddy.getYCoord());
   }
 }

@@ -108,9 +108,9 @@ catch(BotBuddy.SafeModeException ex) {
 
 When writing your own scripts, you can use these methods for getting the mouse coordinates:
 
-- `BotBuddy#getCoords()`
-- `BotBuddy#getXCoord()`
-- `BotBuddy#getYCoord()`
+- `BotBuddy.getCoords();`
+- `BotBuddy.getXCoord();`
+- `BotBuddy.getYCoord();`
 
 Alternatively, you can do one of the following for getting the mouse coordinates:
 
