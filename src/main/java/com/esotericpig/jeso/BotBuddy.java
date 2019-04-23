@@ -22,7 +22,6 @@ import java.awt.AWTException;
 import java.awt.GraphicsDevice;
 import java.awt.MouseInfo;
 import java.awt.Point;
-import java.awt.PointerInfo;
 import java.awt.Robot;
 import java.awt.Toolkit;
 
@@ -65,10 +64,11 @@ import java.awt.event.KeyEvent;
  * @author Jonathan Bradley Whited (@esotericpig)
  * 
  * @see    BotBuddy.Builder
- * @see    java.awt.Robot
- * @see    java.awt.datatransfer.Clipboard
- * @see    java.awt.PointerInfo
- * @see    java.awt.Toolkit
+ * @see    Robot
+ * @see    Clipboard
+ * @see    MouseInfo#getPointerInfo()
+ * @see    java.awt.PointerInfo#getLocation()
+ * @see    Toolkit
  */
 public class BotBuddy implements Cloneable {
   /**
@@ -85,7 +85,6 @@ public class BotBuddy implements Cloneable {
    * For auto delay, or for a manual delay between fast and long if auto delay is set differently.
    */
   public static final int DEFAULT_SHORT_DELAY = 110;
-  
   public static final int DEFAULT_AUTO_DELAY = DEFAULT_SHORT_DELAY;
   
   public static Builder builder() throws AWTException {
@@ -104,8 +103,9 @@ public class BotBuddy implements Cloneable {
   protected Clipboard clip;
   protected int fastDelay;
   protected boolean isAutoDelay;
+  protected boolean isSafeMode = false;
   protected int longDelay;
-  protected PointerInfo pointer;
+  protected Point safeCoords = new Point(-1,-1);
   protected int shortDelay;
   protected Toolkit tool;
   
@@ -118,8 +118,9 @@ public class BotBuddy implements Cloneable {
     clip = buddy.clip;
     fastDelay = buddy.fastDelay;
     isAutoDelay = buddy.isAutoDelay;
+    isSafeMode = buddy.isSafeMode;
     longDelay = buddy.longDelay;
-    pointer = buddy.pointer;
+    safeCoords = new Point(buddy.safeCoords);
     shortDelay = buddy.shortDelay;
     tool = buddy.tool;
   }
@@ -128,7 +129,6 @@ public class BotBuddy implements Cloneable {
     // Set required vars first (other vars may depend on them)
     setBot(builder.bot);
     setClip(builder.clip);
-    setPointer(builder.pointer);
     setTool(builder.tool);
     
     // Set other vars (options)
@@ -142,17 +142,50 @@ public class BotBuddy implements Cloneable {
     }
   }
   
+  public BotBuddy beginSafeMode() {
+    isSafeMode = true;
+    safeCoords = getCoords();
+    
+    return this;
+  }
+  
+  public BotBuddy checkIfSafe() {
+    return checkIfSafe(-1,-1);
+  }
+  
+  public BotBuddy checkIfSafe(int x,int y) {
+    if(!isSafeMode) {
+      return this;
+    }
+    
+    if(safeCoords.x < 0 || safeCoords.y < 0) {
+      safeCoords = getCoords();
+    }
+    else {
+      if(x >= 0 && y >= 0) {
+        safeCoords.move(x,y);
+      }
+      
+      if(!getCoords().equals(safeCoords)) {
+        throw new SafeModeException();
+      }
+    }
+    
+    return this;
+  }
+  
   public BotBuddy click() {
     bot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
     bot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
     
-    return this;
+    return checkIfSafe();
   }
   
   public BotBuddy click(int x,int y) {
     return move(x,y).click();
   }
   
+  @Override
   public BotBuddy clone() {
     return new BotBuddy(this);
   }
@@ -170,7 +203,7 @@ public class BotBuddy implements Cloneable {
   public BotBuddy delay(int delay) {
     bot.delay(delay);
     
-    return this;
+    return checkIfSafe();
   }
   
   public BotBuddy delayAuto() {
@@ -178,25 +211,25 @@ public class BotBuddy implements Cloneable {
       bot.delay(bot.getAutoDelay());
     }
     
-    return this;
+    return checkIfSafe();
   }
   
   public BotBuddy delayFast() {
     bot.delay(fastDelay);
     
-    return this;
+    return checkIfSafe();
   }
   
   public BotBuddy delayLong() {
     bot.delay(longDelay);
     
-    return this;
+    return checkIfSafe();
   }
   
   public BotBuddy delayShort() {
     bot.delay(shortDelay);
     
-    return this;
+    return checkIfSafe();
   }
   
   public BotBuddy doubleClick() {
@@ -211,18 +244,25 @@ public class BotBuddy implements Cloneable {
       setAutoDelay(autoDelay);
     }
     
-    return this;
+    return checkIfSafe();
   }
   
   public BotBuddy doubleClick(int x,int y) {
     return move(x,y).doubleClick();
   }
   
+  public BotBuddy endSafeMode() {
+    isSafeMode = false;
+    safeCoords.move(-1,-1);
+    
+    return this;
+  }
+  
   public BotBuddy enter() {
     bot.keyPress(KeyEvent.VK_ENTER);
     bot.keyRelease(KeyEvent.VK_ENTER);
     
-    return this;
+    return checkIfSafe();
   }
   
   public BotBuddy enter(String text) {
@@ -240,7 +280,7 @@ public class BotBuddy implements Cloneable {
   public BotBuddy move(int x,int y) {
     bot.mouseMove(x,y);
     
-    return this;
+    return checkIfSafe(x,y);
   }
   
   public BotBuddy paste() {
@@ -249,11 +289,15 @@ public class BotBuddy implements Cloneable {
     bot.keyRelease(KeyEvent.VK_V);
     bot.keyRelease(KeyEvent.VK_CONTROL);
     
-    return this;
+    return checkIfSafe();
   }
   
   public BotBuddy paste(String text) {
     return copy(text).paste();
+  }
+  
+  public BotBuddy paste(int x,int y) {
+    return click(x,y).paste();
   }
   
   public BotBuddy paste(int x,int y,String text) {
@@ -263,7 +307,7 @@ public class BotBuddy implements Cloneable {
   public BotBuddy waitForIdle() {
     bot.waitForIdle();
     
-    return this;
+    return checkIfSafe();
   }
   
   public BotBuddy setAutoDelay(int autoDelay) {
@@ -321,16 +365,6 @@ public class BotBuddy implements Cloneable {
     return this;
   }
   
-  public BotBuddy setPointer(PointerInfo pointer) {
-    if(pointer == null) {
-      throw new IllegalArgumentException("PointerInfo cannot be null");
-    }
-    
-    this.pointer = pointer;
-    
-    return this;
-  }
-  
   public BotBuddy setShortDelay(int shortDelay) {
     this.shortDelay = shortDelay;
     
@@ -368,7 +402,9 @@ public class BotBuddy implements Cloneable {
   }
   
   public Point getCoords() {
-    return pointer.getLocation();
+    // DO NOT store PointerInfo!
+    // - If you store PointerInfo in an instance variable, #getLocation() will not be up-to-date.
+    return MouseInfo.getPointerInfo().getLocation();
   }
   
   public int getFastDelay() {
@@ -379,8 +415,8 @@ public class BotBuddy implements Cloneable {
     return longDelay;
   }
   
-  public PointerInfo getPointer() {
-    return pointer;
+  public boolean isSafeMode() {
+    return isSafeMode;
   }
   
   public int getShortDelay() {
@@ -418,7 +454,6 @@ public class BotBuddy implements Cloneable {
     protected boolean isAutoDelay = true;
     protected boolean isAutoWaitForIdle = true;
     protected int longDelay = DEFAULT_LONG_DELAY;
-    protected PointerInfo pointer;
     protected int shortDelay = DEFAULT_SHORT_DELAY;
     protected Toolkit tool;
     
@@ -428,7 +463,6 @@ public class BotBuddy implements Cloneable {
     
     public Builder(Robot bot) {
       this.bot = bot;
-      pointer = MouseInfo.getPointerInfo();
       tool = Toolkit.getDefaultToolkit();
       clip = tool.getSystemClipboard();
     }
@@ -494,12 +528,6 @@ public class BotBuddy implements Cloneable {
       return this;
     }
     
-    public Builder pointer(PointerInfo pointer) {
-      this.pointer = pointer;
-      
-      return this;
-    }
-    
     public Builder shortDelay(int shortDelay) {
       this.shortDelay = shortDelay;
       
@@ -511,5 +539,8 @@ public class BotBuddy implements Cloneable {
       
       return this;
     }
+  }
+  
+  public static class SafeModeException extends RuntimeException {
   }
 }

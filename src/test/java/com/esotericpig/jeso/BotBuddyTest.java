@@ -35,6 +35,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
+ * <pre>
+ * All of this will fail on a headless server.
+ * </pre>
+ * 
  * @author Jonathan Bradley Whited (@esotericpig)
  */
 public class BotBuddyTest {
@@ -56,8 +60,28 @@ public class BotBuddyTest {
   }
   
   @Test
-  public void testAccessors() {
-    // TODO: test setters/getters
+  public void testAccessors() throws AWTException {
+    BotBuddy buddy = BotBuddy.builder().build();
+    
+    int autoDelay = rand.nextInt(MAX_MS);
+    Robot bot = new Robot();
+    Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
+    int fastDelay = rand.nextInt(MAX_MS);
+    boolean isAutoDelay = rand.nextBoolean();
+    boolean isAutoWaitForIdle = rand.nextBoolean();
+    int longDelay = rand.nextInt(MAX_MS);
+    int shortDelay = rand.nextInt(MAX_MS - 1) + 1; // Must be > 0 for isAutoDelay
+    Toolkit tool = Toolkit.getDefaultToolkit();
+    
+    assertEquals(autoDelay,buddy.setAutoDelay(autoDelay).getAutoDelay());
+    assertEquals(bot,buddy.setBot(bot).getBot());
+    assertEquals(clip,buddy.setClip(clip).getClip());
+    assertEquals(fastDelay,buddy.setFastDelay(fastDelay).getFastDelay());
+    assertEquals(isAutoDelay,buddy.setAutoDelay(isAutoDelay).isAutoDelay());
+    assertEquals(isAutoWaitForIdle,buddy.setAutoWaitForIdle(isAutoWaitForIdle).isAutoWaitForIdle());
+    assertEquals(longDelay,buddy.setLongDelay(longDelay).getLongDelay());
+    assertEquals(shortDelay,buddy.setShortDelay(shortDelay).getShortDelay());
+    assertEquals(tool,buddy.setTool(tool).getTool());
   }
   
   @Test
@@ -70,24 +94,23 @@ public class BotBuddyTest {
     builder = BotBuddy.builder();
     builder = BotBuddy.builder(new Robot());
     
-    int autoDelay = rand.nextInt(MAX_MS - 1) + 1;
+    int autoDelay = rand.nextInt(MAX_MS - 1) + 1; // Must be > 0 for isAutoDelay
     Robot bot = new Robot();
+    Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
     int fastDelay = rand.nextInt(MAX_MS);
-    boolean isAutoWaitForIdle = false;
+    boolean isAutoDelay = true; // Always true because autoDelay > 0
+    boolean isAutoWaitForIdle = rand.nextBoolean();
     int longDelay = rand.nextInt(MAX_MS);
-    PointerInfo pointer = MouseInfo.getPointerInfo();
     int shortDelay = rand.nextInt(MAX_MS);
     Toolkit tool = Toolkit.getDefaultToolkit();
-    Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
     
     builder = builder.autoDelay(autoDelay)
-                     .autoDelay(true)
+                     .autoDelay(isAutoDelay)
                      .autoWaitForIdle(isAutoWaitForIdle)
                      .bot(bot)
                      .clip(clip)
                      .fastDelay(fastDelay)
                      .longDelay(longDelay)
-                     .pointer(pointer)
                      .shortDelay(shortDelay)
                      .tool(tool);
     
@@ -95,9 +118,9 @@ public class BotBuddyTest {
     assertEquals(bot,builder.bot);
     assertEquals(clip,builder.clip);
     assertEquals(fastDelay,builder.fastDelay);
+    assertEquals(isAutoDelay,builder.isAutoDelay);
     assertEquals(isAutoWaitForIdle,builder.isAutoWaitForIdle);
     assertEquals(longDelay,builder.longDelay);
-    assertEquals(pointer,builder.pointer);
     assertEquals(shortDelay,builder.shortDelay);
     assertEquals(tool,builder.tool);
     
@@ -107,9 +130,9 @@ public class BotBuddyTest {
     assertEquals(bot,buddy.getBot());
     assertEquals(clip,buddy.getClip());
     assertEquals(fastDelay,buddy.getFastDelay());
+    assertEquals(isAutoDelay,buddy.isAutoDelay());
     assertEquals(isAutoWaitForIdle,buddy.isAutoWaitForIdle());
     assertEquals(longDelay,buddy.getLongDelay());
-    assertEquals(pointer,buddy.getPointer());
     assertEquals(shortDelay,buddy.getShortDelay());
     assertEquals(tool,buddy.getTool());
   }
@@ -125,7 +148,15 @@ public class BotBuddyTest {
   }
   
   @Test
-  public void testMethods() {
-    // TODO: test getCoords(), etc.; NOT click(), etc.
+  public void testMethods() throws AWTException {
+    BotBuddy buddy = BotBuddy.builder().build();
+    
+    buddy = buddy.clone(); // Don't do assertEquals(); don't feel like implementing equals() and hashCode()
+    buddy.beginSafeMode().endSafeMode();
+    
+    // Don't do assertEquals(), as the mouse might have moved in that time
+    System.out.println("Coords:  " + buddy.getCoords());
+    System.out.println("X coord: " + buddy.getXCoord());
+    System.out.println("Y coord: " + buddy.getYCoord());
   }
 }
