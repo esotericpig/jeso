@@ -47,12 +47,25 @@ import java.awt.event.KeyEvent;
  *   new BotBuddy();                       // Convenience method for less code
  *   new BotBuddy.Builder().build();       // Not recommended, but fine
  *   new BotBuddy(new BotBuddy.Builder()); // Not recommended, but fine
+ * 
+ * There's a Safe Mode that throws BotBuddy.SafeModeException if the user moves the mouse:
+ *   try {
+ *     buddy.beginSafeMode()
+ *          .enter(1470,131,"Mommy")
+ *          .delay(2000) // Move your mouse during this time
+ *          .enter(1470,131,"Daddy")
+ *          .endSafeMode();
+ *   }
+ *   catch(BotBuddy.SafeModeException ex) {
+ *     // If you move your mouse, "Daddy" will not be executed
+ *     System.out.println("User is active! Stopping all automatic operations.");
+ *   }
  * </pre>
  * 
  * <p>Similar Projects:</p>
  * <ul>
- *   <li><a href="https://github.com/Denysss/Robot-Utils" target="_blank">Robot-Utils by Denys Shynkarenko (@Denysss) [GitHub]</a></li>
- *   <li><a href="https://github.com/renatoathaydes/Automaton" target="_blank">Automaton by Renato Athaydes (@renatoathaydes) [GitHub]</a></li>
+ *   <li>Robot-Utils by Denys Shynkarenko (@Denysss) <a href="https://github.com/Denysss/Robot-Utils" target="_blank">[GitHub]</a></li>
+ *   <li>Automaton by Renato Athaydes (@renatoathaydes) <a href="https://github.com/renatoathaydes/Automaton" target="_blank">[GitHub]</a></li>
  * </ul>
  * 
  * <p>Getting mouse coordinates:</p>
