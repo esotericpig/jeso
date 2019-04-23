@@ -69,7 +69,14 @@ dependencies {
 /**
  * Tasks
  */
-defaultTasks 'clean','build'
+defaultTasks 'clean','buildRelease'
+
+task(buildRelease,type: GradleBuild) {
+  group       'Build'
+  description 'Assembles everything necessary for a release: Jar, Javadoc Zip, Sources Jar, etc.'
+  
+  tasks = ['clean','jar','javadocZip','sourcesJar']
+}
 
 compileJava {
   encoding = project.ext.encoding
@@ -79,7 +86,7 @@ compileTestJava {
   encoding = project.ext.encoding
 }
 
-jar {
+tasks.withType(Jar) {
   manifest {
     attributes(
       // Add dependencies to classpath
@@ -109,6 +116,10 @@ jar {
   /*from configurations.compile.collect {
     it.isDirectory() ? it : zipTree(it)
   }*/
+  
+  from('.') {
+    include 'LICENSE','README.md'
+  }
 }
 
 javadoc {
@@ -120,6 +131,22 @@ javadoc {
     memberLevel = JavadocMemberLevel.PROTECTED // Show public & protected (don't show private)
     version     = true
   }
+}
+
+task(javadocZip,type: Zip,dependsOn: javadoc) {
+  group       'Documentation'
+  description 'Assembles a Zip archive containing the Javadoc.'
+  
+  classifier 'javadoc'
+  from javadoc.destinationDir
+}
+
+task(sourcesJar,type: Jar,dependsOn: classes) {
+  group       'Documentation'
+  description 'Assembles a Jar archive containing the main source code (*.java).'
+  
+  classifier 'sources'
+  from sourceSets.main.allSource
 }
 
 test {
