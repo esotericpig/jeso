@@ -3,6 +3,7 @@
 ## v1.0.0
 
 - [ ] BotBuddy
+    - Add safe mode (if user moves mouse)
     - Mac OS X support for paste
     - Add documentation
     - Take in File or Array/List (of String); allow single/double quotes and/or Ruby heredocs:
@@ -11,7 +12,7 @@
         - `click 1853 1015`
     - Make #doubleClick() more generic; use above method
 - [ ] CSV class
-- [ ] In Gradle, add a task to check/download the Wrapper checksum. [Release Checksums](https://gradle.org/release-checksums/)
+- [x] In Gradle, add a task to check/download the Wrapper checksum. [Release Checksums](https://gradle.org/release-checksums/)
 - [ ] Arrs/Cols/Strs (one class?):
     - sample(), unique(), compact(), join(). max_length(...)
 - [ ] Look at own code and see where a generic method could be better.

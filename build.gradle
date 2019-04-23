@@ -16,12 +16,11 @@
  * along with jeso. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * Plugins
- */
 plugins {
   id 'java-library'
 }
+
+import java.util.regex.Pattern
 
 /**
  * Properties
@@ -47,6 +46,12 @@ ext.junitJupiterVersion = '5.4.2'
 
 // Javadoc
 javadoc.title           = "${project.name} v${project.version}"
+
+// Checksums
+ext.gradlewPath         = "${projectDir}/gradle/wrapper"
+ext.gradlewJarPath      = "${ext.gradlewPath}/gradle-wrapper.jar"
+ext.gradlewPropPath     = "${ext.gradlewPath}/gradle-wrapper.properties"
+ext.gradlewSumPath      = "${ext.gradlewJarPath}.sha256"
 
 /**
  * Repositories and Dependencies
@@ -78,12 +83,61 @@ task(buildRelease,type: GradleBuild) {
   tasks = ['clean','jar','javadocZip','sourcesJar']
 }
 
+task(checkGradleW) {
+  group       'Checksum'
+  description "Check the SHA-256 sum of the Gradle Wrapper Jar (${project.ext.gradlewJarPath.replaceAll("${projectDir}",'')})."
+  
+  doLast {
+    ant.checksum(file: project.ext.gradlewJarPath,algorithm: 'SHA-256',property: 'gradlewJarSum')
+    
+    String gradlewJarSum = ant.properties['gradlewJarSum']
+    String gradlewSumSum = new File(project.ext.gradlewSumPath).getText('UTF-8').split('\\s+')[0]
+    
+    String gradlewJarPath = project.ext.gradlewJarPath.replaceAll("${projectDir}",'') + ':'
+    String gradlewSumPath = project.ext.gradlewSumPath.replaceAll("${projectDir}",'') + ':'
+    
+    int maxLen = -Math.max(gradlewJarPath.length(),gradlewSumPath.length())
+    
+    println '[Gradle Wrapper Jar Checksum]'
+    printf "%${maxLen}s %s%n",gradlewJarPath,gradlewJarSum
+    printf "%${maxLen}s %s%n",gradlewSumPath,gradlewSumSum
+    printf "%${maxLen}s %s%n","Do they match?",gradlewJarSum.equals(gradlewSumSum) ? 'OK' : 'NOT a match!'
+  }
+}
+
 compileJava {
   encoding = project.ext.encoding
 }
 
 compileTestJava {
   encoding = project.ext.encoding
+}
+
+task(wgetGradleWSums) {
+  group       'Checksum'
+  description 'Download the SHA-256 sums for the Gradle Wrapper Jars.'
+  
+  doLast{
+    String checksums = new URL('https://gradle.org/release-checksums/').getText('UTF-8')
+    String version = project.gradle.gradleVersion
+    
+    int index = checksums.indexOf("v${version}")
+    int gradlebIndex = checksums.indexOf('Binary-only',index)
+    int gradlecIndex = checksums.indexOf('Complete',index)
+    int gradlewIndex = checksums.indexOf('Wrapper',index)
+    
+    // Split on "<code>" or "</code>"
+    Pattern pattern = Pattern.compile('\\s*\\<\\s*\\/?\\s*code\\s*\\>\\s*',Pattern.CASE_INSENSITIVE)
+    String gradlebSum = pattern.split(checksums.substring(gradlebIndex,gradlebIndex + 200))[1]
+    String gradlecSum = pattern.split(checksums.substring(gradlecIndex,gradlecIndex + 200))[1]
+    String gradlewSum = pattern.split(checksums.substring(gradlewIndex,gradlewIndex + 200))[1]
+    
+    println '[Gradle Checksums]'
+    println "Put this in " + project.ext.gradlewPropPath.replaceAll("${projectDir}",'') + ':'
+    println "  distributionSha256Sum=${gradlebSum}"
+    println "Save this to " + project.ext.gradlewSumPath.replaceAll("${projectDir}",'') + ':'
+    println "  ${gradlewSum} ${new File(gradlewJarPath).getName()}"
+  }
 }
 
 tasks.withType(Jar) {
@@ -117,7 +171,7 @@ tasks.withType(Jar) {
     it.isDirectory() ? it : zipTree(it)
   }*/
   
-  from('.') {
+  from("${projectDir}/") {
     include 'LICENSE','README.md'
   }
 }
