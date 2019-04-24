@@ -4,7 +4,7 @@
 
 - [ ] BotBuddy
     - [x] Add safe mode (if user moves mouse)
-    - [ ] Mac OS X support for paste
+    - [x] Mac OS X support for paste
     - [ ] Add documentation
     - [ ] Take in File or Array/List (of String); allow single/double quotes and/or Ruby heredocs:
         - `paste 999  493  "Fish"`

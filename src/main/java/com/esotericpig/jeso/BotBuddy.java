@@ -32,6 +32,8 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
+import java.util.function.UnaryOperator;
+
 /**
  * <pre>
  * <b>BotBuddy</b> is a simple wrapper around <b>{@link java.awt.Robot java.awt.Robot}</b>.
@@ -60,6 +62,9 @@ import java.awt.event.KeyEvent;
  *     // If you move your mouse, "Daddy" will not be executed
  *     System.out.println("User is active! Stopping all automatic operations.");
  *   }
+ * 
+ * If you click into a virtual machine, you can change the OS for Shortcuts:
+ *   buddy.setOSFamily(OSFamily.MACOS);
  * </pre>
  * 
  * <p>Similar Projects:</p>
@@ -118,6 +123,7 @@ public class BotBuddy implements Cloneable {
   protected boolean isAutoDelay;
   protected boolean isSafeMode = false;
   protected int longDelay;
+  protected OSFamily osFamily;
   protected Point safeCoords = new Point(-1,-1);
   protected int shortDelay;
   protected Toolkit tool;
@@ -133,6 +139,7 @@ public class BotBuddy implements Cloneable {
     isAutoDelay = buddy.isAutoDelay;
     isSafeMode = buddy.isSafeMode;
     longDelay = buddy.longDelay;
+    osFamily = buddy.osFamily;
     safeCoords = new Point(buddy.safeCoords);
     shortDelay = buddy.shortDelay;
     tool = buddy.tool;
@@ -148,6 +155,7 @@ public class BotBuddy implements Cloneable {
     setAutoWaitForIdle(builder.isAutoWaitForIdle);
     setFastDelay(builder.fastDelay);
     setLongDelay(builder.longDelay);
+    setOSFamily(builder.osFamily);
     setShortDelay(builder.shortDelay);
     
     if(builder.isAutoDelay) {
@@ -188,14 +196,22 @@ public class BotBuddy implements Cloneable {
   }
   
   public BotBuddy click() {
-    bot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-    bot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
+    return click(InputEvent.BUTTON1_DOWN_MASK);
+  }
+  
+  public BotBuddy click(int button) {
+    bot.mousePress(button);
+    bot.mouseRelease(button);
     
     return checkIfSafe();
   }
   
   public BotBuddy click(int x,int y) {
     return move(x,y).click();
+  }
+  
+  public BotBuddy click(int x,int y,int button) {
+    return move(x,y).click(button);
   }
   
   @Override
@@ -290,6 +306,13 @@ public class BotBuddy implements Cloneable {
     return paste(x,y,text).enter();
   }
   
+  public BotBuddy key(int keyCode) {
+    bot.keyPress(keyCode);
+    bot.keyRelease(keyCode);
+    
+    return checkIfSafe();
+  }
+  
   public BotBuddy move(int x,int y) {
     bot.mouseMove(x,y);
     
@@ -297,12 +320,7 @@ public class BotBuddy implements Cloneable {
   }
   
   public BotBuddy paste() {
-    bot.keyPress(KeyEvent.VK_CONTROL);
-    bot.keyPress(KeyEvent.VK_V);
-    bot.keyRelease(KeyEvent.VK_V);
-    bot.keyRelease(KeyEvent.VK_CONTROL);
-    
-    return checkIfSafe();
+    return shortcut(Shortcuts.PASTE);
   }
   
   public BotBuddy paste(String text) {
@@ -315,6 +333,34 @@ public class BotBuddy implements Cloneable {
   
   public BotBuddy paste(int x,int y,String text) {
     return click(x,y).paste(text);
+  }
+  
+  public BotBuddy pressKey(int keyCode) {
+    bot.keyPress(keyCode);
+    
+    return checkIfSafe();
+  }
+  
+  public BotBuddy pressMouse(int button) {
+    bot.mousePress(button);
+    
+    return checkIfSafe();
+  }
+  
+  public BotBuddy releaseKey(int keyCode) {
+    bot.keyRelease(keyCode);
+    
+    return checkIfSafe();
+  }
+  
+  public BotBuddy releaseMouse(int button) {
+    bot.mouseRelease(button);
+    
+    return checkIfSafe();
+  }
+  
+  public BotBuddy shortcut(Shortcut shortcut) {
+    return shortcut.press(this).checkIfSafe();
   }
   
   public BotBuddy waitForIdle() {
@@ -378,6 +424,12 @@ public class BotBuddy implements Cloneable {
     return this;
   }
   
+  public BotBuddy setOSFamily(OSFamily osFamily) {
+    this.osFamily = osFamily;
+    
+    return this;
+  }
+  
   public BotBuddy setShortDelay(int shortDelay) {
     this.shortDelay = shortDelay;
     
@@ -428,6 +480,10 @@ public class BotBuddy implements Cloneable {
     return longDelay;
   }
   
+  public OSFamily getOSFamily() {
+    return osFamily;
+  }
+  
   public boolean isSafeMode() {
     return isSafeMode;
   }
@@ -467,6 +523,7 @@ public class BotBuddy implements Cloneable {
     protected boolean isAutoDelay = true;
     protected boolean isAutoWaitForIdle = true;
     protected int longDelay = DEFAULT_LONG_DELAY;
+    protected OSFamily osFamily = Sys.OS_FAMILY;
     protected int shortDelay = DEFAULT_SHORT_DELAY;
     protected Toolkit tool;
     
@@ -541,6 +598,12 @@ public class BotBuddy implements Cloneable {
       return this;
     }
     
+    public Builder osFamily(OSFamily osFamily) {
+      this.osFamily = osFamily;
+      
+      return this;
+    }
+    
     public Builder shortDelay(int shortDelay) {
       this.shortDelay = shortDelay;
       
@@ -555,5 +618,49 @@ public class BotBuddy implements Cloneable {
   }
   
   public static class SafeModeException extends RuntimeException {
+  }
+  
+  /**
+   * <pre>
+   * This class can really be used for any automated operations, not just
+   *   keyboard shortcuts.
+   * 
+   * Extends UnaryOperator and changes #apply() to #press() so that if the
+   *   internals change in the future, it won't affect users that much.
+   * </pre>
+   * 
+   * @author Jonathan Bradley Whited (@esotericpig)
+   */
+  @FunctionalInterface
+  public static interface Shortcut extends UnaryOperator<BotBuddy> {
+    public abstract BotBuddy press(BotBuddy buddy);
+    
+    public default BotBuddy apply(BotBuddy buddy) {
+      return press(buddy);
+    }
+  }
+  
+  public static class Shortcuts {
+    public static final Shortcut PASTE;
+    public static final Shortcut PASTE_DEFAULT;
+    public static final Shortcut PASTE_MACOS;
+    
+    static {
+      PASTE_DEFAULT = (buddy) -> buddy.pressKey(KeyEvent.VK_CONTROL)
+                                      .pressKey(KeyEvent.VK_V)
+                                      .releaseKey(KeyEvent.VK_V)
+                                      .releaseKey(KeyEvent.VK_CONTROL);
+      PASTE_MACOS = (buddy) -> buddy.pressKey(KeyEvent.VK_META)
+                                    .pressKey(KeyEvent.VK_V)
+                                    .releaseKey(KeyEvent.VK_V)
+                                    .releaseKey(KeyEvent.VK_META);
+      PASTE = (buddy) -> {
+        switch(buddy.getOSFamily()) {
+          case MACOS: return PASTE_MACOS.press(buddy);
+        }
+        
+        return PASTE_DEFAULT.press(buddy);
+      };
+    }
   }
 }

@@ -70,6 +70,7 @@ public class BotBuddyTest {
     boolean isAutoDelay = rand.nextBoolean();
     boolean isAutoWaitForIdle = rand.nextBoolean();
     int longDelay = rand.nextInt(MAX_MS);
+    OSFamily osFamily = OSFamily.VALUES[rand.nextInt(OSFamily.VALUES.length)];
     int shortDelay = rand.nextInt(MAX_MS - 1) + 1; // Must be > 0 for isAutoDelay
     Toolkit tool = Toolkit.getDefaultToolkit();
     
@@ -80,6 +81,7 @@ public class BotBuddyTest {
     assertEquals(isAutoDelay,buddy.setAutoDelay(isAutoDelay).isAutoDelay());
     assertEquals(isAutoWaitForIdle,buddy.setAutoWaitForIdle(isAutoWaitForIdle).isAutoWaitForIdle());
     assertEquals(longDelay,buddy.setLongDelay(longDelay).getLongDelay());
+    assertEquals(osFamily,buddy.setOSFamily(osFamily).getOSFamily());
     assertEquals(shortDelay,buddy.setShortDelay(shortDelay).getShortDelay());
     assertEquals(tool,buddy.setTool(tool).getTool());
   }
@@ -101,6 +103,7 @@ public class BotBuddyTest {
     boolean isAutoDelay = true; // Always true because autoDelay > 0
     boolean isAutoWaitForIdle = rand.nextBoolean();
     int longDelay = rand.nextInt(MAX_MS);
+    OSFamily osFamily = OSFamily.VALUES[rand.nextInt(OSFamily.VALUES.length)];
     int shortDelay = rand.nextInt(MAX_MS);
     Toolkit tool = Toolkit.getDefaultToolkit();
     
@@ -111,6 +114,7 @@ public class BotBuddyTest {
                      .clip(clip)
                      .fastDelay(fastDelay)
                      .longDelay(longDelay)
+                     .osFamily(osFamily)
                      .shortDelay(shortDelay)
                      .tool(tool);
     
@@ -121,6 +125,7 @@ public class BotBuddyTest {
     assertEquals(isAutoDelay,builder.isAutoDelay);
     assertEquals(isAutoWaitForIdle,builder.isAutoWaitForIdle);
     assertEquals(longDelay,builder.longDelay);
+    assertEquals(osFamily,builder.osFamily);
     assertEquals(shortDelay,builder.shortDelay);
     assertEquals(tool,builder.tool);
     
@@ -133,6 +138,7 @@ public class BotBuddyTest {
     assertEquals(isAutoDelay,buddy.isAutoDelay());
     assertEquals(isAutoWaitForIdle,buddy.isAutoWaitForIdle());
     assertEquals(longDelay,buddy.getLongDelay());
+    assertEquals(osFamily,buddy.getOSFamily());
     assertEquals(shortDelay,buddy.getShortDelay());
     assertEquals(tool,buddy.getTool());
   }

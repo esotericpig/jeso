@@ -70,7 +70,8 @@ BotBuddy buddy = BotBuddy.builder()
 All of the main methods can also be chained together:
 
 ```Java
-buddy.click([int x,int y])
+buddy.click([int button])
+     .click([int x,int y,int button])
      .copy(String text,[ClipboardOwner owner])
      .delay(int delay)
      .delayAuto()
@@ -80,9 +81,15 @@ buddy.click([int x,int y])
      .doubleClick([int x,int y])
      .enter([String text])
      .enter([int x,int y,String text])
+     .key(int keyCode)
      .move(int x,int y)
      .paste([String text])
      .paste([int x,int y,String text])
+     .pressKey(int keyCode)
+     .pressMouse(int button)
+     .releaseKey(int keyCode)
+     .releaseMouse(int button)
+     .shortcut(BotBuddy.Shortcut shortcut)
      .waitForIdle()
      .set*(*);
 ```
@@ -106,6 +113,12 @@ catch(BotBuddy.SafeModeException ex) {
   // If you move your mouse, "Daddy" will not be executed
   System.out.println("User is active! Stopping all automatic operations.");
 }
+```
+
+If your program clicks into a virtual machine, you can change the OS to change the keyboard shortcut keys (e.g., paste):
+
+```Java
+buddy.setOSFamily(OSFamily.MACOS);
 ```
 
 When writing your own scripts, you can use these methods for getting the mouse coordinates:
