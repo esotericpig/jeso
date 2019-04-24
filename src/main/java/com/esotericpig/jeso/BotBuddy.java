@@ -262,18 +262,7 @@ public class BotBuddy implements Cloneable {
   }
   
   public BotBuddy doubleClick() {
-    int autoDelay = getAutoDelay();
-    boolean isAutoDelay = isAutoDelay();
-    
-    setAutoDelay(false);
-    click().delayFast().click();
-    
-    if(isAutoDelay) {
-      bot.delay(autoDelay);
-      setAutoDelay(autoDelay);
-    }
-    
-    return checkIfSafe();
+    return shortcutFast((buddy) -> buddy.click().delayFast().click());
   }
   
   public BotBuddy doubleClick(int x,int y) {
@@ -361,6 +350,21 @@ public class BotBuddy implements Cloneable {
   
   public BotBuddy shortcut(Shortcut shortcut) {
     return shortcut.press(this).checkIfSafe();
+  }
+  
+  public BotBuddy shortcutFast(Shortcut shortcut) {
+    int autoDelay = getAutoDelay();
+    boolean isAutoDelay = isAutoDelay();
+    
+    setAutoDelay(false);
+    shortcut.press(this);
+    
+    if(isAutoDelay) {
+      setAutoDelay(autoDelay);
+      bot.delay(autoDelay);
+    }
+    
+    return checkIfSafe();
   }
   
   public BotBuddy waitForIdle() {

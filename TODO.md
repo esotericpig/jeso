@@ -10,7 +10,7 @@
         - `paste 999  493  "Fish"`
         - `enter 1427 500  "Sakana"`
         - `click 1853 1015`
-    - [ ] Make #doubleClick() more generic; use above method
+    - [x] Make #doubleClick() more generic; use above method
 - [ ] Add appropriate logging (Logback?); search and remove printlns
 - [ ] CSV class
 - [x] In Gradle, add a task to check/download the Wrapper checksum. [Release Checksums](https://gradle.org/release-checksums/)
