@@ -27,12 +27,14 @@ import java.util.Locale;
 public enum OSFamily {
   LINUX("linux"),MACOS("darwin mac osx"),WINDOWS("win","darwin"),UNKNOWN;
   
+  public static final OSFamily[] VALUES = values();
+  
   public static OSFamily guessFromName(String osName) {
     osName = osName.replaceAll("\\s+","").toLowerCase(Locale.ENGLISH);
     
     OSFamily osFamily = UNKNOWN;
     
-    for(OSFamily osf: values()) {
+    for(OSFamily osf: VALUES) {
       if(osf.badWords == null && osf.goodWords == null) {
         continue;
       }
