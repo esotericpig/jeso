@@ -99,6 +99,8 @@ public class BotBuddy implements Cloneable {
    */
   public static final int DEFAULT_LONG_DELAY = 1100;
   
+  public static final int DEFAULT_MOUSE_BUTTON = InputEvent.BUTTON1_DOWN_MASK;
+  
   /**
    * For auto delay, or for a manual delay between fast and long if auto delay is set differently.
    */
@@ -196,7 +198,7 @@ public class BotBuddy implements Cloneable {
   }
   
   public BotBuddy click() {
-    return click(InputEvent.BUTTON1_DOWN_MASK);
+    return click(DEFAULT_MOUSE_BUTTON);
   }
   
   public BotBuddy click(int button) {
@@ -262,11 +264,19 @@ public class BotBuddy implements Cloneable {
   }
   
   public BotBuddy doubleClick() {
-    return shortcutFast((buddy) -> buddy.click().delayFast().click());
+    return doubleClick(DEFAULT_MOUSE_BUTTON);
+  }
+  
+  public BotBuddy doubleClick(int button) {
+    return shortcutFast((buddy) -> buddy.click(button).delayFast().click(button));
   }
   
   public BotBuddy doubleClick(int x,int y) {
     return move(x,y).doubleClick();
+  }
+  
+  public BotBuddy doubleClick(int x,int y,int button) {
+    return move(x,y).doubleClick(button);
   }
   
   public BotBuddy endSafeMode() {
