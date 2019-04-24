@@ -39,11 +39,9 @@ Then use the following files in your project:
 
 For one example, it can be used for moving the mouse and pasting in text.
 
-It can automate tedious tasks that a website/program has not implemented yet, such as inputting a CSV file into a website, row by row.
-
-It can also be used for automating tedious tasks in games, such as moving your character to a place to fish and then moving your character home to dump the fish.
-
-It can also be used for testing/QAing your desktop applications.
+- It can automate tedious tasks that a website/program has not implemented yet, such as inputting a CSV file into a website, row by row.
+- It can be used for automating tedious tasks in games, such as moving your character to a place to fish and then moving your character home to dump the fish.
+- It can be used for testing/QAing your desktop applications.
 
 Example usage:
 
@@ -126,7 +124,7 @@ Similar projects to [BotBuddy](src/main/java/com/esotericpig/jeso/BotBuddy.java)
 - Automaton by Renato Athaydes (@renatoathaydes) [[GitHub](https://github.com/renatoathaydes/Automaton)]
 
 ## [License](#contents)
-[GNU GPL v3+](LICENSE)
+[GNU LGPL v3+](LICENSE)
 
 > jeso ([https://github.com/esotericpig/jeso](https://github.com/esotericpig/jeso))  
 > Copyright (c) 2019 Jonathan Bradley Whited (@esotericpig)  
