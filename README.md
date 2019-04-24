@@ -1,6 +1,6 @@
 # jeso
 
-Java utils to make Java less verbose.
+Java utils to make Java less verbose and more fun.
 
 Inspired largely by Ruby.
 
@@ -15,7 +15,7 @@ Name = Java + gesso + esoteric.
     - [BotBuddy](#botbuddy)
 - [License](#license)
 
-## Using
+## [Using](#contents)
 
 Currently, an official release hasn't been made yet, but you can go ahead and use it in your project by building a pre-release yourself:
 
@@ -27,9 +27,13 @@ Then use the following files in your project:
 - build/libs/jeso-*-sources.jar
 - build/distributions/jeso-*-javadoc.zip
 
-## Code
+## [Code](#contents)
 
-### BotBuddy
+| Class                 | Summary |
+| --------------------- | ------- |
+| [BotBuddy](#botbuddy) | A simple wrapper around [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html) |
+
+### [BotBuddy](#code)
 
 [BotBuddy](src/main/java/com/esotericpig/jeso/BotBuddy.java) is a simple wrapper around [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html).
 
@@ -121,7 +125,7 @@ Similar projects to [BotBuddy](src/main/java/com/esotericpig/jeso/BotBuddy.java)
 - Robot-Utils by Denys Shynkarenko (@Denysss) [[GitHub](https://github.com/Denysss/Robot-Utils)]
 - Automaton by Renato Athaydes (@renatoathaydes) [[GitHub](https://github.com/renatoathaydes/Automaton)]
 
-## License
+## [License](#contents)
 [GNU GPL v3+](LICENSE)
 
 > jeso ([https://github.com/esotericpig/jeso](https://github.com/esotericpig/jeso))  
