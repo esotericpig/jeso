@@ -80,7 +80,7 @@ task(buildRelease,type: GradleBuild) {
   group       'Build'
   description 'Assembles everything necessary for a release: Jar, Javadoc Zip, Sources Jar, etc.'
   
-  tasks = ['jar','javadocZip','sourcesJar']
+  tasks = ['test','jar','javadoc','javadocZip','sourcesJar']
 }
 
 task(checkGradleW) {
