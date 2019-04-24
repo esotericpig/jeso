@@ -18,8 +18,6 @@
 
 package com.esotericpig.jeso;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,11 +43,5 @@ public class SysTest {
   public void testOS() {
     System.out.println("OS Name:   " + Sys.OS_NAME);
     System.out.println("OS Family: " + Sys.OS_FAMILY);
-    
-    assertEquals(Sys.OSFamily.LINUX,Sys.OSFamily.guessFromName("GNU/Linux Fedora"));
-    assertEquals(Sys.OSFamily.MACOS,Sys.OSFamily.guessFromName("Apple Darwin"));
-    assertEquals(Sys.OSFamily.MACOS,Sys.OSFamily.guessFromName("Apple Mac OS X"));
-    assertEquals(Sys.OSFamily.MACOS,Sys.OSFamily.guessFromName("Apple OS X"));
-    assertEquals(Sys.OSFamily.WINDOWS,Sys.OSFamily.guessFromName("Microsoft Windows XP"));
   }
 }
