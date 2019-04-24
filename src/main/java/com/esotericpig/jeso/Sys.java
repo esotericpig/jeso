@@ -22,6 +22,15 @@ package com.esotericpig.jeso;
  * @author Jonathan Bradley Whited (@esotericpig)
  */
 public class Sys {
-  public static final String OS_NAME = System.getProperty("os.name","Unknown");
+  public static final String OS_NAME = getSafeProp("os.name","Unknown");
   public static final OSFamily OS_FAMILY = OSFamily.guessFromName(OS_NAME);
+  
+  public static String getSafeProp(String key,String def) {
+    try {
+      return System.getProperty(key,def);
+    }
+    catch(SecurityException se) {
+      return def;
+    }
+  }
 }

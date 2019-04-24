@@ -24,8 +24,6 @@ import org.junit.jupiter.api.Test;
 
 /**
  * <pre>
- * If a Security Manager exists and disallows certain operations, then some of
- *   these tests could fail.
  * </pre>
  * 
  * @author Jonathan Bradley Whited (@esotericpig)

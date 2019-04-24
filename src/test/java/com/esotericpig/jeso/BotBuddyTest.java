@@ -21,8 +21,7 @@ package com.esotericpig.jeso;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.awt.AWTException;
-import java.awt.MouseInfo;
-import java.awt.PointerInfo;
+import java.awt.GraphicsEnvironment;
 import java.awt.Robot;
 import java.awt.Toolkit;
 
@@ -36,7 +35,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * <pre>
- * All of this will fail on a headless server.
+ * On a headless server, all of these tests will not run.
  * </pre>
  * 
  * @author Jonathan Bradley Whited (@esotericpig)
@@ -61,6 +60,10 @@ public class BotBuddyTest {
   
   @Test
   public void testAccessors() throws AWTException {
+    if(isHeadless()) {
+      return;
+    }
+    
     BotBuddy buddy = BotBuddy.builder().build();
     
     int autoDelay = rand.nextInt(MAX_MS);
@@ -88,6 +91,10 @@ public class BotBuddyTest {
   
   @Test
   public void testBuilder() throws AWTException {
+    if(isHeadless()) {
+      return;
+    }
+    
     BotBuddy.Builder builder = null;
     
     builder = new BotBuddy.Builder();
@@ -145,6 +152,10 @@ public class BotBuddyTest {
   
   @Test
   public void testConstructors() throws AWTException {
+    if(isHeadless()) {
+      return;
+    }
+    
     BotBuddy buddy = null;
     
     buddy = new BotBuddy();
@@ -155,6 +166,10 @@ public class BotBuddyTest {
   
   @Test
   public void testMainMethods() throws AWTException {
+    if(isHeadless()) {
+      return;
+    }
+    
     BotBuddy buddy = BotBuddy.builder().build();
     
     buddy = buddy.clone(); // Don't do assertEquals(); don't feel like implementing equals() and hashCode()
@@ -164,5 +179,15 @@ public class BotBuddyTest {
     System.out.println("Coords:  " + BotBuddy.getCoords());
     System.out.println("X coord: " + BotBuddy.getXCoord());
     System.out.println("Y coord: " + BotBuddy.getYCoord());
+  }
+  
+  public boolean isHeadless() {
+    boolean isHeadless = GraphicsEnvironment.isHeadless();
+    
+    if(isHeadless) {
+      System.out.println("This environment is headless. Ignoring Robot test.");
+    }
+    
+    return isHeadless;
   }
 }
