@@ -42,7 +42,7 @@ public class SysTest {
   }
   
   @Test
-  public void testStatics() {
+  public void testOS() {
     System.out.println("OS Name:   " + Sys.OS_NAME);
     System.out.println("OS Family: " + Sys.OS_FAMILY);
     

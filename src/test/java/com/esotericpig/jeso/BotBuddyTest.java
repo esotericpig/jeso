@@ -85,7 +85,7 @@ public class BotBuddyTest {
   }
   
   @Test
-  public void testBuilders() throws AWTException {
+  public void testBuilder() throws AWTException {
     BotBuddy.Builder builder = null;
     
     builder = new BotBuddy.Builder();
@@ -148,7 +148,7 @@ public class BotBuddyTest {
   }
   
   @Test
-  public void testMethods() throws AWTException {
+  public void testMainMethods() throws AWTException {
     BotBuddy buddy = BotBuddy.builder().build();
     
     buddy = buddy.clone(); // Don't do assertEquals(); don't feel like implementing equals() and hashCode()
