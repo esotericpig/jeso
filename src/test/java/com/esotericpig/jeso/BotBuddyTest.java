@@ -21,7 +21,6 @@ package com.esotericpig.jeso;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.awt.AWTException;
-import java.awt.GraphicsEnvironment;
 import java.awt.Robot;
 import java.awt.Toolkit;
 
@@ -182,7 +181,7 @@ public class BotBuddyTest {
   }
   
   public boolean isHeadless() {
-    boolean isHeadless = GraphicsEnvironment.isHeadless();
+    boolean isHeadless = BotBuddy.isHeadless();
     
     if(isHeadless) {
       System.out.println("This environment is headless. Ignoring Robot test.");

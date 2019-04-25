@@ -67,10 +67,11 @@ BotBuddy buddy = BotBuddy.builder()
                          .build();
 ```
 
-All of the main methods can also be chained together:
+Most methods can also be chained together:
 
 ```Java
-buddy.click([int button])
+buddy.beep()
+     .click([int button])
      .click([int x,int y,int button])
      .copy(String text,[ClipboardOwner owner])
      .delay(int delay)
@@ -91,8 +92,21 @@ buddy.click([int button])
      .releaseKey(int keyCode)
      .releaseMouse(int button)
      .shortcut(BotBuddy.Shortcut shortcut)
+     .shortcutFast(BotBuddy.Shortcut shortcut)
      .waitForIdle()
+     .wheel(int amount)
      .set*(*);
+
+// Unchainable methods
+buddy.printScreen(Rectangle screenRect);
+buddy.printScreen(int width,int height);
+buddy.printScreen(int x,int y,int width,int height);
+buddy.getPixel(Point coords);
+buddy.getPixel(int x,int y);
+buddy.getScreenHeight();
+buddy.getScreenSize();
+buddy.getScreenWidth();
+buddy.get*(*);
 ```
 
 A Safe Mode has been added for convenience. If the user ever moves their mouse, then **BotBuddy.SafeModeException** will be thrown. After each operation, it just checks the mouse coordinates, while updating its internal coordinates accordingly to the operations. Example:
@@ -122,7 +136,7 @@ If your program clicks into a virtual machine, you can change the OS to change t
 buddy.setOSFamily(OSFamily.MACOS);
 ```
 
-When writing your own scripts, you can use these methods for getting the mouse coordinates:
+When writing your own scripts, you can use these helper methods:
 
 - `BotBuddy.getCoords();`
 - `BotBuddy.getXCoord();`

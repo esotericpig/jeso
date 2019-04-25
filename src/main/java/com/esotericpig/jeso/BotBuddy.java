@@ -19,9 +19,13 @@
 package com.esotericpig.jeso;
 
 import java.awt.AWTException;
+import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.MouseInfo;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Toolkit;
 
@@ -31,6 +35,8 @@ import java.awt.datatransfer.StringSelection;
 
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+
+import java.awt.image.BufferedImage;
 
 import java.util.function.UnaryOperator;
 
@@ -119,6 +125,24 @@ public class BotBuddy implements Cloneable {
     return new Builder(screen);
   }
   
+  public static Point getCoords() {
+    // DO NOT store PointerInfo!
+    // - If you store PointerInfo in an instance variable, #getLocation() will not be up-to-date.
+    return MouseInfo.getPointerInfo().getLocation();
+  }
+  
+  public static boolean isHeadless() {
+    return GraphicsEnvironment.isHeadless();
+  }
+  
+  public static int getXCoord() {
+    return getCoords().x;
+  }
+  
+  public static int getYCoord() {
+    return getCoords().y;
+  }
+  
   protected Robot bot;
   protected Clipboard clip;
   protected int fastDelay;
@@ -126,7 +150,7 @@ public class BotBuddy implements Cloneable {
   protected boolean isSafeMode = false;
   protected int longDelay;
   protected OSFamily osFamily;
-  protected Point safeCoords = new Point(-1,-1);
+  protected Point safeCoords = null;
   protected int shortDelay;
   protected Toolkit tool;
   
@@ -142,7 +166,7 @@ public class BotBuddy implements Cloneable {
     isSafeMode = buddy.isSafeMode;
     longDelay = buddy.longDelay;
     osFamily = buddy.osFamily;
-    safeCoords = new Point(buddy.safeCoords);
+    safeCoords = (buddy.safeCoords != null) ? (new Point(buddy.safeCoords)) : null;
     shortDelay = buddy.shortDelay;
     tool = buddy.tool;
   }
@@ -165,6 +189,12 @@ public class BotBuddy implements Cloneable {
     }
   }
   
+  public BotBuddy beep() {
+    tool.beep();
+    
+    return this;
+  }
+  
   public BotBuddy beginSafeMode() {
     isSafeMode = true;
     safeCoords = getCoords();
@@ -173,20 +203,21 @@ public class BotBuddy implements Cloneable {
   }
   
   public BotBuddy checkIfSafe() {
-    return checkIfSafe(-1,-1);
+    return checkIfSafe(null);
   }
   
-  public BotBuddy checkIfSafe(int x,int y) {
+  public BotBuddy checkIfSafe(Point coords) {
     if(!isSafeMode) {
       return this;
     }
     
-    if(safeCoords.x < 0 || safeCoords.y < 0) {
+    // In multi-screen environments, x and y can be negative, so test null instead of (-1,-1)
+    if(safeCoords == null) {
       safeCoords = getCoords();
     }
     else {
-      if(x >= 0 && y >= 0) {
-        safeCoords.move(x,y);
+      if(coords != null) {
+        safeCoords.setLocation(coords);
       }
       
       if(!getCoords().equals(safeCoords)) {
@@ -281,7 +312,7 @@ public class BotBuddy implements Cloneable {
   
   public BotBuddy endSafeMode() {
     isSafeMode = false;
-    safeCoords.move(-1,-1);
+    safeCoords = null;
     
     return this;
   }
@@ -315,7 +346,7 @@ public class BotBuddy implements Cloneable {
   public BotBuddy move(int x,int y) {
     bot.mouseMove(x,y);
     
-    return checkIfSafe(x,y);
+    return checkIfSafe(new Point(x,y));
   }
   
   public BotBuddy paste() {
@@ -344,6 +375,18 @@ public class BotBuddy implements Cloneable {
     bot.mousePress(button);
     
     return checkIfSafe();
+  }
+  
+  public BufferedImage printScreen(Rectangle screenRect) {
+    return bot.createScreenCapture(screenRect);
+  }
+  
+  public BufferedImage printScreen(int width,int height) {
+    return printScreen(new Rectangle(width,height));
+  }
+  
+  public BufferedImage printScreen(int x,int y,int width,int height) {
+    return printScreen(new Rectangle(x,y,width,height));
   }
   
   public BotBuddy releaseKey(int keyCode) {
@@ -379,6 +422,12 @@ public class BotBuddy implements Cloneable {
   
   public BotBuddy waitForIdle() {
     bot.waitForIdle();
+    
+    return checkIfSafe();
+  }
+  
+  public BotBuddy wheel(int amount) {
+    bot.mouseWheel(amount);
     
     return checkIfSafe();
   }
@@ -480,18 +529,20 @@ public class BotBuddy implements Cloneable {
     return clip;
   }
   
-  public static Point getCoords() {
-    // DO NOT store PointerInfo!
-    // - If you store PointerInfo in an instance variable, #getLocation() will not be up-to-date.
-    return MouseInfo.getPointerInfo().getLocation();
-  }
-  
   public int getFastDelay() {
     return fastDelay;
   }
   
   public int getLongDelay() {
     return longDelay;
+  }
+  
+  public Color getPixel(Point coords) {
+    return getPixel(coords.x,coords.y);
+  }
+  
+  public Color getPixel(int x,int y) {
+    return bot.getPixelColor(x,y);
   }
   
   public OSFamily getOSFamily() {
@@ -502,20 +553,24 @@ public class BotBuddy implements Cloneable {
     return isSafeMode;
   }
   
+  public int getScreenHeight() {
+    return getScreenSize().height;
+  }
+  
+  public Dimension getScreenSize() {
+    return tool.getScreenSize();
+  }
+  
+  public int getScreenWidth() {
+    return getScreenSize().width;
+  }
+  
   public int getShortDelay() {
     return shortDelay;
   }
   
   public Toolkit getTool() {
     return tool;
-  }
-  
-  public static int getXCoord() {
-    return getCoords().x;
-  }
-  
-  public static int getYCoord() {
-    return getCoords().y;
   }
   
   /**
