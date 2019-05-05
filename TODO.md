@@ -14,7 +14,7 @@
 - [ ] Add appropriate logging (Logback?); search and remove printlns
 - [ ] CSV class
 - [x] In Gradle, add a task to check/download the Wrapper checksum. [Release Checksums](https://gradle.org/release-checksums/)
-- [ ] In Gradle, add a fat jar task that includes everything in one jar (javadoc, source, dependencies)
+- [x] In Gradle, add a fat jar task that includes everything in one jar (javadoc, source, dependencies)
 - [ ] Arrs/Cols/Strs (one class?):
     - sample(), unique(), compact(), join(). max_length(...)
 - [ ] Look at own code and see where a generic method could be better.
