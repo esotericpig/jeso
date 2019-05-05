@@ -407,7 +407,7 @@ public class BotBuddy implements Cloneable {
   
   public BotBuddy shortcutFast(Shortcut shortcut) {
     int autoDelay = getAutoDelay();
-    boolean isAutoDelay = isAutoDelay();
+    boolean isAutoDelay = this.isAutoDelay;
     
     setAutoDelay(false);
     shortcut.press(this);
