@@ -184,6 +184,7 @@ public class BotBuddyTest {
     boolean isHeadless = BotBuddy.isHeadless();
     
     if(isHeadless) {
+      // TODO: add test name; make more meaningful
       System.out.println("This environment is headless. Ignoring Robot test.");
     }
     

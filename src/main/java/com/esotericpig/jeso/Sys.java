@@ -30,6 +30,9 @@ public class Sys {
       return System.getProperty(key,def);
     }
     catch(SecurityException se) {
+      // TODO: log it instead
+      System.out.println(se);
+      se.printStackTrace();
       return def;
     }
   }
