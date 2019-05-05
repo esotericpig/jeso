@@ -41,6 +41,8 @@ ext.charset             = 'UTF-8'
 ext.encoding            = 'UTF-8'
 ext.locale              = 'en_US'
 
+ext.compilerArgs        = ['-Xlint:deprecation','-Xlint:unchecked']
+
 // Dependencies
 ext.junitJupiterVersion = '5.4.2'
 
@@ -122,10 +124,12 @@ task(checkGradleW) {
 
 compileJava {
   encoding = project.ext.encoding
+  options.compilerArgs += project.ext.compilerArgs
 }
 
 compileTestJava {
   encoding = project.ext.encoding
+  options.compilerArgs += project.ext.compilerArgs
 }
 
 task(wgetGradleWSums) {
