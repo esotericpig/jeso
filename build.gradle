@@ -76,6 +76,21 @@ dependencies {
  */
 defaultTasks 'clean','buildRelease'
 
+task(buildFatRelease,type: Jar,dependsOn: ['test','javadoc','classes']) {
+  group       'Build'
+  description 'Assembles everything necessary for a release into one "fat" jar.'
+  
+  // Include dependencies (jars) to final jar; a "fat jar"
+  from configurations.compile.collect {
+    it.isDirectory() ? it : zipTree(it)
+  }
+  
+  classifier 'all'
+  from javadoc.destinationDir
+  from sourceSets.main.allSource
+  from sourceSets.main.output
+}
+
 task(buildRelease,type: GradleBuild) {
   group       'Build'
   description 'Assembles everything necessary for a release: Jar, Javadoc Zip, Sources Jar, etc.'
@@ -146,8 +161,7 @@ tasks.withType(Jar) {
   manifest {
     attributes(
       // Add dependencies to classpath
-      // - Commented out, as a user should have the dependencies in their classpath
-      //'Class-Path':                 configurations.compile.collect { it.getName() }.join(' '),
+      'Class-Path':             configurations.compile.collect { it.getName() }.join(' '),
       
       'Specification-Title':    project.name,
       'Specification-Version':  project.version,
@@ -166,12 +180,6 @@ tasks.withType(Jar) {
       'Lib-Description':        project.description,
     )
   }
-  
-  // Include dependencies (jars) to final jar; a "fat jar"
-  // - Commented out, as a user should add the dependencies to their project
-  /*from configurations.compile.collect {
-    it.isDirectory() ? it : zipTree(it)
-  }*/
   
   from("${projectDir}/") {
     include 'LICENSE','README.md'

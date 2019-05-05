@@ -27,6 +27,11 @@ Then use the following files in your project:
 - build/libs/jeso-*-sources.jar
 - build/distributions/jeso-*-javadoc.zip
 
+Alternatively you can build everything into one jar:
+
+- `$ ./gradlew(.bat) clean buildFatRelease`
+- build/libs/jeso-*-all.jar
+
 ## [Code](#contents)
 
 | Class                 | Summary |
@@ -96,8 +101,11 @@ buddy.beep()
      .waitForIdle()
      .wheel(int amount)
      .set*(*);
+```
 
-// Unchainable methods
+Unchainable methods:
+
+```Java
 buddy.printScreen(Rectangle screenRect);
 buddy.printScreen(int width,int height);
 buddy.printScreen(int x,int y,int width,int height);
