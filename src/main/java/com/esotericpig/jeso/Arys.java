@@ -18,6 +18,8 @@
 
 package com.esotericpig.jeso;
 
+import java.lang.reflect.Array;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -26,21 +28,24 @@ import java.util.Random;
 import java.util.Set;
 
 // TODO: primitives:    boolean,byte,char,double,float,int,long,short
-// TODO: compact():     <primitives>
-// TODO: compact_mut(): <primitives>
-// TODO: join():        <all>
+// TODO: join():        <primitives>
+// TODO: joins():       <primitives>
 // TODO: sample():      <primitives>
 // TODO: samples():     <primitives>
 // TODO: uniq():        <primitives>
-// TODO: uniq_mut():    <primitives>
+// TODO: uniqMut():     <primitives>
 // TODO: tests
 
 /**
  * @author Jonathan Bradley Whited (@esotericpig)
  */
-public class Arys {
+public final class Arys {
   @SafeVarargs
-  public static <T> List<T> compact(T... ary) {
+  public static <T> T[] compact(T... ary) {
+    if(ary.length < 1) {
+      return ary;
+    }
+    
     List<T> compact = new ArrayList<>();
     
     for(T t: ary) {
@@ -49,10 +54,10 @@ public class Arys {
       }
     }
     
-    return compact;
+    return toArray(ary,compact);
   }
   
-  public static <T> T[] compact_mut(T[] ary) {
+  public static <T> T[] compactMut(T[] ary) {
     if(ary.length < 2) {
       return ary;
     }
@@ -73,12 +78,77 @@ public class Arys {
   }
   
   @SafeVarargs
-  public static <T> T sample(T... ary) {
+  public static <T> String join(T... ary) {
+    return joins("",ary);
+  }
+  
+  @SafeVarargs
+  public static <T> String joins(char separator,T... ary) {
     if(ary.length < 1) {
-      return null;
+      return "";
+    }
+    if(ary.length == 1) {
+      return ary[0].toString();
     }
     
-    return ary[(int)(Math.random() * ary.length)];
+    StringBuilder sb = new StringBuilder();
+    
+    for(int i = 0;;) {
+      T t = ary[i];
+      
+      sb.append(t.toString());
+      
+      if((++i) >= ary.length) {
+        break;
+      }
+      
+      sb.append(separator);
+    }
+    
+    return sb.toString();
+  }
+  
+  @SafeVarargs
+  public static <T> String joins(CharSequence separator,T... ary) {
+    if(ary.length < 1) {
+      return "";
+    }
+    if(ary.length == 1) {
+      return ary[0].toString();
+    }
+    
+    StringBuilder sb = new StringBuilder();
+    
+    for(int i = 0;;) {
+      T t = ary[i];
+      
+      sb.append(t.toString());
+      
+      if((++i) >= ary.length) {
+        break;
+      }
+      
+      sb.append(separator);
+    }
+    
+    return sb.toString();
+  }
+  
+  /**
+   * <pre>
+   * java.util.Arrays#copyOfRange(...) does the same thing.
+   * </pre>
+   */
+  @SuppressWarnings("unchecked")
+  public static <T> T[] newArray(T[] ary,int length) {
+    Class<? extends T[]> clazz = (Class<? extends T[]>)ary.getClass();
+    
+    return (T[])Array.newInstance(clazz.getComponentType(),length);
+  }
+  
+  @SafeVarargs
+  public static <T> T sample(T... ary) {
+    return sample(Rand.rand,ary);
   }
   
   @SafeVarargs
@@ -91,69 +161,49 @@ public class Arys {
   }
   
   @SafeVarargs
-  public static <T> List<T> samples(int count,T... ary) {
+  public static <T> T[] samples(int count,T... ary) {
+    return samples(count,Rand.rand,ary);
+  }
+  
+  @SafeVarargs
+  public static <T> T[] samples(int count,Random rand,T... ary) {
+    if(count < 1) {
+      return newArray(ary,0);
+    }
     if(count > ary.length) {
       count = ary.length;
     }
     
-    List<T> samples = new ArrayList<>();
-    
-    if(count < 1) {
-      return samples;
-    }
-    
     List<T> options = new ArrayList<>(Arrays.asList(ary));
+    T[] samples = newArray(ary,count);
     
-    for(; count > 0; --count) {
-      samples.add(options.remove((int)(Math.random() * options.size())));
+    for(int i = 0; i < count; ++i) {
+      samples[i] = options.remove(rand.nextInt(options.size()));
     }
     
     return samples;
   }
   
   @SafeVarargs
-  public static <T> List<T> samples(int count,Random rand,T... ary) {
-    if(count > ary.length) {
-      count = ary.length;
+  public static <T> T[] uniq(T... ary) {
+    if(ary.length < 2) {
+      return ary;
     }
     
-    List<T> samples = new ArrayList<>();
-    
-    if(count < 1) {
-      return samples;
-    }
-    
-    List<T> options = new ArrayList<>(Arrays.asList(ary));
-    
-    for(; count > 0; --count) {
-      samples.add(options.remove(rand.nextInt(options.size())));
-    }
-    
-    return samples;
-  }
-  
-  @SafeVarargs
-  public static <T> List<T> uniq(T... ary) {
+    Set<T> dups = new HashSet<>();
     List<T> uniqs = new ArrayList<>();
     
-    if(ary.length == 1) {
-      uniqs.add(ary[0]);
-    }
-    else if(ary.length > 1) {
-      Set<T> dups = new HashSet<>();
-      
-      for(T t: ary) {
-        if(!dups.contains(t)) {
-          dups.add(t);
-          uniqs.add(t);
-        }
+    for(T t: ary) {
+      if(!dups.contains(t)) {
+        dups.add(t);
+        uniqs.add(t);
       }
     }
     
-    return uniqs;
+    return toArray(ary,uniqs);
   }
   
-  public static <T> T[] uniq_mut(T[] ary) {
+  public static <T> T[] uniqMut(T[] ary) {
     if(ary.length < 2) {
       return ary;
     }
@@ -175,9 +225,18 @@ public class Arys {
     return ary;
   }
   
+  public static <T> T[] toArray(T[] ary,List<T> list) {
+    return list.toArray(newArray(ary,list.size()));
+  }
+  
   public static void main(String[] args) {
   }
   
   private Arys() {
+    throw new UnsupportedOperationException("Cannot construct a utility class");
+  }
+  
+  public static final class Rand {
+    public static final Random rand = new Random();
   }
 }
