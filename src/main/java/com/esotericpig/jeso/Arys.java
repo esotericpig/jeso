@@ -40,6 +40,8 @@ import java.util.Set;
  * @author Jonathan Bradley Whited (@esotericpig)
  */
 public final class Arys {
+  public static final String DEFAULT_JOIN_SEPARATOR = "";
+  
   @SafeVarargs
   public static <T> T[] compact(T... ary) {
     if(ary.length < 1) {
@@ -79,7 +81,7 @@ public final class Arys {
   
   @SafeVarargs
   public static <T> String join(T... ary) {
-    return joins("",ary);
+    return joins(DEFAULT_JOIN_SEPARATOR,ary);
   }
   
   @SafeVarargs
