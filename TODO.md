@@ -36,3 +36,4 @@
      - Can add/remove what is escaped/unescaped in Map
      - Can specify end tag; default: "
      - Can specify escape char; default: \
+- [ ] Add [SpotBugs](https://spotbugs.github.io/) to Gradle?
