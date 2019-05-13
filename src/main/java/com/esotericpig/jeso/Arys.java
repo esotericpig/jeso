@@ -139,7 +139,15 @@ public final class Arys {
   /**
    * <pre>
    * java.util.Arrays#copyOfRange(...) does the same thing.
+   * 
+   * This does not modify the {@code ary} arg.
    * </pre>
+   * 
+   * @param <T>    the type of array to create
+   * @param ary    the array to use for getting the Class data and component type
+   * @param length the length of the new array
+   * 
+   * @return the new array
    */
   @SuppressWarnings("unchecked")
   public static <T> T[] newArray(T[] ary,int length) {
