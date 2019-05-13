@@ -5,7 +5,6 @@
 - [ ] BotBuddy
     - [x] Add safe mode (if user moves mouse)
     - [x] Mac OS X support for paste
-    - [ ] Add documentation
     - [ ] Take in File or Array/List (of String); allow single/double quotes and/or Ruby heredocs:
         - `paste 999  493  "Fish"`
         - `enter 1427 500  "Sakana"`
@@ -37,3 +36,7 @@
      - Can specify end tag; default: "
      - Can specify escape char; default: \
 - [ ] Add [SpotBugs](https://spotbugs.github.io/) to Gradle?
+- [ ] Add appropriate documentation
+    - [ ] In all classes (Javadoc)
+    - [ ] In README.md
+    - [ ] In HACKING.md?
