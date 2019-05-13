@@ -32,8 +32,8 @@ import java.util.Set;
 // TODO: joins():       <primitives>
 // TODO: sample():      <primitives>
 // TODO: samples():     <primitives>
-// TODO: uniq():        <primitives>
-// TODO: uniqMut():     <primitives>
+// TODO: unique():      <primitives>
+// TODO: uniqueMut():   <primitives>
 // TODO: tests
 
 /**
@@ -187,7 +187,7 @@ public final class Arys {
   }
   
   @SafeVarargs
-  public static <T> T[] uniq(T... ary) {
+  public static <T> T[] unique(T... ary) {
     if(ary.length < 2) {
       return ary;
     }
@@ -205,7 +205,7 @@ public final class Arys {
     return toArray(ary,uniqs);
   }
   
-  public static <T> T[] uniqMut(T[] ary) {
+  public static <T> T[] uniqueMut(T[] ary) {
     if(ary.length < 2) {
       return ary;
     }
