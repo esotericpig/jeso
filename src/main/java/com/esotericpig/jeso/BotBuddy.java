@@ -87,12 +87,12 @@ import java.util.function.UnaryOperator;
  * 
  * @author Jonathan Bradley Whited (@esotericpig)
  * 
- * @see    BotBuddy.Builder
- * @see    Robot
- * @see    Clipboard
- * @see    MouseInfo#getPointerInfo()
- * @see    java.awt.PointerInfo#getLocation()
- * @see    Toolkit
+ * @see BotBuddy.Builder
+ * @see Robot
+ * @see Clipboard
+ * @see MouseInfo#getPointerInfo()
+ * @see java.awt.PointerInfo#getLocation()
+ * @see Toolkit
  */
 public class BotBuddy implements Cloneable {
   /**
