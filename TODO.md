@@ -32,3 +32,7 @@
     - f.out("%s[max_name] ","George");
     - f.end(); // Sends all to out
 - [ ] Add my LinkedList; for storing nodes for fast insertion
+- [ ] EscapeJava class
+     - Can add/remove what is escaped/unescaped in Map
+     - Can specify end tag; default: "
+     - Can specify escape char; default: \
