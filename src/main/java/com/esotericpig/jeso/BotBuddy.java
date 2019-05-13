@@ -172,6 +172,13 @@ public class BotBuddy implements Cloneable {
   }
   
   public BotBuddy(Builder builder) {
+    if(builder.tool == null) {
+      builder.tool(Toolkit.getDefaultToolkit());
+    }
+    if(builder.clip == null) {
+      builder.clip(builder.tool.getSystemClipboard());
+    }
+    
     // Set required vars first (other vars may depend on them)
     setBot(builder.bot);
     setClip(builder.clip);
@@ -586,24 +593,22 @@ public class BotBuddy implements Cloneable {
    */
   public static class Builder {
     protected int autoDelay = DEFAULT_AUTO_DELAY;
-    protected Robot bot;
-    protected Clipboard clip;
+    protected Robot bot = null;
+    protected Clipboard clip = null;
     protected int fastDelay = DEFAULT_FAST_DELAY;
     protected boolean isAutoDelay = true;
     protected boolean isAutoWaitForIdle = true;
     protected int longDelay = DEFAULT_LONG_DELAY;
     protected OSFamily osFamily = Sys.OS_FAMILY;
     protected int shortDelay = DEFAULT_SHORT_DELAY;
-    protected Toolkit tool;
+    protected Toolkit tool = null;
     
     public Builder() throws AWTException {
       this(new Robot());
     }
     
     public Builder(Robot bot) {
-      this.bot = bot;
-      tool = Toolkit.getDefaultToolkit();
-      clip = tool.getSystemClipboard();
+      bot(bot);
     }
     
     public Builder(GraphicsDevice screen) throws AWTException {
