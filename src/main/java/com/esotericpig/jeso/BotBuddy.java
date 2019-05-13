@@ -687,6 +687,21 @@ public class BotBuddy implements Cloneable {
   }
   
   public static class SafeModeException extends RuntimeException {
+    public SafeModeException() {
+      this("User is active");
+    }
+    
+    public SafeModeException(Throwable cause) {
+      super(cause);
+    }
+    
+    public SafeModeException(String message) {
+      super(message);
+    }
+    
+    public SafeModeException(String message,Throwable cause) {
+      super(message,cause);
+    }
   }
   
   /**
