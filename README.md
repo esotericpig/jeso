@@ -10,10 +10,15 @@ Name = Java + gesso + esoteric.
 
 ## Contents
 
+- [Requirements](#requirements)
 - [Using](#using)
 - [Code](#code)
     - [BotBuddy](#botbuddy)
 - [License](#license)
+
+## [Requirements](#contents)
+
+- Java 8 or later
 
 ## [Using](#contents)
 
@@ -34,9 +39,10 @@ Alternatively you can build everything into one jar:
 
 ## [Code](#contents)
 
-| Class                 | Summary |
-| --------------------- | ------- |
+| Class | Summary |
+| ----- | ------- |
 | [BotBuddy](#botbuddy) | A simple wrapper around [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html) |
+| [BotBuddyCode](#botbuddycode) | A very simple scripting language interpreter for [BotBuddy](#botbuddy) |
 
 ### [BotBuddy](#code)
 
@@ -158,6 +164,10 @@ Similar projects to [BotBuddy](src/main/java/com/esotericpig/jeso/BotBuddy.java)
 
 - Robot-Utils by Denys Shynkarenko (@Denysss) [[GitHub](https://github.com/Denysss/Robot-Utils)]
 - Automaton by Renato Athaydes (@renatoathaydes) [[GitHub](https://github.com/renatoathaydes/Automaton)]
+
+### [BotBuddyCode](#code)
+
+[BotBuddyCode](src/main/java/com/esotericpig/jeso/BotBuddyCode.java) is a very simple scripting language interpreter for [BotBuddy](#botbuddy).
 
 ## [License](#contents)
 [GNU LGPL v3+](LICENSE)
