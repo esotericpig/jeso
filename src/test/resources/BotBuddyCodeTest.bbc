@@ -1,0 +1,72 @@
+# This is a comment
+test00
+test01 # comment
+
+# Double quotes
+test02 10 "Hello" 20 # comment
+
+# Don't trim "Hello "
+test03 10 20 "Hello 
+\"World\"" 30 40 # comment
+
+# Single quotes
+test04 'Hello 
+\'World\''
+
+# Keep parsing args
+test05 "Hello
+World" 10 20
+
+# Special quote to change the terminator
+test06 %^Hello \^
+World^
+test07 %(Hello (\)
+World)
+test08 %/Hello \/ World/
+test09 %<Hello \> World>
+test10 %[Hello \] World]
+test11 %{Hello \} World}
+
+# Heredoc
+test12 <<EOS
+    Hello      
+      World    
+Everybody!
+EOS?
+
+EOS
+
+# Heredoc tag can be indented
+test13 <<EOS
+    Hello      
+      World    
+  EOS
+
+# Keep parsing args
+test14 <<EOS
+    Hello      
+      World    
+  EOS 10 20
+
+# Heredoc text indention can be cut
+test15 <<-EOS
+    Hello      
+      World    
+  EOS
+test16 <<-EOS
+    Hello      
+      World    
+ Lowest
+  EOS
+test17 <<-EOS
+    Hello      
+      World    
+
+  EOS
+test18 <<-EOS
+    These are all
+    on the same line.
+    Don't you like
+    heredoc?
+      -Shakespeare
+  EOS
