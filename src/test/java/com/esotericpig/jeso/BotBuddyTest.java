@@ -180,7 +180,7 @@ public class BotBuddyTest {
     System.out.println("Y coord: " + BotBuddy.getYCoord());
   }
   
-  public boolean isHeadless() {
+  public static boolean isHeadless() {
     boolean isHeadless = BotBuddy.isHeadless();
     
     if(isHeadless) {
