@@ -19,6 +19,7 @@
 package com.esotericpig.jeso;
 
 import java.awt.AWTException;
+import java.awt.Point;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -31,9 +32,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.Locale;
+import java.util.Map;
+
+import java.util.regex.Pattern;
 
 /**
  * <pre>
@@ -54,6 +60,69 @@ public class BotBuddyCode implements Closeable {
   public static final int DEFAULT_COMMENT_CHAR = '#';
   public static final int DEFAULT_ESCAPE_CHAR = '\\';
   
+  public static Map<String,Instructor> addDefaultInstructors(Map<String,Instructor> instructors) {
+    // TODO:
+    // delay,delayAuto,delayFast,delayLong,delayShort
+    // doubleClick x4
+    // enter x4
+    // key
+    // move
+    // pressKey, pressMouse, releaseKey, releaseMouse
+    // printScreen x2
+    // waitForIdle
+    // wheel
+    // setAutoDelay x2
+    // setAutoWaitForIdle
+    // setFastDelay,setLongDelay,setShortDelay
+    // setOSFamily
+    // getPixel
+    // getOSFamily
+    // rest of getters
+    
+    // Static methods
+    instructors.put("getcoords",(buddy,inst) -> {
+      Point coords = BotBuddy.getCoords();
+      System.out.println("(" + coords.x + "," + coords.y + ")");
+    });
+    instructors.put("getxcoord",(buddy,inst) -> System.out.println(BotBuddy.getXCoord()));
+    instructors.put("getycoord",(buddy,inst) -> System.out.println(BotBuddy.getYCoord()));
+    
+    // Main methods
+    instructors.put("beep",(buddy,inst) -> buddy.beep());
+    instructors.put("beginsafemode",(buddy,inst) -> buddy.beginSafeMode());
+    instructors.put("click",(buddy,inst) -> {
+      switch(inst.getArgsLength()) {
+        case 0: buddy.click(); break;
+        case 1: buddy.click(inst.getArg(0).parseInt()); break;
+        case 2: buddy.click(inst.getArg(0).parseInt(),inst.getArg(1).parseInt()); break;
+        default:
+          buddy.click(inst.getArg(0).parseInt(),inst.getArg(1).parseInt(),inst.getArg(2).parseInt());
+          break;
+      }
+    });
+    instructors.put("copy",(buddy,inst) -> {
+      inst.checkArgsLength(1);
+      buddy.copy(inst.getArg(0).getValue());
+    });
+    instructors.put("endsafemode",(buddy,inst) -> buddy.endSafeMode());
+    instructors.put("paste",(buddy,inst) -> {
+      switch(inst.getArgsLength()) {
+        case 0: buddy.paste(); break;
+        case 1: buddy.paste(inst.getArg(0).getValue()); break;
+        case 2: buddy.paste(inst.getArg(0).parseInt(),inst.getArg(1).parseInt()); break;
+        default:
+          buddy.paste(inst.getArg(0).parseInt(),inst.getArg(1).parseInt(),inst.getArg(2).getValue());
+          break;
+      }
+    });
+    
+    // Setters
+    
+    // Getters
+    
+    return instructors;
+  }
+  
   public static Builder builder(BufferedReader input) {
     return new Builder(input);
   }
@@ -71,11 +140,12 @@ public class BotBuddyCode implements Closeable {
   protected int commentChar;
   protected int escapeChar;
   protected BufferedReader input = null;
-  protected StringBuilder instructions = new StringBuilder();
+  protected Map<String,Instructor> instructors = null;
   protected String line = null;
   protected int lineChar = 0;
   protected int lineIndex = 0;
   protected int lineNumber = 0;
+  protected StringBuilder output = new StringBuilder();
   
   public BotBuddyCode(Builder builder) throws AWTException,IOException {
     if(builder.buddy == null) {
@@ -93,11 +163,16 @@ public class BotBuddyCode implements Closeable {
         builder.input(Files.newBufferedReader(builder.path,builder.charset));
       }
     }
+    if(builder.instructors == null) {
+      builder.instructors(new HashMap<>()); // TODO: init capacity
+      addDefaultInstructors(builder.instructors);
+    }
     
     setBuddy(builder.buddy);
     setCommentChar(builder.commentChar);
     setEscapeChar(builder.escapeChar);
     input = builder.input;
+    instructors = builder.instructors;
   }
   
   @Override
@@ -105,8 +180,8 @@ public class BotBuddyCode implements Closeable {
     // For Garbage Collection (GC)
     buddy = null;
     buffer = null;
-    instructions = null;
     line = null;
+    output = null;
     
     if(input != null) {
       input.close();
@@ -123,9 +198,9 @@ public class BotBuddyCode implements Closeable {
   }
   
   public String interpret(boolean execute) throws IOException,ParseException {
-    instructions.setLength(0);
     line = null;
     lineNumber = 0;
+    output.setLength(0);
     
     while(readLine() != null) {
       resetLine();
@@ -137,11 +212,8 @@ public class BotBuddyCode implements Closeable {
       }
       
       // Instruction name
+      LinePoint linePoint = new LinePoint(lineNumber,lineIndex + 1);
       String name = readToWhitespace().toString();
-      
-      if(!execute) {
-        instructions.append('[').append(name).append("]\n");
-      }
       
       // Instruction args
       List<Arg> args = new ArrayList<>();
@@ -172,21 +244,33 @@ public class BotBuddyCode implements Closeable {
         args.add(new Arg(buffer.toString(),prevLineNumber,prevLineIndex + 1));
         
         if(lineIndex == prevLineIndex && lineNumber == prevLineNumber) {
-          throw new ParseException("Internal code is broken causing an infinite loop",lineNumber,lineIndex);
+          throw new ParseException("Internal code is broken causing an infinite loop",lineNumber
+            ,lineIndex + 1);
         }
       } while(line != null && hasLineChar()); // nextLine() might have been called
       
+      // Execute/output instruction
+      Instruction instruction = new Instruction(name,args,linePoint);
+      
       if(execute) {
-        // TODO: execute
+        // TODO: throw exception if doesn't exist
+        Instructor instructor = instructors.get(instruction.getID());
+        
+        if(instructor != null) {
+          instructor.execute(buddy,instruction);
+        }
       }
       else {
+        // TODO: add ID and whether inst exists
+        output.append('[').append(instruction.getName()).append("]\n");
+        
         for(Arg arg: args) {
-          instructions.append("- \"").append(arg.getValue()).append("\"\n");
+          output.append("- \"").append(arg.getValue()).append("\"\n");
         }
       }
     }
     
-    return instructions.toString();
+    return output.toString();
   }
   
   public String interpretDryRun() throws IOException,ParseException {
@@ -477,6 +561,10 @@ public class BotBuddyCode implements Closeable {
     return input;
   }
   
+  public Map<String,Instructor> getInstructors() {
+    return instructors;
+  }
+  
   public boolean hasLineChar() {
     return lineIndex < line.length();
   }
@@ -485,15 +573,30 @@ public class BotBuddyCode implements Closeable {
     return lineIndex >= line.length();
   }
   
-  public static class Arg {
-    protected int lineColumn;
-    protected int lineNumber;
+  public static class Arg extends LinePoint {
     protected String value;
     
     public Arg(String value,int lineNumber,int lineColumn) {
-      this.lineColumn = lineColumn;
-      this.lineNumber = lineNumber;
+      super(lineNumber,lineColumn);
+      
+      if(value == null) {
+        throw new IllegalArgumentException("Value cannot be null");
+      }
+      
       this.value = value;
+    }
+    
+    public int parseInt() throws ParseException {
+      try {
+        return Integer.parseInt(value);
+      }
+      catch(NumberFormatException ex) {
+        throw new ParseException("Arg '" + value + "' must be an int",this,ex);
+      }
+    }
+    
+    public String getValue() {
+      return value;
     }
     
     @Override
@@ -505,18 +608,6 @@ public class BotBuddyCode implements Closeable {
       
       return str.toString();
     }
-    
-    public int getLineColumn() {
-      return lineColumn;
-    }
-    
-    public int getLineNumber() {
-      return lineNumber;
-    }
-    
-    public String getValue() {
-      return value;
-    }
   }
   
   public static class Builder {
@@ -525,6 +616,7 @@ public class BotBuddyCode implements Closeable {
     protected int commentChar = DEFAULT_COMMENT_CHAR;
     protected int escapeChar = DEFAULT_ESCAPE_CHAR;
     protected BufferedReader input = null;
+    protected Map<String,Instructor> instructors = null;
     protected Path path = null;
     
     public Builder(BufferedReader input) {
@@ -580,6 +672,12 @@ public class BotBuddyCode implements Closeable {
       return this;
     }
     
+    public Builder instructors(Map<String,Instructor> instructors) {
+      this.instructors = instructors;
+      
+      return this;
+    }
+    
     public Builder path(Path path) {
       this.path = path;
       
@@ -587,17 +685,125 @@ public class BotBuddyCode implements Closeable {
     }
   }
   
+  public static class Instruction extends LinePoint {
+    public static final Pattern ID_PATTERN = Pattern.compile("[\\s_\\-\\.]+"
+      ,Pattern.UNICODE_CHARACTER_CLASS);
+    
+    public static final String toID(String name) {
+      return ID_PATTERN.matcher(name).replaceAll("").toLowerCase(Locale.ENGLISH);
+    }
+    
+    protected Arg[] args;
+    protected String id;
+    protected String name;
+    
+    public Instruction(String name,Arg[] args,int lineNumber,int lineColumn) {
+      super(lineNumber,lineColumn);
+      
+      if(name == null) {
+        throw new IllegalArgumentException("Name cannot be null");
+      }
+      if(args == null) {
+        throw new IllegalArgumentException("Args cannot be null");
+      }
+      
+      this.args = args;
+      this.id = toID(name);
+      this.name = name;
+    }
+    
+    public Instruction(String name,List<Arg> args,int lineNumber,int lineColumn) {
+      this(name,args.toArray(new Arg[args.size()]),lineNumber,lineColumn);
+    }
+    
+    public Instruction(String name,Arg[] args,LinePoint linePoint) {
+      this(name,args,linePoint.lineNumber,linePoint.lineColumn);
+    }
+    
+    public Instruction(String name,List<Arg> args,LinePoint linePoint) {
+      this(name,args,linePoint.lineNumber,linePoint.lineColumn);
+    }
+    
+    public void checkArgsLength(int length) throws ParseException {
+      if(args.length < length) {
+        throw new ParseException("Must have " + length + " arg(s)",this);
+      }
+    }
+    
+    public Arg getArg(int index) {
+      return args[index];
+    }
+    
+    public Arg[] getArgs() {
+      return args;
+    }
+    
+    public int getArgsLength() {
+      return args.length;
+    }
+    
+    public String getID() {
+      return id;
+    }
+    
+    public String getName() {
+      return name;
+    }
+  }
+  
+  @FunctionalInterface
+  public static interface Instructor {
+    public abstract void execute(BotBuddy buddy,Instruction inst) throws ParseException;
+  }
+  
+  public static class LinePoint {
+    protected int lineColumn;
+    protected int lineNumber;
+    
+    public LinePoint(int lineNumber,int lineColumn) {
+      this.lineColumn = lineColumn;
+      this.lineNumber = lineNumber;
+    }
+    
+    public int getLineColumn() {
+      return lineColumn;
+    }
+    
+    public int getLineNumber() {
+      return lineNumber;
+    }
+  }
+  
   public static class ParseException extends Exception {
+    public static String buildMessage(String message,int lineNumber,int lineColumn) {
+      StringBuilder msg = new StringBuilder(message.length() + 9);
+      
+      msg.append(lineNumber).append(':').append(lineColumn);
+      msg.append(": ").append(message);
+      
+      return msg.toString();
+    }
+    
     protected int lineColumn;
     protected int lineNumber;
     
     public ParseException(String message,int lineNumber,int lineColumn) {
-      super((new StringBuilder(message.length() + 9))
-        .append(lineNumber).append(':').append(lineColumn).append(": ").append(message)
-        .toString());
+      this(message,lineNumber,lineColumn,null);
+    }
+    
+    public ParseException(String message,int lineNumber,int lineColumn,Throwable cause) {
+      super(buildMessage(message,lineNumber,lineColumn),cause);
       
       this.lineColumn = lineColumn;
       this.lineNumber = lineNumber;
+    }
+    
+    public ParseException(String message,LinePoint linePoint) {
+      this(message,linePoint.getLineNumber(),linePoint.getLineColumn());
+    }
+    
+    public ParseException(String message,LinePoint linePoint,Throwable cause) {
+      this(message,linePoint.getLineNumber(),linePoint.getLineColumn(),cause);
     }
     
     public int getLineColumn() {
@@ -612,7 +818,8 @@ public class BotBuddyCode implements Closeable {
   // TODO: remove
   public static void main(String[] args) {
     try(BotBuddyCode bbc = BotBuddyCode.builder(java.nio.file.Paths.get("bb.rb")).build()) {
-      System.out.print(bbc.interpretDryRun());
+      //System.out.print(bbc.interpretDryRun());
+      bbc.interpret();
     }
     catch(Exception ex) {
       System.out.println(ex);
