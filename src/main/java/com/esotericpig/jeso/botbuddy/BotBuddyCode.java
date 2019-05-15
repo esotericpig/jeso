@@ -16,7 +16,7 @@
  * along with jeso. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.esotericpig.jeso;
+package com.esotericpig.jeso.botbuddy;
 
 import java.awt.AWTException;
 import java.awt.Point;

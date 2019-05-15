@@ -46,7 +46,7 @@ Alternatively you can build everything into one jar:
 
 ### [BotBuddy](#code)
 
-[BotBuddy](src/main/java/com/esotericpig/jeso/BotBuddy.java) is a simple wrapper around [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html).
+[BotBuddy](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddy.java) is a simple wrapper around [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html).
 
 For one example, it can be used for moving the mouse and pasting in text.
 
@@ -57,7 +57,7 @@ For one example, it can be used for moving the mouse and pasting in text.
 Example usage:
 
 ```Java
-import com.esotericpig.jeso.BotBuddy;
+import com.esotericpig.jeso.botbuddy.BotBuddy;
 
 // ...class...main...
 
@@ -160,14 +160,14 @@ Alternatively, you can do one of the following for getting the mouse coordinates
 
 - Linux: Install `xdotool` and run `xdotool getmouselocation`
 
-Similar projects to [BotBuddy](src/main/java/com/esotericpig/jeso/BotBuddy.java):
+Similar projects:
 
 - Robot-Utils by Denys Shynkarenko (@Denysss) [[GitHub](https://github.com/Denysss/Robot-Utils)]
 - Automaton by Renato Athaydes (@renatoathaydes) [[GitHub](https://github.com/renatoathaydes/Automaton)]
 
 ### [BotBuddyCode](#code)
 
-[BotBuddyCode](src/main/java/com/esotericpig/jeso/BotBuddyCode.java) is a very simple scripting language interpreter for [BotBuddy](#botbuddy).
+[BotBuddyCode](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddyCode.java) is a very simple scripting language interpreter for [BotBuddy](#botbuddy).
 
 ## [License](#contents)
 [GNU LGPL v3+](LICENSE)

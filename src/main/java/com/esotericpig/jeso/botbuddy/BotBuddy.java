@@ -16,7 +16,10 @@
  * along with jeso. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.esotericpig.jeso;
+package com.esotericpig.jeso.botbuddy;
+
+import com.esotericpig.jeso.OSFamily;
+import com.esotericpig.jeso.Sys;
 
 import java.awt.AWTException;
 import java.awt.Color;
