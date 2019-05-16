@@ -40,3 +40,4 @@
     - [ ] In all classes (Javadoc)
     - [ ] In README.md
     - [ ] In HACKING.md?
+- [ ] Mimic Ruby's [OptionParser](https://ruby-doc.org/stdlib-2.6.3/libdoc/optparse/rdoc/OptionParser.html), but add sub-commands capability? Now possible thanks to Java 8 lambdas.
