@@ -123,7 +123,7 @@ buddy.getScreenWidth();
 buddy.get*(*);
 ```
 
-A Safe Mode has been added for convenience. If the user ever moves their mouse, then **BotBuddy.SafeModeException** will be thrown. After each operation, it just checks the mouse coordinates, while updating its internal coordinates accordingly to the operations. Example:
+A Safe Mode has been added for convenience. If the user ever moves their mouse, then **UserIsActiveException** will be thrown. After each operation, it just checks the mouse coordinates, while updating its internal coordinates accordingly to the operations. Example:
 
 ```Java
 BotBuddy buddy = BotBuddy.builder().build();
@@ -138,7 +138,7 @@ try {
        .enter(1470,131,"Daddy")
        .endSafeMode();
 }
-catch(BotBuddy.SafeModeException ex) {
+catch(UserIsActiveException ex) {
   // If you move your mouse, "Daddy" will not be executed
   System.out.println("User is active! Stopping all automatic operations.");
 }
@@ -158,7 +158,7 @@ When writing your own scripts, you can use these helper methods:
 
 Alternatively, you can do one of the following for getting the mouse coordinates:
 
-- Linux: Install `xdotool` and run `xdotool getmouselocation`
+- Linux: Install `xdotool` and run `xdotool getmouselocation`.
 
 Similar projects:
 

@@ -41,7 +41,7 @@ import java.awt.event.KeyEvent;
 
 import java.awt.image.BufferedImage;
 
-import java.util.function.UnaryOperator;
+// TODO: add leftClick, rightClick, drag
 
 /**
  * <pre>
@@ -59,7 +59,7 @@ import java.util.function.UnaryOperator;
  *   new BotBuddy.Builder().build();       // Not recommended, but fine
  *   new BotBuddy(new BotBuddy.Builder()); // Not recommended, but fine
  * 
- * There's a Safe Mode that throws BotBuddy.SafeModeException if the user moves the mouse:
+ * There's a Safe Mode that throws UserIsActiveException if the user moves the mouse:
  *   try {
  *     buddy.beginSafeMode()
  *          .enter(1470,131,"Mommy")
@@ -67,7 +67,7 @@ import java.util.function.UnaryOperator;
  *          .enter(1470,131,"Daddy")
  *          .endSafeMode();
  *   }
- *   catch(BotBuddy.SafeModeException ex) {
+ *   catch(UserIsActiveException ex) {
  *     // If you move your mouse, "Daddy" will not be executed
  *     System.out.println("User is active! Stopping all automatic operations.");
  *   }
@@ -199,6 +199,11 @@ public class BotBuddy implements Cloneable {
     }
   }
   
+  @Override
+  public BotBuddy clone() {
+    return new BotBuddy(this);
+  }
+  
   public BotBuddy beep() {
     tool.beep();
     
@@ -231,7 +236,7 @@ public class BotBuddy implements Cloneable {
       }
       
       if(!getCoords().equals(safeCoords)) {
-        throw new SafeModeException();
+        throw new UserIsActiveException();
       }
     }
     
@@ -255,11 +260,6 @@ public class BotBuddy implements Cloneable {
   
   public BotBuddy click(int x,int y,int button) {
     return move(x,y).click(button);
-  }
-  
-  @Override
-  public BotBuddy clone() {
-    return new BotBuddy(this);
   }
   
   public BotBuddy copy(String text) {
@@ -694,42 +694,17 @@ public class BotBuddy implements Cloneable {
     }
   }
   
-  public static class SafeModeException extends RuntimeException {
-    public SafeModeException() {
-      this("User is active");
-    }
-    
-    public SafeModeException(Throwable cause) {
-      super(cause);
-    }
-    
-    public SafeModeException(String message) {
-      super(message);
-    }
-    
-    public SafeModeException(String message,Throwable cause) {
-      super(message,cause);
-    }
-  }
-  
   /**
    * <pre>
    * This class can really be used for any automated operations, not just
    *   keyboard shortcuts.
-   * 
-   * Extends UnaryOperator and changes #apply() to #press() so that if the
-   *   internals change in the future, it won't affect users that much.
    * </pre>
    * 
    * @author Jonathan Bradley Whited (@esotericpig)
    */
   @FunctionalInterface
-  public static interface Shortcut extends UnaryOperator<BotBuddy> {
+  public static interface Shortcut {
     public abstract BotBuddy press(BotBuddy buddy);
-    
-    public default BotBuddy apply(BotBuddy buddy) {
-      return press(buddy);
-    }
   }
   
   public static class Shortcuts {
