@@ -1,66 +1,67 @@
-[test00]
-[test01]
-[test02]
-- "10"
-- "Hello"
-- "20"
-[test03]
-- "10"
-- "20"
-- "Hello 
-"World""
-- "30"
-- "40"
-[test04]
-- "Hello 
-'World'"
-[test05]
-- "Hello
-World"
-- "10"
-- "20"
-[test06]
-- "Hello ^
-World"
-[test07]
-- "Hello ()
-World"
-[test08]
-- "Hello / World"
-[test09]
-- "Hello > World"
-[test10]
-- "Hello ] World"
-[test11]
-- "Hello } World"
-[test12]
-- "    Hello      
+[test00:test00]:none
+[test01:test01]:none
+[test02:test02]:none
+- [0]: '10'
+- [1]: 'Hello'
+- [2]: '20'
+[test03:test03]:none
+- [0]: '10'
+- [1]: '20'
+- [2]: 'Hello 
+"World"'
+- [3]: '30'
+- [4]: '40'
+[test04:test04]:none
+- [0]: 'Hello 
+'World\' \ \a\b\c'
+[test05:test05]:none
+- [0]: 'Hello
+World'
+- [1]: '10'
+- [2]: '20'
+[test06:test06]:none
+- [0]: 'Hello ^
+World'
+[test07:test07]:none
+- [0]: 'Hello ()
+World'
+[test08:test08]:none
+- [0]: 'Hello / World'
+[test09:test09]:none
+- [0]: 'Hello > World'
+[test10:test10]:none
+- [0]: 'Hello ] World'
+[test11:test11]:none
+- [0]: 'Hello } World'
+[test12:test12]:none
+- [0]: '    Hello      
       World    
 Everybody!
+E
 EOS?
-"
-[test13]
-- "    Hello      
-      World    "
-[test14]
-- "    Hello      
-      World    "
-- "10"
-- "20"
-[test15]
-- "Hello      
-  World    "
-[test16]
-- "   Hello      
+'
+[test13:test13]:none
+- [0]: '    Hello      
+      World    '
+[test14:test14]:none
+- [0]: '    Hello      
+      World    '
+- [1]: '10'
+- [2]: '20'
+[test15:test15]:none
+- [0]: 'Hello      
+  World    '
+[test16:test16]:none
+- [0]: '   Hello      
      World    
-Lowest"
-[test17]
-- "    Hello      
+Lowest'
+[test17:test17]:none
+- [0]: '    Hello      
       World    
-"
-[test18]
-- "These are all
+'
+[test18:test18]:none
+- [0]: 'These are all
 on the same line.
 Don't you like
 heredoc?
-  -Shakespeare"
+  -Shakespeare'

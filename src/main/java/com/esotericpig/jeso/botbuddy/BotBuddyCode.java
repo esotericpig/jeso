@@ -30,12 +30,13 @@ import java.nio.charset.StandardCharsets;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -60,7 +61,7 @@ public class BotBuddyCode implements Closeable {
   public static final int DEFAULT_COMMENT_CHAR = '#';
   public static final int DEFAULT_ESCAPE_CHAR = '\\';
   
-  public static Map<String,Instructor> addDefaultInstructors(Map<String,Instructor> instructors) {
+  public static Map<String,Executor> addBaseExecutors(Map<String,Executor> executors) {
     // TODO:
     // delay,delayAuto,delayFast,delayLong,delayShort
     // doubleClick x4
@@ -80,39 +81,49 @@ public class BotBuddyCode implements Closeable {
     // rest of getters
     
     // Static methods
-    instructors.put("getcoords",(buddy,inst) -> {
+    executors.put("getcoords",(buddy,inst) -> {
       Point coords = BotBuddy.getCoords();
       System.out.println("(" + coords.x + "," + coords.y + ")");
     });
-    instructors.put("getxcoord",(buddy,inst) -> System.out.println(BotBuddy.getXCoord()));
-    instructors.put("getycoord",(buddy,inst) -> System.out.println(BotBuddy.getYCoord()));
+    executors.put("getxcoord",(buddy,inst) -> System.out.println(BotBuddy.getXCoord()));
+    executors.put("getycoord",(buddy,inst) -> System.out.println(BotBuddy.getYCoord()));
     
     // Main methods
-    instructors.put("beep",(buddy,inst) -> buddy.beep());
-    instructors.put("beginsafemode",(buddy,inst) -> buddy.beginSafeMode());
-    instructors.put("click",(buddy,inst) -> {
-      switch(inst.getArgsLength()) {
+    executors.put("beep",(buddy,inst) -> buddy.beep());
+    executors.put("beginsafemode",(buddy,inst) -> buddy.beginSafeMode());
+    executors.put("click",(buddy,inst) -> {
+      switch(inst.args.length) {
         case 0: buddy.click(); break;
-        case 1: buddy.click(inst.getArg(0).parseInt()); break;
-        case 2: buddy.click(inst.getArg(0).parseInt(),inst.getArg(1).parseInt()); break;
+        case 1: buddy.click(inst.args[0].parseInt()); break;
+        case 2: buddy.click(inst.args[0].parseInt(),inst.args[1].parseInt()); break;
         default:
-          buddy.click(inst.getArg(0).parseInt(),inst.getArg(1).parseInt(),inst.getArg(2).parseInt());
+          buddy.click(inst.args[0].parseInt(),inst.args[1].parseInt(),inst.args[2].parseInt());
           break;
       }
     });
-    instructors.put("copy",(buddy,inst) -> {
-      inst.checkArgsLength(1);
-      buddy.copy(inst.getArg(0).getValue());
-    });
-    instructors.put("endsafemode",(buddy,inst) -> buddy.endSafeMode());
-    instructors.put("paste",(buddy,inst) -> {
-      switch(inst.getArgsLength()) {
+    executors.put("copy",(buddy,inst) -> buddy.copy(inst.getArg(0).value));
+    executors.put("endsafemode",(buddy,inst) -> buddy.endSafeMode());
+    executors.put("paste",(buddy,inst) -> {
+      switch(inst.args.length) {
         case 0: buddy.paste(); break;
-        case 1: buddy.paste(inst.getArg(0).getValue()); break;
-        case 2: buddy.paste(inst.getArg(0).parseInt(),inst.getArg(1).parseInt()); break;
+        case 1: buddy.paste(inst.args[0].value); break;
+        case 2: buddy.paste(inst.args[0].parseInt(),inst.args[1].parseInt()); break;
         default:
-          buddy.paste(inst.getArg(0).parseInt(),inst.getArg(1).parseInt(),inst.getArg(2).getValue());
+          buddy.paste(inst.args[0].parseInt(),inst.args[1].parseInt(),inst.args[2].value);
           break;
+      }
+    });
+    
+    // Extra methods
+    executors.put("puts",(buddy,inst) -> {
+      if(inst.args.length < 1) {
+        System.out.println();
+      }
+      else {
+        for(Arg arg: inst.args) {
+          System.out.print(arg.value);
+        }
+        System.out.println();
       }
     });
     
@@ -120,7 +131,7 @@ public class BotBuddyCode implements Closeable {
     
     // Getters
     
-    return instructors;
+    return executors;
   }
   
   public static Builder builder(BufferedReader input) {
@@ -139,8 +150,8 @@ public class BotBuddyCode implements Closeable {
   protected StringBuilder buffer = new StringBuilder();
   protected int commentChar;
   protected int escapeChar;
+  protected Map<String,Executor> executors;
   protected BufferedReader input = null;
-  protected Map<String,Instructor> instructors = null;
   protected String line = null;
   protected int lineChar = 0;
   protected int lineIndex = 0;
@@ -150,6 +161,9 @@ public class BotBuddyCode implements Closeable {
   public BotBuddyCode(Builder builder) throws AWTException,IOException {
     if(builder.buddy == null) {
       builder.buddy(BotBuddy.builder().build());
+    }
+    if(builder.executors == null) {
+      builder.executors(DefaultExecutors.defaultExecutors);
     }
     if(builder.input == null) {
       if(builder.path == null) {
@@ -163,23 +177,21 @@ public class BotBuddyCode implements Closeable {
         builder.input(Files.newBufferedReader(builder.path,builder.charset));
       }
     }
-    if(builder.instructors == null) {
-      builder.instructors(new HashMap<>()); // TODO: init capacity
-      addDefaultInstructors(builder.instructors);
-    }
     
     setBuddy(builder.buddy);
     setCommentChar(builder.commentChar);
     setEscapeChar(builder.escapeChar);
+    setExecutors(builder.executors);
     input = builder.input;
-    instructors = builder.instructors;
   }
   
   @Override
   public void close() throws IOException {
     // For Garbage Collection (GC)
+    // - Do NOT call clear(), etc., as Builder may be used again to build a new one
     buddy = null;
     buffer = null;
+    executors = null;
     line = null;
     output = null;
     
@@ -189,21 +201,16 @@ public class BotBuddyCode implements Closeable {
     }
   }
   
-  public void incLineChar() {
-    lineIndex += Character.charCount(lineChar);
-  }
-  
-  public void interpret() throws IOException,ParseException {
+  public void interpret() throws IOException,ParseCodeException {
     interpret(true);
   }
   
-  public String interpret(boolean execute) throws IOException,ParseException {
+  public String interpret(boolean execute) throws IOException,ParseCodeException {
     line = null;
     lineNumber = 0;
     output.setLength(0);
     
-    while(readLine() != null) {
-      resetLine();
+    while(nextLine() != null) {
       seekToNonWhitespace();
       
       // Ignore empty line or comment (handled in seek)
@@ -212,7 +219,7 @@ public class BotBuddyCode implements Closeable {
       }
       
       // Instruction name
-      LinePoint linePoint = new LinePoint(lineNumber,lineIndex + 1);
+      LineOfCode loc = new LineOfCode(lineNumber,lineIndex);
       String name = readToWhitespace().toString();
       
       // Instruction args
@@ -241,31 +248,49 @@ public class BotBuddyCode implements Closeable {
           readToWhitespace();
         }
         
-        args.add(new Arg(buffer.toString(),prevLineNumber,prevLineIndex + 1));
+        args.add(new Arg(buffer.toString(),prevLineNumber,prevLineIndex));
         
+        // Was there a read/seek above? Or are we caught in an infinite loop parsing the same char?
         if(lineIndex == prevLineIndex && lineNumber == prevLineNumber) {
-          throw new ParseException("Internal code is broken causing an infinite loop",lineNumber
-            ,lineIndex + 1);
+          throw new ParseCodeException("Internal code is broken causing an infinite loop",lineNumber
+            ,lineIndex);
         }
       } while(line != null && hasLineChar()); // nextLine() might have been called
       
       // Execute/output instruction
-      Instruction instruction = new Instruction(name,args,linePoint);
+      Instruction instruction = new Instruction(name,args,loc);
       
       if(execute) {
-        // TODO: throw exception if doesn't exist
-        Instructor instructor = instructors.get(instruction.getID());
+        Executor executor = executors.get(instruction.id);
         
-        if(instructor != null) {
-          instructor.execute(buddy,instruction);
+        if(executor == null) {
+          throw new ParseCodeException("Instruction '" + instruction.id + "' from '" + instruction.name
+            + "' does not exist",instruction.loc);
         }
+        
+        executor.execute(buddy,instruction);
       }
       else {
-        // TODO: add ID and whether inst exists
-        output.append('[').append(instruction.getName()).append("]\n");
+        // WARNING: If you change this, update "/src/test/resources/BotBuddyCodeTestOutput.txt",
+        //            else, the test will fail. For this reason, don't use #toString() methods.
+        output.append('[');
+        output.append(instruction.id).append(':').append(instruction.name);
+        output.append("]:(");
+        output.append(instruction.loc.getNumber()).append(':').append(instruction.loc.getColumn());
+        output.append("):");
+        output.append(executors.containsKey(instruction.id) ? "exists" : "none");
+        output.append('\n');
         
-        for(Arg arg: args) {
-          output.append("- \"").append(arg.getValue()).append("\"\n");
+        for(int i = 0; i < instruction.args.length; ++i) {
+          Arg arg = instruction.args[i];
+          
+          output.append("- [");
+          output.append(i);
+          output.append("]:(");
+          output.append(arg.loc.getNumber()).append(':').append(arg.loc.getColumn());
+          output.append("): '");
+          output.append(arg.value);
+          output.append("'\n");
         }
       }
     }
@@ -273,111 +298,123 @@ public class BotBuddyCode implements Closeable {
     return output.toString();
   }
   
-  public String interpretDryRun() throws IOException,ParseException {
+  public String interpretDryRun() throws IOException,ParseCodeException {
     return interpret(false);
   }
   
-  public StringBuilder readHeredoc() throws IOException,ParseException {
+  public String nextLine() throws IOException {
+    if((line = input.readLine()) != null) {
+      lineChar = 0;
+      lineIndex = 0;
+      ++lineNumber;
+    }
+    
+    return line;
+  }
+  
+  public int nextLineChar() {
+    lineChar = line.codePointAt(lineIndex);
+    lineIndex += Character.charCount(lineChar);
+    
+    return lineChar;
+  }
+  
+  public StringBuilder readHeredoc() throws IOException,ParseCodeException {
     // '<...' instead of '<<...'
-    incLineChar();
-    if(!hasLineChar() || readLineChar() != '<') {
-      throw new ParseException("Invalid heredoc '<' instead of '<<' or unquoted string",lineNumber,lineIndex);
+    if(!hasLineChar() || nextLineChar() != '<') {
+      throw new ParseCodeException("Invalid heredoc '<' instead of '<<' or unquoted string",lineNumber
+        ,lineIndex);
     }
-    
     // '<<' with EOL
-    incLineChar();
     if(!hasLineChar()) {
-      throw new ParseException("Invalid heredoc without a tag or unquoted string",lineNumber,lineIndex);
+      throw new ParseCodeException("Invalid heredoc without a tag or unquoted string",lineNumber,lineIndex);
     }
     
-    boolean isIndent = (readLineChar() == '-');
+    boolean isIndent = (nextLineChar() == '-');
     
     if(isIndent) {
-      incLineChar();
+      nextLineChar();
     }
     
-    int prevLineIndex = lineIndex;
+    int prevLineColumn = lineIndex;
     String endTag = readToLineEnd().toString();
     
     // '<<-' with EOL
     if(endTag.isEmpty()) {
-      throw new ParseException("Invalid heredoc without a tag or unquoted string",lineNumber,prevLineIndex);
+      throw new ParseCodeException("Invalid heredoc without a tag or unquoted string",lineNumber
+        ,prevLineColumn);
     }
     // '<< ...' or '<<- ...'
     if(!endTag.equals(endTag.trim())) {
-      throw new ParseException("Invalid heredoc with spaces or unquoted string",lineNumber,prevLineIndex);
+      throw new ParseCodeException("Invalid heredoc with spaces or unquoted string",lineNumber
+        ,prevLineColumn);
     }
     
-    List<String> heredoc = new LinkedList<>();
+    // Read the heredoc lines and (possible) indent (<<-)
+    List<String> heredocLines = new LinkedList<>();
     int minIndent = Integer.MAX_VALUE;
     
-    while(readLine() != null) {
+    while(nextLine() != null) {
       int indent = 0;
       
-      resetLine();
       buffer.setLength(0);
       
-      // Read to non-whitespace
-      for(; hasLineChar(); incLineChar(), indent += Character.charCount(lineChar)) {
-        buffer.appendCodePoint(readLineChar());
+      // Read to non-whitespace for (possible) indent (<<-)
+      // - Don't do "indent += Character.charCount(lineChar)" I think; could cause weird results
+      for(; hasLineChar(); ++indent) {
+        buffer.appendCodePoint(nextLineChar());
         
         if(!Character.isWhitespace(lineChar)) {
           break;
         }
       }
       
-      if(hasLineChar()) {
-        // Is end tag?
-        if(lineChar == endTag.codePointAt(0)) {
-          boolean isEndTag = false;
+      // Is end tag?
+      if(lineChar == endTag.codePointAt(0)) {
+        boolean isEndTag = false;
+        
+        for(int i = 1; hasLineChar();) {
+          int endTagChar = endTag.codePointAt(i);
           
-          incLineChar();
+          buffer.appendCodePoint(nextLineChar());
           
-          for(int i = 1; hasLineChar(); incLineChar()) {
-            int endTagChar = endTag.codePointAt(i);
-            
-            buffer.appendCodePoint(readLineChar());
-            
-            // Not end tag: "Everybody!"
-            if(lineChar != endTagChar) {
-              break;
-            }
-            
-            // Last char of end tag
-            if((i += Character.charCount(endTagChar)) >= endTag.length()) {
-              incLineChar();
-              
-              if(hasLineChar()) {
-                // Is end tag: "EOS 10 20"
-                if(Character.isWhitespace(readLineChar())) {
-                  isEndTag = true;
-                }
-                // Not end tag: "EOS?"
-                else {
-                  buffer.appendCodePoint(lineChar);
-                }
-              }
-              // Is end tag: "EOS"
-              else {
-                isEndTag = true;
-              }
-              
-              break;
-            }
+          // Not end tag: "Everybody!"
+          if(lineChar != endTagChar) {
+            break;
           }
           
-          if(isEndTag) {
+          // Last char of end tag
+          if((i += Character.charCount(endTagChar)) >= endTag.length()) {
+            if(hasLineChar()) {
+              // Is end tag: "EOS 10 20"
+              if(Character.isWhitespace(nextLineChar())) {
+                isEndTag = true;
+              }
+              // Not end tag: "EOS?"
+              else {
+                buffer.appendCodePoint(lineChar);
+              }
+            }
+            // Is end tag: "EOS" with EOL
+            else {
+              isEndTag = true;
+            }
+            
             break;
           }
         }
         
-        // Read rest of chars to line end
-        for(incLineChar(); hasLineChar(); incLineChar()) {
-          buffer.appendCodePoint(readLineChar());
+        if(isEndTag) {
+          break;
         }
       }
       
-      heredoc.add(buffer.toString());
+      // Read rest of chars to line end
+      while(hasLineChar()) {
+        buffer.appendCodePoint(nextLineChar());
+      }
+      
+      heredocLines.add(buffer.toString());
       
       // Update min indent
       if(isIndent && indent < minIndent) {
@@ -385,23 +422,24 @@ public class BotBuddyCode implements Closeable {
       }
     }
     
+    // Convert heredoc lines to one string
     isIndent = (isIndent && minIndent > 0 && minIndent != Integer.MAX_VALUE);
     buffer.setLength(0);
     
-    if(!heredoc.isEmpty()) {
-      for(Iterator<String> it = heredoc.iterator();;) {
-        String hd = it.next();
+    if(!heredocLines.isEmpty()) {
+      for(Iterator<String> it = heredocLines.iterator();;) {
+        String hdLine = it.next();
         
         if(isIndent) {
-          for(int i = minIndent; i < hd.length();) {
-            int hdChar = hd.codePointAt(i);
+          for(int i = minIndent; i < hdLine.length();) {
+            int hdChar = hdLine.codePointAt(i);
             
             buffer.appendCodePoint(hdChar);
             i += Character.charCount(hdChar);
           }
         }
         else {
-          buffer.append(hd);
+          buffer.append(hdLine);
         }
         
         // Don't add last newline (chomp)
@@ -416,46 +454,40 @@ public class BotBuddyCode implements Closeable {
     return buffer;
   }
   
-  public String readLine() throws IOException {
-    if((line = input.readLine()) != null) {
-      ++lineNumber;
-    }
-    
-    return line;
-  }
-  
-  public int readLineChar() {
-    return (lineChar = line.codePointAt(lineIndex));
-  }
-  
   public StringBuilder readQuote(int endQuote) throws IOException {
     boolean hasEndQuote = false;
     
     buffer.setLength(0);
-    incLineChar();
     
     while(true) {
-      for(; hasLineChar(); incLineChar()) {
-        readLineChar();
+      while(hasLineChar()) {
+        nextLineChar();
         
-        // Escaped end quote (e.g., \")
+        // Escaped char?
         if(lineChar == escapeChar) {
-          incLineChar();
-          
           if(hasLineChar()) {
-            if(readLineChar() == endQuote) {
+            nextLineChar();
+            
+            // Escaped end quote (e.g., \")
+            if(lineChar == endQuote) {
               buffer.appendCodePoint(lineChar);
             }
+            // Escaped escape (e.g., \\)
+            else if(lineChar == escapeChar) {
+              buffer.appendCodePoint(escapeChar);
+            }
             else {
+              // To make it easier for non-programmers, don't output lineChar only.
+              //   For example, "\a" will output that exactly (with the backslash).
               buffer.appendCodePoint(escapeChar).appendCodePoint(lineChar);
             }
           }
+          // EOL
           else {
             buffer.appendCodePoint(lineChar);
           }
         }
         else if(lineChar == endQuote) {
-          incLineChar();
           hasEndQuote = true;
           
           break;
@@ -465,22 +497,20 @@ public class BotBuddyCode implements Closeable {
         }
       }
       
-      if(hasEndQuote || readLine() == null) {
+      if(hasEndQuote || nextLine() == null) {
         break;
       }
       
       buffer.append('\n');
-      resetLine();
     }
     
     return buffer;
   }
   
-  public StringBuilder readSpecialQuote() throws IOException,ParseException {
-    incLineChar();
-    
-    if(!hasLineChar() || Character.isWhitespace(readLineChar())) {
-      throw new ParseException("Invalid '%' without a tag or unquoted string",lineNumber,lineIndex);
+  public StringBuilder readSpecialQuote() throws IOException,ParseCodeException {
+    if(!hasLineChar() || Character.isWhitespace(nextLineChar())) {
+      throw new ParseCodeException("Invalid special quote '%' without a tag, with spaces, or unquoted string"
+        ,lineNumber,lineIndex);
     }
     
     switch(lineChar) {
@@ -494,16 +524,28 @@ public class BotBuddyCode implements Closeable {
   }
   
   public StringBuilder readToLineEnd() {
-    for(buffer.setLength(0); hasLineChar(); incLineChar()) {
-      buffer.appendCodePoint(readLineChar());
+    buffer.setLength(0);
+    
+    if(lineIndex > 0) {
+      buffer.appendCodePoint(lineChar);
+    }
+    
+    while(hasLineChar()) {
+      buffer.appendCodePoint(nextLineChar());
     }
     
     return buffer;
   }
   
   public StringBuilder readToWhitespace() {
-    for(buffer.setLength(0); hasLineChar(); incLineChar()) {
-      if(Character.isWhitespace(readLineChar())) {
+    buffer.setLength(0);
+    
+    if(lineIndex > 0) {
+      buffer.appendCodePoint(lineChar);
+    }
+    
+    while(hasLineChar()) {
+      if(Character.isWhitespace(nextLineChar())) {
         break;
       }
       
@@ -513,14 +555,9 @@ public class BotBuddyCode implements Closeable {
     return buffer;
   }
   
-  public void resetLine() {
-    lineChar = 0;
-    lineIndex = 0;
-  }
-  
   public int seekToNonWhitespace() {
-    for(; hasLineChar(); incLineChar()) {
-      if(!Character.isWhitespace(readLineChar())) {
+    while(hasLineChar()) {
+      if(!Character.isWhitespace(nextLineChar())) {
         // Ignore comment
         if(lineChar == commentChar) {
           lineIndex = line.length(); // Go to end
@@ -545,6 +582,10 @@ public class BotBuddyCode implements Closeable {
     this.escapeChar = escapeChar;
   }
   
+  public void setExecutors(Map<String,Executor> executors) {
+    this.executors = executors;
+  }
+  
   public BotBuddy getBuddy() {
     return buddy;
   }
@@ -557,12 +598,8 @@ public class BotBuddyCode implements Closeable {
     return escapeChar;
   }
   
-  public BufferedReader getInput() {
-    return input;
-  }
-  
-  public Map<String,Instructor> getInstructors() {
-    return instructors;
+  public Map<String,Executor> getExecutors() {
+    return executors;
   }
   
   public boolean hasLineChar() {
@@ -573,38 +610,40 @@ public class BotBuddyCode implements Closeable {
     return lineIndex >= line.length();
   }
   
-  public static class Arg extends LinePoint {
-    protected String value;
+  public static class Arg {
+    public LineOfCode loc;
+    public String value;
     
     public Arg(String value,int lineNumber,int lineColumn) {
-      super(lineNumber,lineColumn);
-      
+      this(value,new LineOfCode(lineNumber,lineColumn));
+    }
+    
+    public Arg(String value,LineOfCode loc) {
       if(value == null) {
         throw new IllegalArgumentException("Value cannot be null");
       }
+      if(loc == null) {
+        throw new IllegalArgumentException("LineOfCode cannot be null");
+      }
       
+      this.loc = loc;
       this.value = value;
     }
     
-    public int parseInt() throws ParseException {
+    public int parseInt() throws ParseCodeException {
       try {
         return Integer.parseInt(value);
       }
       catch(NumberFormatException ex) {
-        throw new ParseException("Arg '" + value + "' must be an int",this,ex);
+        throw new ParseCodeException("Arg '" + value + "' must be an int",loc,ex);
       }
-    }
-    
-    public String getValue() {
-      return value;
     }
     
     @Override
     public String toString() {
-      StringBuilder str = new StringBuilder(value.length() + 11);
+      StringBuilder str = new StringBuilder(11 + value.length());
       
-      str.append(lineNumber).append(':').append(lineColumn);
-      str.append(": \"").append(value).append("\"\n");
+      str.append(loc).append(": ").append(value);
       
       return str.toString();
     }
@@ -615,8 +654,8 @@ public class BotBuddyCode implements Closeable {
     protected Charset charset = StandardCharsets.UTF_8;
     protected int commentChar = DEFAULT_COMMENT_CHAR;
     protected int escapeChar = DEFAULT_ESCAPE_CHAR;
+    protected Map<String,Executor> executors = null;
     protected BufferedReader input = null;
-    protected Map<String,Instructor> instructors = null;
     protected Path path = null;
     
     public Builder(BufferedReader input) {
@@ -628,7 +667,7 @@ public class BotBuddyCode implements Closeable {
     }
     
     public Builder(Path path,Charset charset) {
-      input(path,charset);
+      path(path,charset);
     }
     
     public BotBuddyCode build() throws AWTException,IOException {
@@ -659,21 +698,14 @@ public class BotBuddyCode implements Closeable {
       return this;
     }
     
+    public Builder executors(Map<String,Executor> executors) {
+      this.executors = executors;
+      
+      return this;
+    }
+    
     public Builder input(BufferedReader input) {
       this.input = input;
-      
-      return this;
-    }
-    
-    public Builder input(Path path,Charset charset) {
-      this.charset = charset;
-      this.path = path;
-      
-      return this;
-    }
-    
-    public Builder instructors(Map<String,Instructor> instructors) {
-      this.instructors = instructors;
       
       return this;
     }
@@ -683,141 +715,95 @@ public class BotBuddyCode implements Closeable {
       
       return this;
     }
+    
+    public Builder path(Path path,Charset charset) {
+      this.charset = charset;
+      this.path = path;
+      
+      return this;
+    }
   }
   
-  public static class Instruction extends LinePoint {
-    public static final Pattern ID_PATTERN = Pattern.compile("[\\s_\\-\\.]+"
-      ,Pattern.UNICODE_CHARACTER_CLASS);
+  public static class DefaultExecutors {
+    // TODO: init capacity
+    public static final Map<String,Executor> defaultExecutors = new HashMap<String,Executor>();
     
-    public static final String toID(String name) {
+    static {
+      addBaseExecutors(defaultExecutors);
+    }
+  }
+  
+  @FunctionalInterface
+  public static interface Executor {
+    public abstract void execute(BotBuddy buddy,Instruction inst) throws ParseCodeException;
+  }
+  
+  public static class Instruction {
+    public static final Pattern ID_PATTERN = Pattern.compile("[\\s_\\-\\.]+",Pattern.UNICODE_CHARACTER_CLASS);
+    
+    public static String toId(String name) {
       return ID_PATTERN.matcher(name).replaceAll("").toLowerCase(Locale.ENGLISH);
     }
     
-    protected Arg[] args;
-    protected String id;
-    protected String name;
+    public Arg[] args;
+    public String id;
+    public LineOfCode loc;
+    public String name;
     
     public Instruction(String name,Arg[] args,int lineNumber,int lineColumn) {
-      super(lineNumber,lineColumn);
-      
+      this(name,args,new LineOfCode(lineNumber,lineColumn));
+    }
+    
+    public Instruction(String name,Arg[] args,LineOfCode loc) {
       if(name == null) {
         throw new IllegalArgumentException("Name cannot be null");
       }
       if(args == null) {
         throw new IllegalArgumentException("Args cannot be null");
       }
+      if(loc == null) {
+        throw new IllegalArgumentException("LineOfCode cannot be null");
+      }
       
       this.args = args;
-      this.id = toID(name);
+      this.id = toId(name);
+      this.loc = loc;
       this.name = name;
     }
     
     public Instruction(String name,List<Arg> args,int lineNumber,int lineColumn) {
-      this(name,args.toArray(new Arg[args.size()]),lineNumber,lineColumn);
+      this(name,args,new LineOfCode(lineNumber,lineColumn));
     }
     
-    public Instruction(String name,Arg[] args,LinePoint linePoint) {
-      this(name,args,linePoint.lineNumber,linePoint.lineColumn);
+    public Instruction(String name,List<Arg> args,LineOfCode loc) {
+      this(name,args.toArray(new Arg[args.size()]),loc);
     }
     
-    public Instruction(String name,List<Arg> args,LinePoint linePoint) {
-      this(name,args,linePoint.lineNumber,linePoint.lineColumn);
-    }
-    
-    public void checkArgsLength(int length) throws ParseException {
-      if(args.length < length) {
-        throw new ParseException("Must have " + length + " arg(s)",this);
+    public Arg getArg(int index) throws ParseCodeException {
+      if(index >= args.length) {
+        throw new ParseCodeException("Not enough args",loc);
       }
-    }
-    
-    public Arg getArg(int index) {
+      
       return args[index];
     }
     
-    public Arg[] getArgs() {
-      return args;
-    }
-    
-    public int getArgsLength() {
-      return args.length;
-    }
-    
-    public String getID() {
-      return id;
-    }
-    
-    public String getName() {
-      return name;
-    }
-  }
-  
-  @FunctionalInterface
-  public static interface Instructor {
-    public abstract void execute(BotBuddy buddy,Instruction inst) throws ParseException;
-  }
-  
-  public static class LinePoint {
-    protected int lineColumn;
-    protected int lineNumber;
-    
-    public LinePoint(int lineNumber,int lineColumn) {
-      this.lineColumn = lineColumn;
-      this.lineNumber = lineNumber;
-    }
-    
-    public int getLineColumn() {
-      return lineColumn;
-    }
-    
-    public int getLineNumber() {
-      return lineNumber;
-    }
-  }
-  
-  public static class ParseException extends Exception {
-    public static String buildMessage(String message,int lineNumber,int lineColumn) {
-      StringBuilder msg = new StringBuilder(message.length() + 9);
+    @Override
+    public String toString() {
+      StringBuilder str = new StringBuilder();
       
-      msg.append(lineNumber).append(':').append(lineColumn);
-      msg.append(": ").append(message);
+      str.append('[').append(id).append(':').append(name).append("]:").append(loc).append('\n');
       
-      return msg.toString();
-    }
-    
-    protected int lineColumn;
-    protected int lineNumber;
-    
-    public ParseException(String message,int lineNumber,int lineColumn) {
-      this(message,lineNumber,lineColumn,null);
-    }
-    
-    public ParseException(String message,int lineNumber,int lineColumn,Throwable cause) {
-      super(buildMessage(message,lineNumber,lineColumn),cause);
+      for(int i = 0; i < args.length; ++i) {
+        str.append("- [").append(i).append("]:").append(args[i]).append('\n');
+      }
       
-      this.lineColumn = lineColumn;
-      this.lineNumber = lineNumber;
-    }
-    
-    public ParseException(String message,LinePoint linePoint) {
-      this(message,linePoint.getLineNumber(),linePoint.getLineColumn());
-    }
-    
-    public ParseException(String message,LinePoint linePoint,Throwable cause) {
-      this(message,linePoint.getLineNumber(),linePoint.getLineColumn(),cause);
-    }
-    
-    public int getLineColumn() {
-      return lineColumn;
-    }
-    
-    public int getLineNumber() {
-      return lineNumber;
+      return str.toString();
     }
   }
   
-  // TODO: remove
+  // TODO: make own simple app here; take in file, can do dry run; ButBuddyCodeApp or here?
   public static void main(String[] args) {
-    try(BotBuddyCode bbc = BotBuddyCode.builder(java.nio.file.Paths.get("bb.rb")).build()) {
+    try(BotBuddyCode bbc = BotBuddyCode.builder(Paths.get("bb.rb")).build()) {
       //System.out.print(bbc.interpretDryRun());
       bbc.interpret();
     }

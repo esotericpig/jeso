@@ -11,7 +11,7 @@ test03 10 20 "Hello
 
 # Single quotes
 test04 'Hello 
-\'World\''
+\'World\\\' \\ \a\b\c'
 
 # Keep parsing args
 test05 "Hello
@@ -32,6 +32,7 @@ test12 <<EOS
     Hello      
       World    
 Everybody!
+E
 EOS?
 
 EOS

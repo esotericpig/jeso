@@ -44,6 +44,14 @@ import org.junit.jupiter.api.Test;
  * @author Jonathan Bradley Whited (@esotericpig)
  */
 public class BotBuddyCodeTest {
+  public static String cleanOutput(String output) {
+    output = output.trim();
+    // Remove LineOfCode coords "(11,11)" for cleaner diffs if update file in future
+    output = output.replaceAll("\\(\\d+\\:\\d+\\)\\:","");
+    
+    return output;
+  }
+  
   @BeforeEach
   public void setUpEach() {
   }
@@ -53,7 +61,7 @@ public class BotBuddyCodeTest {
   }
   
   @Test
-  public void testInterpretDryRun() throws AWTException,IOException,BotBuddyCode.ParseException,URISyntaxException {
+  public void testInterpretDryRun() throws AWTException,IOException,ParseCodeException,URISyntaxException {
     if(BotBuddyTest.isHeadless()) {
       return;
     }
@@ -62,7 +70,7 @@ public class BotBuddyCodeTest {
     Path bbcTestOutPath = Paths.get(getClass().getResource("/BotBuddyCodeTestOutput.txt").toURI());
     Path bbcTestPath = Paths.get(getClass().getResource("/BotBuddyCodeTest.bbc").toURI());
     
-    String bbcTestOut = Files.lines(bbcTestOutPath).collect(Collectors.joining("\n")).trim();
+    String bbcTestOut = cleanOutput(Files.lines(bbcTestOutPath).collect(Collectors.joining("\n")));
     
     System.out.println("[" + bbcTestOutPath + "]:");
     System.out.println(bbcTestOut);
@@ -71,11 +79,11 @@ public class BotBuddyCodeTest {
     try(BotBuddyCode bbc = BotBuddyCode.builder(bbcTestPath).build()) {
       System.out.println("[" + bbcTestPath + "]:");
       
-      String instructions = bbc.interpretDryRun().trim();
-      System.out.println(instructions);
+      String bbcOut = cleanOutput(bbc.interpretDryRun());
+      System.out.println(bbcOut);
+      System.out.println();
       
-      // Strings are trimmed above
-      assertEquals(instructions,bbcTestOut);
+      assertEquals(bbcTestOut,bbcOut);
     }
   }
 }
