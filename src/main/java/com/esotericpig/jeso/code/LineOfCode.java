@@ -64,6 +64,14 @@ public class LineOfCode implements Cloneable {
     number = 1;
   }
   
+  public void setColumn(int column) {
+    this.column = column;
+  }
+  
+  public void setNumber(int number) {
+    this.number = number;
+  }
+  
   public int getColumn() {
     return column;
   }
