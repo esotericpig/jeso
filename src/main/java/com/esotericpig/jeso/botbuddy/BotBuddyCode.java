@@ -18,6 +18,9 @@
 
 package com.esotericpig.jeso.botbuddy;
 
+import com.esotericpig.jeso.code.LineOfCode;
+import com.esotericpig.jeso.code.ParseCodeException;
+
 import java.awt.AWTException;
 import java.awt.Point;
 
@@ -250,8 +253,8 @@ public class BotBuddyCode implements Closeable {
       }
       
       // Instruction name
-      LineOfCode loc = new LineOfCode(lineNumber,lineIndex);
-      String name = readToWhitespace().toString();
+      final LineOfCode loc = new LineOfCode(lineNumber,lineIndex);
+      final String name = readToWhitespace().toString();
       
       // Instruction args
       List<Arg> args = new ArrayList<>();
@@ -263,8 +266,8 @@ public class BotBuddyCode implements Closeable {
           break;
         }
         
-        int prevLineIndex = lineIndex;
-        int prevLineNumber = lineNumber;
+        final int prevLineIndex = lineIndex;
+        final int prevLineNumber = lineNumber;
         
         if(lineChar == '"' || lineChar == '\'') {
           readQuote(lineChar);
@@ -279,13 +282,13 @@ public class BotBuddyCode implements Closeable {
           readToWhitespace();
         }
         
-        args.add(new Arg(buffer.toString(),prevLineNumber,prevLineIndex));
-        
         // Was there a read/seek above? Or are we caught in an infinite loop parsing the same char?
         if(lineIndex == prevLineIndex && lineNumber == prevLineNumber) {
           throw new ParseCodeException("Internal code is broken causing an infinite loop",lineNumber
             ,lineIndex);
         }
+        
+        args.add(new Arg(buffer.toString(),prevLineNumber,prevLineIndex));
       } while(line != null && hasLineChar()); // nextLine() might have been called
       
       // Execute/output instruction
@@ -505,18 +508,20 @@ public class BotBuddyCode implements Closeable {
       while(hasLineChar()) {
         nextLineChar();
         
+        if(lineChar == endQuote) {
+          hasEndQuote = true;
+          
+          break;
+        }
+        
         // Escaped char?
         if(lineChar == escapeChar) {
           if(hasLineChar()) {
             nextLineChar();
             
-            // Escaped end quote (e.g., \")
-            if(lineChar == endQuote) {
+            // Escaped end quote (e.g., \") or escaped escape (e.g., \\)
+            if(lineChar == endQuote || lineChar == escapeChar) {
               buffer.appendCodePoint(lineChar);
-            }
-            // Escaped escape (e.g., \\)
-            else if(lineChar == escapeChar) {
-              buffer.appendCodePoint(escapeChar);
             }
             else {
               // To make it easier for non-programmers, don't output lineChar only.
@@ -526,13 +531,10 @@ public class BotBuddyCode implements Closeable {
           }
           // EOL
           else {
+            // To make it easier for non-programmers, just output as is with no error.
+            //   For example, "\" with EOL will output that exactly (a backslash).
             buffer.appendCodePoint(lineChar);
           }
-        }
-        else if(lineChar == endQuote) {
-          hasEndQuote = true;
-          
-          break;
         }
         else {
           buffer.appendCodePoint(lineChar);
@@ -685,7 +687,7 @@ public class BotBuddyCode implements Closeable {
     public String toString() {
       StringBuilder str = new StringBuilder(11 + value.length());
       
-      str.append(loc).append(": ").append(value);
+      str.append(loc).append(": '").append(value).append('\'');
       
       return str.toString();
     }
@@ -778,6 +780,67 @@ public class BotBuddyCode implements Closeable {
   @FunctionalInterface
   public static interface Executor {
     public abstract void execute(BotBuddy buddy,Instruction inst) throws ParseCodeException;
+  }
+  
+  // TODO: move toId() into this method?
+  public static class Executors {
+    protected Map<String,Executor> entries;
+    
+    // TODO: initCapacity, loadFactor
+    public Executors() {
+      entries = new HashMap<>();
+    }
+    
+    public Executor put(String id,Executor executor) {
+      return putWithId(id,executor);
+    }
+    
+    public Executor putWithId(String id,Executor executor) {
+      // TODO: only do this check if log isDebug
+      String validId = Instruction.toId(id);
+      
+      if(!id.equals(validId)) {
+        throw new IllegalArgumentException("ID '" + id + "' is invalid; must be '" + validId + "'");
+      }
+      
+      return entries.put(id,executor);
+    }
+    
+    public Executor putWithName(String name,Executor executor) {
+      return entries.put(Instruction.toId(name),executor);
+    }
+    
+    public Executor remove(String id) {
+      return removeWithId(id);
+    }
+    
+    public Executor removeWithId(String id) {
+      return entries.remove(id);
+    }
+    
+    public Executor removeWithName(String name) {
+      return entries.remove(Instruction.toId(name));
+    }
+    
+    public Executor get(String id) {
+      return getWithId(id);
+    }
+    
+    public Executor get(Instruction inst) {
+      return entries.get(inst.id);
+    }
+    
+    public Map<String,Executor> getEntries() {
+      return entries;
+    }
+    
+    public Executor getWithId(String id) {
+      return entries.get(id);
+    }
+    
+    public Executor getWithName(String name) {
+      return entries.get(Instruction.toId(name));
+    }
   }
   
   public static class Instruction {

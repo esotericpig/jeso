@@ -16,7 +16,7 @@
  * along with jeso. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.esotericpig.jeso.botbuddy;
+package com.esotericpig.jeso.code;
 
 /**
  * @author Jonathan Bradley Whited (@esotericpig)

@@ -20,6 +20,8 @@ package com.esotericpig.jeso.botbuddy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.esotericpig.jeso.code.ParseCodeException;
+
 import java.awt.AWTException;
 
 import java.io.IOException;
