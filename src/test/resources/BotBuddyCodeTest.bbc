@@ -71,3 +71,15 @@ test18 <<-EOS
     heredoc?
       -Shakespeare
   EOS
+
+# Heredoc with 1 char
+test19 <<E
+  Hello World
+E?
+E
+test20 <<-E
+  Hello World
+  E
+test21 <<-E
+  Hello World
+  E 10 20

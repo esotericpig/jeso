@@ -367,8 +367,8 @@ public class BotBuddyCode implements Closeable {
       nextLineChar();
     }
     
-    int prevLineColumn = lineIndex;
-    String endTag = readToLineEnd().toString();
+    final int prevLineColumn = lineIndex;
+    final String endTag = readToLineEnd().toString();
     
     // '<<-' with EOL
     if(endTag.isEmpty()) {
@@ -382,6 +382,9 @@ public class BotBuddyCode implements Closeable {
     }
     
     // Read the heredoc lines and (possible) indent (<<-)
+    final int endTagChar0 = endTag.codePointAt(0);
+    final int endTagChar0Count = Character.charCount(endTagChar0);
+    
     List<String> heredocLines = new LinkedList<>();
     int minIndent = Integer.MAX_VALUE;
     
@@ -391,7 +394,7 @@ public class BotBuddyCode implements Closeable {
       buffer.setLength(0);
       
       // Read to non-whitespace for (possible) indent (<<-)
-      // - Don't do "indent += Character.charCount(lineChar)" I think; could cause weird results
+      // - Do NOT do "indent += Character.charCount(lineChar)"; indent code after loop uses charCount()
       for(; hasLineChar(); ++indent) {
         buffer.appendCodePoint(nextLineChar());
         
@@ -401,24 +404,18 @@ public class BotBuddyCode implements Closeable {
       }
       
       // Is end tag?
-      if(lineChar == endTag.codePointAt(0)) {
+      if(lineChar == endTagChar0) {
         boolean isEndTag = false;
         
-        for(int i = 1; hasLineChar();) {
-          int endTagChar = endTag.codePointAt(i);
-          
-          buffer.appendCodePoint(nextLineChar());
-          
-          // Not end tag: "Everybody!"
-          if(lineChar != endTagChar) {
-            break;
-          }
-          
-          // Last char of end tag
-          if((i += Character.charCount(endTagChar)) >= endTag.length()) {
+        // End tag might be a single char (e.g., "E") with EOL, so don't test "hasLineChar()"
+        for(int i = endTagChar0Count;;) {
+          // Last char of end tag?
+          if(i >= endTag.length()) {
             if(hasLineChar()) {
+              nextLineChar();
+              
               // Is end tag: "EOS 10 20"
-              if(Character.isWhitespace(nextLineChar())) {
+              if(Character.isWhitespace(lineChar)) {
                 isEndTag = true;
               }
               // Not end tag: "EOS?"
@@ -433,6 +430,20 @@ public class BotBuddyCode implements Closeable {
             
             break;
           }
+          if(isLineEnd()) {
+            break;
+          }
+          
+          int endTagChar = endTag.codePointAt(i);
+          
+          buffer.appendCodePoint(nextLineChar());
+          
+          // Not end tag: "Everybody!"
+          if(lineChar != endTagChar) {
+            break;
+          }
+          
+          i += Character.charCount(endTagChar);
         }
         
         if(isEndTag) {

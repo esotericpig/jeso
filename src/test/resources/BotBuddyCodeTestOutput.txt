@@ -65,3 +65,12 @@ on the same line.
 Don't you like
 heredoc?
   -Shakespeare'
+[test19:test19]:none
+- [0]: '  Hello World
+E?'
+[test20:test20]:none
+- [0]: 'Hello World'
+[test21:test21]:none
+- [0]: 'Hello World'
+- [1]: '10'
+- [2]: '20'
