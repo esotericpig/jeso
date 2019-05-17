@@ -64,110 +64,6 @@ public class BotBuddyCode implements Closeable {
   public static final int DEFAULT_COMMENT_CHAR = '#';
   public static final int DEFAULT_ESCAPE_CHAR = '\\';
   
-  public static Map<String,Executor> addBaseExecutors(Map<String,Executor> executors) {
-    // TODO: printScreen(): save to file or clipboard?
-    // TODO: shortcut/shortcutFast(): load 2nd file or add logic for methods?
-    //                                1) can use Shortcuts.PASTE, etc.
-    //                                2) shortcut "getcoords\nbeep" (use heredoc/string); StringReader
-    // TODO: setAutoDelay(): parse int/boolean?
-    // TODO: setAutoWaitForIdle(): parseBoolean()
-    
-    // TODO:
-    //   setFastDelay,setLongDelay,setShortDelay
-    //   setOSFamily
-    //   getters
-    
-    // Static methods
-    executors.put("getcoords",(buddy,inst) -> {
-      Point coords = BotBuddy.getCoords();
-      System.out.println("(" + coords.x + "," + coords.y + ")");
-    });
-    executors.put("getxcoord",(buddy,inst) -> System.out.println(BotBuddy.getXCoord()));
-    executors.put("getycoord",(buddy,inst) -> System.out.println(BotBuddy.getYCoord()));
-    
-    // Main methods
-    executors.put("beep",(buddy,inst) -> buddy.beep());
-    executors.put("beginsafemode",(buddy,inst) -> buddy.beginSafeMode());
-    executors.put("click",(buddy,inst) -> {
-      switch(inst.args.length) {
-        case 0: buddy.click(); break;
-        case 1: buddy.click(inst.args[0].parseInt()); break;
-        case 2: buddy.click(inst.args[0].parseInt(),inst.args[1].parseInt()); break;
-        default:
-          buddy.click(inst.args[0].parseInt(),inst.args[1].parseInt(),inst.args[2].parseInt());
-          break;
-      }
-    });
-    executors.put("copy",(buddy,inst) -> buddy.copy(inst.getArg(0).value));
-    executors.put("delay",(buddy,inst) -> buddy.delay(inst.getArg(0).parseInt()));
-    executors.put("delayauto",(buddy,inst) -> buddy.delayAuto());
-    executors.put("delayfast",(buddy,inst) -> buddy.delayFast());
-    executors.put("delaylong",(buddy,inst) -> buddy.delayLong());
-    executors.put("delayshort",(buddy,inst) -> buddy.delayShort());
-    executors.put("doubleclick",(buddy,inst) -> {
-      switch(inst.args.length) {
-        case 0: buddy.doubleClick(); break;
-        case 1: buddy.doubleClick(inst.args[0].parseInt()); break;
-        case 2: buddy.doubleClick(inst.args[0].parseInt(),inst.args[1].parseInt()); break;
-        default:
-          buddy.doubleClick(inst.args[0].parseInt(),inst.args[1].parseInt(),inst.args[2].parseInt());
-          break;
-      }
-    });
-    executors.put("endsafemode",(buddy,inst) -> buddy.endSafeMode());
-    executors.put("enter",(buddy,inst) -> {
-      switch(inst.args.length) {
-        case 0: buddy.enter(); break;
-        case 1: buddy.enter(inst.args[0].value); break;
-        case 2: buddy.enter(inst.args[0].parseInt(),inst.args[1].parseInt()); break;
-        default:
-          buddy.enter(inst.args[0].parseInt(),inst.args[1].parseInt(),inst.args[2].value);
-          break;
-      }
-    });
-    executors.put("key",(buddy,inst) -> buddy.key(inst.getArg(0).parseInt()));
-    executors.put("move",(buddy,inst) -> buddy.move(inst.getArg(0).parseInt(),inst.getArg(1).parseInt()));
-    executors.put("paste",(buddy,inst) -> {
-      switch(inst.args.length) {
-        case 0: buddy.paste(); break;
-        case 1: buddy.paste(inst.args[0].value); break;
-        case 2: buddy.paste(inst.args[0].parseInt(),inst.args[1].parseInt()); break;
-        default:
-          buddy.paste(inst.args[0].parseInt(),inst.args[1].parseInt(),inst.args[2].value);
-          break;
-      }
-    });
-    executors.put("presskey",(buddy,inst) -> buddy.pressKey(inst.getArg(0).parseInt()));
-    executors.put("pressmouse",(buddy,inst) -> buddy.pressMouse(inst.getArg(0).parseInt()));
-    executors.put("releasekey",(buddy,inst) -> buddy.releaseKey(inst.getArg(0).parseInt()));
-    executors.put("releasemouse",(buddy,inst) -> buddy.releaseMouse(inst.getArg(0).parseInt()));
-    executors.put("waitforidle",(buddy,inst) -> buddy.waitForIdle());
-    executors.put("wheel",(buddy,inst) -> buddy.wheel(inst.getArg(0).parseInt()));
-    
-    // Extra methods
-    executors.put("puts",(buddy,inst) -> {
-      if(inst.args.length < 1) {
-        System.out.println();
-      }
-      else {
-        for(Arg arg: inst.args) {
-          System.out.print(arg.value);
-        }
-        System.out.println();
-      }
-    });
-    
-    // Setters
-    
-    // Getters
-    executors.put("getpixel",(buddy,inst) -> {
-      System.out.println(buddy.getPixel(inst.getArg(0).parseInt(),inst.getArg(1).parseInt()));
-    });
-    executors.put("getosfamily",(buddy,inst) -> System.out.println(buddy.getOSFamily()));
-    
-    return executors;
-  }
-  
   public static Builder builder(BufferedReader input) {
     return new Builder(input);
   }
@@ -184,7 +80,7 @@ public class BotBuddyCode implements Closeable {
   protected StringBuilder buffer = new StringBuilder();
   protected int commentChar;
   protected int escapeChar;
-  protected Map<String,Executor> executors;
+  protected Executors executors;
   protected BufferedReader input = null;
   protected String line = null;
   protected int lineChar = 0;
@@ -295,7 +191,7 @@ public class BotBuddyCode implements Closeable {
       Instruction instruction = new Instruction(name,args,loc);
       
       if(execute) {
-        Executor executor = executors.get(instruction.id);
+        Executor executor = executors.get(instruction);
         
         if(executor == null) {
           throw new ParseCodeException("Instruction '" + instruction.id + "' from '" + instruction.name
@@ -312,7 +208,7 @@ public class BotBuddyCode implements Closeable {
         output.append("]:(");
         output.append(instruction.loc.getNumber()).append(':').append(instruction.loc.getColumn());
         output.append("):");
-        output.append(executors.containsKey(instruction.id) ? "exists" : "none");
+        output.append(executors.contains(instruction) ? "exists" : "none");
         output.append('\n');
         
         for(int i = 0; i < instruction.args.length; ++i) {
@@ -626,7 +522,7 @@ public class BotBuddyCode implements Closeable {
     this.escapeChar = escapeChar;
   }
   
-  public void setExecutors(Map<String,Executor> executors) {
+  public void setExecutors(Executors executors) {
     this.executors = executors;
   }
   
@@ -642,7 +538,7 @@ public class BotBuddyCode implements Closeable {
     return escapeChar;
   }
   
-  public Map<String,Executor> getExecutors() {
+  public Executors getExecutors() {
     return executors;
   }
   
@@ -698,7 +594,7 @@ public class BotBuddyCode implements Closeable {
     protected Charset charset = StandardCharsets.UTF_8;
     protected int commentChar = DEFAULT_COMMENT_CHAR;
     protected int escapeChar = DEFAULT_ESCAPE_CHAR;
-    protected Map<String,Executor> executors = null;
+    protected Executors executors = null;
     protected BufferedReader input = null;
     protected Path path = null;
     
@@ -742,7 +638,7 @@ public class BotBuddyCode implements Closeable {
       return this;
     }
     
-    public Builder executors(Map<String,Executor> executors) {
+    public Builder executors(Executors executors) {
       this.executors = executors;
       
       return this;
@@ -770,10 +666,10 @@ public class BotBuddyCode implements Closeable {
   
   public static class DefaultExecutors {
     // TODO: init capacity
-    public static final Map<String,Executor> defaultExecutors = new HashMap<String,Executor>();
+    public static final Executors defaultExecutors = new Executors();
     
     static {
-      addBaseExecutors(defaultExecutors);
+      defaultExecutors.addBaseExecutors();
     }
   }
   
@@ -782,13 +678,118 @@ public class BotBuddyCode implements Closeable {
     public abstract void execute(BotBuddy buddy,Instruction inst) throws ParseCodeException;
   }
   
-  // TODO: move toId() into this method?
   public static class Executors {
     protected Map<String,Executor> entries;
     
     // TODO: initCapacity, loadFactor
     public Executors() {
       entries = new HashMap<>();
+    }
+    
+    public void addBaseExecutors() {
+      // TODO: printScreen(): save to file or clipboard?
+      // TODO: shortcut/shortcutFast(): load 2nd file or add logic for methods?
+      //                                1) can use Shortcuts.PASTE, etc.
+      //                                2) shortcut "getcoords\nbeep" (use heredoc/string); StringReader
+      // TODO: setAutoDelay(): parse int/boolean?
+      // TODO: setAutoWaitForIdle(): parseBoolean()
+      
+      // TODO:
+      //   setFastDelay,setLongDelay,setShortDelay
+      //   setOSFamily
+      //   getters
+      
+      // Static methods
+      put("getcoords",(buddy,inst) -> {
+        Point coords = BotBuddy.getCoords();
+        System.out.println("(" + coords.x + "," + coords.y + ")");
+      });
+      put("getxcoord",(buddy,inst) -> System.out.println(BotBuddy.getXCoord()));
+      put("getycoord",(buddy,inst) -> System.out.println(BotBuddy.getYCoord()));
+      
+      // Main methods
+      put("beep",(buddy,inst) -> buddy.beep());
+      put("beginsafemode",(buddy,inst) -> buddy.beginSafeMode());
+      put("click",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 0: buddy.click(); break;
+          case 1: buddy.click(inst.args[0].parseInt()); break;
+          case 2: buddy.click(inst.args[0].parseInt(),inst.args[1].parseInt()); break;
+          default:
+            buddy.click(inst.args[0].parseInt(),inst.args[1].parseInt(),inst.args[2].parseInt());
+            break;
+        }
+      });
+      put("copy",(buddy,inst) -> buddy.copy(inst.getArg(0).value));
+      put("delay",(buddy,inst) -> buddy.delay(inst.getArg(0).parseInt()));
+      put("delayauto",(buddy,inst) -> buddy.delayAuto());
+      put("delayfast",(buddy,inst) -> buddy.delayFast());
+      put("delaylong",(buddy,inst) -> buddy.delayLong());
+      put("delayshort",(buddy,inst) -> buddy.delayShort());
+      put("doubleclick",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 0: buddy.doubleClick(); break;
+          case 1: buddy.doubleClick(inst.args[0].parseInt()); break;
+          case 2: buddy.doubleClick(inst.args[0].parseInt(),inst.args[1].parseInt()); break;
+          default:
+            buddy.doubleClick(inst.args[0].parseInt(),inst.args[1].parseInt(),inst.args[2].parseInt());
+            break;
+        }
+      });
+      put("endsafemode",(buddy,inst) -> buddy.endSafeMode());
+      put("enter",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 0: buddy.enter(); break;
+          case 1: buddy.enter(inst.args[0].value); break;
+          case 2: buddy.enter(inst.args[0].parseInt(),inst.args[1].parseInt()); break;
+          default:
+            buddy.enter(inst.args[0].parseInt(),inst.args[1].parseInt(),inst.args[2].value);
+            break;
+        }
+      });
+      put("key",(buddy,inst) -> buddy.key(inst.getArg(0).parseInt()));
+      put("move",(buddy,inst) -> buddy.move(inst.getArg(0).parseInt(),inst.getArg(1).parseInt()));
+      put("paste",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 0: buddy.paste(); break;
+          case 1: buddy.paste(inst.args[0].value); break;
+          case 2: buddy.paste(inst.args[0].parseInt(),inst.args[1].parseInt()); break;
+          default:
+            buddy.paste(inst.args[0].parseInt(),inst.args[1].parseInt(),inst.args[2].value);
+            break;
+        }
+      });
+      put("presskey",(buddy,inst) -> buddy.pressKey(inst.getArg(0).parseInt()));
+      put("pressmouse",(buddy,inst) -> buddy.pressMouse(inst.getArg(0).parseInt()));
+      put("releasekey",(buddy,inst) -> buddy.releaseKey(inst.getArg(0).parseInt()));
+      put("releasemouse",(buddy,inst) -> buddy.releaseMouse(inst.getArg(0).parseInt()));
+      put("waitforidle",(buddy,inst) -> buddy.waitForIdle());
+      put("wheel",(buddy,inst) -> buddy.wheel(inst.getArg(0).parseInt()));
+      
+      // Extra methods
+      put("puts",(buddy,inst) -> {
+        if(inst.args.length < 1) {
+          System.out.println();
+        }
+        else {
+          for(Arg arg: inst.args) {
+            System.out.print(arg.value);
+          }
+          System.out.println();
+        }
+      });
+      
+      // Setters
+      
+      // Getters
+      put("getpixel",(buddy,inst) -> {
+        System.out.println(buddy.getPixel(inst.getArg(0).parseInt(),inst.getArg(1).parseInt()));
+      });
+      put("getosfamily",(buddy,inst) -> System.out.println(buddy.getOSFamily()));
+    }
+    
+    public boolean contains(Instruction inst) {
+      return entries.containsKey(inst.id);
     }
     
     public Executor put(String id,Executor executor) {
