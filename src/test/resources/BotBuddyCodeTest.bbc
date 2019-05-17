@@ -83,3 +83,8 @@ test20 <<-E
 test21 <<-E
   Hello World
   E 10 20
+
+# 1 char args with EOL & spaces
+test22 1 2
+ test23
+  test24

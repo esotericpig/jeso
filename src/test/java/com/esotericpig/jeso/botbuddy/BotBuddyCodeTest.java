@@ -40,7 +40,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * <pre>
- * On a headless server, all of these tests will not run.
+ * On a headless server, some tests will not run.
  * </pre>
  * 
  * @author Jonathan Bradley Whited (@esotericpig)
@@ -60,6 +60,20 @@ public class BotBuddyCodeTest {
   
   @AfterEach
   public void tearDownEach() {
+  }
+  
+  @Test
+  public void testExecutors() {
+    BotBuddyCode.Executors executors = BotBuddyCode.DefaultExecutors.defaultExecutors;
+    
+    // If this doesn't match, then an entry was accidentally overridden in #addBase().
+    //   For example, "put("delayauto",...);" was called twice with the same ID, instead of using a new ID.
+    assertEquals(BotBuddyCode.Executors.BASE_COUNT,executors.getSize());
+    
+    for(String id: executors.getEntries().keySet()) {
+      // Possible if "delay_Auto" or something was typed in instead of "delayauto"
+      assertEquals(BotBuddyCode.Instruction.toId(id),id);
+    }
   }
   
   @Test

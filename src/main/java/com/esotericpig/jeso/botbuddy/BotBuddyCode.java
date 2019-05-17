@@ -22,6 +22,7 @@ import com.esotericpig.jeso.code.LineOfCode;
 import com.esotericpig.jeso.code.ParseCodeException;
 
 import java.awt.AWTException;
+import java.awt.Color;
 import java.awt.Point;
 
 import java.io.BufferedReader;
@@ -141,11 +142,8 @@ public class BotBuddyCode implements Closeable {
     output.setLength(0);
     
     while(nextLine() != null) {
-      seekToNonWhitespace();
-      
-      // Ignore empty line or comment (handled in seek)
-      if(isLineEnd()) {
-        continue;
+      if(!seekToNonWhitespace()) {
+        continue; // Ignore empty line or comment (handled in seek)
       }
       
       // Instruction name
@@ -155,15 +153,16 @@ public class BotBuddyCode implements Closeable {
       // Instruction args
       List<Arg> args = new ArrayList<>();
       
-      do {
-        seekToNonWhitespace();
+      // nextLine() may or may not be called, so check if null
+      while(line != null && hasLineChar()) {
+        final int prevLineIndex = lineIndex;
+        final int prevLineNumber = lineNumber;
         
-        if(isLineEnd()) {
+        if(!seekToNonWhitespace()) {
           break;
         }
         
-        final int prevLineIndex = lineIndex;
-        final int prevLineNumber = lineNumber;
+        LineOfCode argLoc = new LineOfCode(lineNumber,lineIndex);
         
         if(lineChar == '"' || lineChar == '\'') {
           readQuote(lineChar);
@@ -184,8 +183,8 @@ public class BotBuddyCode implements Closeable {
             ,lineIndex);
         }
         
-        args.add(new Arg(buffer.toString(),prevLineNumber,prevLineIndex));
-      } while(line != null && hasLineChar()); // nextLine() might have been called
+        args.add(new Arg(buffer.toString(),argLoc));
+      }
       
       // Execute/output instruction
       Instruction instruction = new Instruction(name,args,loc);
@@ -448,6 +447,7 @@ public class BotBuddyCode implements Closeable {
   }
   
   public StringBuilder readSpecialQuote() throws IOException,ParseCodeException {
+    // '%' with EOL or '% ...'
     if(!hasLineChar() || Character.isWhitespace(nextLineChar())) {
       throw new ParseCodeException("Invalid special quote '%' without a tag, with spaces, or unquoted string"
         ,lineNumber,lineIndex);
@@ -495,19 +495,24 @@ public class BotBuddyCode implements Closeable {
     return buffer;
   }
   
-  public int seekToNonWhitespace() {
+  /**
+   * @return true if found a non-whitespace char, else false
+   */
+  public boolean seekToNonWhitespace() {
     while(hasLineChar()) {
       if(!Character.isWhitespace(nextLineChar())) {
         // Ignore comment
         if(lineChar == commentChar) {
           lineIndex = line.length(); // Go to end
+          
+          return false;
         }
         
-        break;
+        return true;
       }
     }
     
-    return lineChar;
+    return false;
   }
   
   public void setBuddy(BotBuddy buddy) {
@@ -669,7 +674,7 @@ public class BotBuddyCode implements Closeable {
     public static final Executors defaultExecutors = new Executors();
     
     static {
-      defaultExecutors.addBaseExecutors();
+      defaultExecutors.addBase();
     }
   }
   
@@ -679,14 +684,42 @@ public class BotBuddyCode implements Closeable {
   }
   
   public static class Executors {
+    /**
+     * <pre>
+     * This MUST match the number of base entries in #addBase() for testing,
+     *   because the test will fail if an entry has been overridden accidentally.
+     * </pre>
+     */
+    public static final int BASE_COUNT = 27;
+    
     protected Map<String,Executor> entries;
     
-    // TODO: initCapacity, loadFactor
     public Executors() {
-      entries = new HashMap<>();
+      // Default loadFactor is 0.75, so make it so we have enough on init.
+      //   Use 0.74 because casting doesn't round, and don't want to use Math.round().
+      this((int)(BASE_COUNT / 0.74));
     }
     
-    public void addBaseExecutors() {
+    /**
+     * <pre>
+     * This does NOT copy the entries, but uses {@code entries} directly as is.
+     * </pre>
+     * 
+     * @param entries the entries to be used directly (not copied)
+     */
+    public Executors(Map<String,Executor> entries) {
+      this.entries = entries;
+    }
+    
+    public Executors(int initCapacity) {
+      this(new HashMap<>(initCapacity));
+    }
+    
+    public Executors(int initCapacity,float loadFactor) {
+      this(new HashMap<>(initCapacity,loadFactor));
+    }
+    
+    public void addBase() {
       // TODO: printScreen(): save to file or clipboard?
       // TODO: shortcut/shortcutFast(): load 2nd file or add logic for methods?
       //                                1) can use Shortcuts.PASTE, etc.
@@ -783,7 +816,18 @@ public class BotBuddyCode implements Closeable {
       
       // Getters
       put("getpixel",(buddy,inst) -> {
-        System.out.println(buddy.getPixel(inst.getArg(0).parseInt(),inst.getArg(1).parseInt()));
+        // Probably don't need alpha I think; probably always 255
+        Color pixel = buddy.getPixel(inst.getArg(0).parseInt(),inst.getArg(1).parseInt());
+        int pixelWord = (pixel.getRed() << 16) | (pixel.getGreen() << 8) | (pixel.getBlue());
+        StringBuilder str = new StringBuilder(47);
+        
+        str.append("(r=").append(pixel.getRed());
+        str.append(",g=").append(pixel.getGreen());
+        str.append(",b=").append(pixel.getBlue());
+        str.append(") | Hex=").append(Integer.toHexString(pixelWord).toUpperCase(Locale.ENGLISH));
+        str.append(" | RGB=").append(pixelWord);
+        
+        System.out.println(str);
       });
       put("getosfamily",(buddy,inst) -> System.out.println(buddy.getOSFamily()));
     }
@@ -797,13 +841,6 @@ public class BotBuddyCode implements Closeable {
     }
     
     public Executor putWithId(String id,Executor executor) {
-      // TODO: only do this check if log isDebug
-      String validId = Instruction.toId(id);
-      
-      if(!id.equals(validId)) {
-        throw new IllegalArgumentException("ID '" + id + "' is invalid; must be '" + validId + "'");
-      }
-      
       return entries.put(id,executor);
     }
     
@@ -833,6 +870,10 @@ public class BotBuddyCode implements Closeable {
     
     public Map<String,Executor> getEntries() {
       return entries;
+    }
+    
+    public int getSize() {
+      return entries.size();
     }
     
     public Executor getWithId(String id) {

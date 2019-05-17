@@ -74,3 +74,8 @@ E?'
 - [0]: 'Hello World'
 - [1]: '10'
 - [2]: '20'
+[test22:test22]:none
+- [0]: '1'
+- [1]: '2'
+[test23:test23]:none
+[test24:test24]:none
