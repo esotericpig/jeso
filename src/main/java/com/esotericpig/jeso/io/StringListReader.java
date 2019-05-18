@@ -203,10 +203,11 @@ public class StringListReader extends Reader {
           
           if(++lineIndex >= list.size() || !iterator.hasNext()) {
             line = null;
+            
+            break;
           }
-          else {
-            line = iterator.next();
-          }
+          
+          line = iterator.next();
         }
       }
       
