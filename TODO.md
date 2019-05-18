@@ -2,14 +2,15 @@
 
 ## v1.0.0
 
-- [ ] BotBuddy
+- [x] BotBuddy
     - [x] Add safe mode (if user moves mouse)
     - [x] Mac OS X support for paste
-    - [ ] Take in File or Array/List (of String); allow single/double quotes and/or Ruby heredocs:
+    - [x] Take in File or Array/List (of String); allow single/double quotes and/or Ruby heredocs:
         - `paste 999  493  "Fish"`
         - `enter 1427 500  "Sakana"`
         - `click 1853 1015`
     - [x] Make #doubleClick() more generic; use above method
+    - [ ] Store history of keys/mouse pressed, so can release them if UserIsActiveException during Safe Mode
 - [ ] Add appropriate logging (Logback?); search and remove printlns
 - [ ] CSV class
 - [x] In Gradle, add a task to check/download the Wrapper checksum. [Release Checksums](https://gradle.org/release-checksums/)
@@ -31,7 +32,7 @@
     - f.out("%s[max_name] ","George");
     - f.end(); // Sends all to out
 - [ ] Add my LinkedList; for storing nodes for fast insertion
-- [ ] EscapeJava class
+- [ ] Some type of EscapeBase, and EscapeJava class extends it
      - Can add/remove what is escaped/unescaped in Map
      - Can specify end tag; default: "
      - Can specify escape char; default: \
