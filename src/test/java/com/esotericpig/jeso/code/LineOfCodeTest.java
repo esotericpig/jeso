@@ -51,33 +51,36 @@ public class LineOfCodeTest {
     final int lineColumn = rand.nextInt(1111);
     final int lineNumber = rand.nextInt(1111);
     
-    LineOfCode loc1 = new LineOfCode();
+    LineOfCode loc1 = new LineOfCode(lineNumber,lineColumn);
     LineOfCode loc2 = new LineOfCode(lineNumber,lineColumn);
-    LineOfCode loc3 = new LineOfCode(loc2);
-    LineOfCode loc4 = loc3.clone();
-    
-    loc1.setColumn(lineColumn);
-    loc1.setNumber(lineNumber);
     
     System.out.println(loc1.toString());
+    System.out.println(loc2.toString());
+    
+    assertNotEquals(loc1,loc1.next());
+    assertNotEquals(loc1,loc1.nextColumn());
+    assertNotEquals(loc1,loc1.nextNumber());
     
     assertEquals(lineColumn,loc1.getColumn());
-    assertEquals(lineColumn,loc2.getColumn());
-    assertEquals(lineColumn,loc3.getColumn());
-    assertEquals(lineColumn,loc4.getColumn());
     assertEquals(lineNumber,loc1.getNumber());
-    assertEquals(lineNumber,loc2.getNumber());
-    assertEquals(lineNumber,loc3.getNumber());
-    assertEquals(lineNumber,loc4.getNumber());
-    
-    loc1.reset();
-    loc2.resetColumn();
-    loc2.resetNumber();
     
     assertEquals(loc1.getColumn(),loc2.getColumn());
     assertEquals(loc1.getNumber(),loc2.getNumber());
     
-    assertNotEquals(loc1.nextColumn(),loc1.nextColumn());
-    assertNotEquals(loc1.nextNumber(),loc1.nextNumber());
+    assertEquals(loc1,loc2);
+    assertEquals(loc1.hashCode(),loc2.hashCode());
+    assertEquals(loc1.toString(),loc2.toString());
+    
+    LineOfCode[] locs = new LineOfCode[]{
+      loc1.next(),
+      loc1.nextColumn(),
+      loc1.nextNumber()
+    };
+    
+    for(LineOfCode loc: locs) {
+      assertNotEquals(loc1,loc);
+      assertNotEquals(loc1.hashCode(),loc.hashCode());
+      assertNotEquals(loc1.toString(),loc.toString());
+    }
   }
 }

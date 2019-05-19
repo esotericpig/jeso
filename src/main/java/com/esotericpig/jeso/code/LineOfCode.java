@@ -21,16 +21,14 @@ package com.esotericpig.jeso.code;
 /**
  * @author Jonathan Bradley Whited (@esotericpig)
  */
-public class LineOfCode implements Cloneable {
-  protected int column;
-  protected int number;
+public class LineOfCode {
+  public static final LineOfCode FIRST = new LineOfCode();
+  
+  protected final int column;
+  protected final int number;
   
   public LineOfCode() {
-    reset();
-  }
-  
-  public LineOfCode(LineOfCode loc) {
-    this(loc.number,loc.column);
+    this(1,1);
   }
   
   public LineOfCode(int number,int column) {
@@ -38,38 +36,16 @@ public class LineOfCode implements Cloneable {
     this.number = number;
   }
   
-  @Override
-  public LineOfCode clone() {
-    return new LineOfCode(this);
+  public LineOfCode next() {
+    return new LineOfCode(number + 1,1);
   }
   
-  public int nextColumn() {
-    return column++;
+  public LineOfCode nextColumn() {
+    return new LineOfCode(number,column + 1);
   }
   
-  public int nextNumber() {
-    return number++;
-  }
-  
-  public void reset() {
-    resetColumn();
-    resetNumber();
-  }
-  
-  public void resetColumn() {
-    column = 1;
-  }
-  
-  public void resetNumber() {
-    number = 1;
-  }
-  
-  public void setColumn(int column) {
-    this.column = column;
-  }
-  
-  public void setNumber(int number) {
-    this.number = number;
+  public LineOfCode nextNumber() {
+    return new LineOfCode(number + 1,column + 1);
   }
   
   public int getColumn() {
@@ -78,6 +54,30 @@ public class LineOfCode implements Cloneable {
   
   public int getNumber() {
     return number;
+  }
+  
+  @Override
+  public boolean equals(Object obj) {
+    if(obj == this) {
+      return true;
+    }
+    if(!(obj instanceof LineOfCode)) {
+      return false;
+    }
+    
+    LineOfCode loc = (LineOfCode)obj;
+    
+    return column == loc.column && number == loc.number;
+  }
+  
+  @Override
+  public int hashCode() {
+    int result = 1;
+    
+    result = 31 * result + column;
+    result = 31 * result + number;
+    
+    return result;
   }
   
   @Override
