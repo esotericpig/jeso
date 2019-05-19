@@ -27,7 +27,7 @@ public class LineOfCode {
   protected final int column;
   protected final int number;
   
-  public LineOfCode() {
+  protected LineOfCode() {
     this(1,1);
   }
   
