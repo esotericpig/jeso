@@ -21,6 +21,8 @@ package com.esotericpig.jeso.botbuddy;
 import com.esotericpig.jeso.code.LineOfCode;
 import com.esotericpig.jeso.code.ParseCodeException;
 
+import com.esotericpig.jeso.io.StringListReader;
+
 import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Point;
@@ -28,6 +30,7 @@ import java.awt.Point;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.StringReader;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -46,20 +49,14 @@ import java.util.Map;
 
 import java.util.regex.Pattern;
 
+// TODO: use ReentrantLock
+
 /**
  * <pre>
- * 
  * // TODO: flesh this out
- * If you want to process a String, use StringReader:
- *   BotBuddyCode bbc = BotBuddyCode().builder(new StringReader(str)).build();
- *   
- *   bbc.interpretDryRun();
  * </pre>
  * 
  * @author Jonathan Bradley Whited (@esotericpig)
- * 
- * @see java.io.StringReader
- * @see java.nio.file.Paths
  */
 public class BotBuddyCode implements Closeable {
   public static final int DEFAULT_COMMENT_CHAR = '#';
@@ -77,12 +74,21 @@ public class BotBuddyCode implements Closeable {
     return new Builder(path,charset);
   }
   
+  public static Builder builder(CharSequence str) {
+    return new Builder(str);
+  }
+  
+  public static Builder builder(List<String> strList) {
+    return new Builder(strList);
+  }
+  
   protected BotBuddy buddy;
   protected StringBuilder buffer = new StringBuilder();
   protected int commentChar;
   protected int escapeChar;
   protected Executors executors;
   protected BufferedReader input = null;
+  protected String instructionName = null;
   protected String line = null;
   protected int lineChar = 0;
   protected int lineIndex = 0;
@@ -123,6 +129,7 @@ public class BotBuddyCode implements Closeable {
     buddy = null;
     buffer = null;
     executors = null;
+    instructionName = null;
     line = null;
     output = null;
     
@@ -132,11 +139,20 @@ public class BotBuddyCode implements Closeable {
     }
   }
   
+  public ParseCodeException buildParseCodeException(String message) {
+    return ParseCodeException.build(lineNumber,lineIndex,message,instructionName);
+  }
+  
+  public ParseCodeException buildParseCodeException(String message,Throwable cause) {
+    return ParseCodeException.build(lineNumber,lineIndex,message,instructionName,cause);
+  }
+  
   public void interpret() throws IOException,ParseCodeException {
     interpret(true);
   }
   
   public String interpret(boolean execute) throws IOException,ParseCodeException {
+    instructionName = null;
     line = null;
     lineNumber = 0;
     output.setLength(0);
@@ -148,13 +164,12 @@ public class BotBuddyCode implements Closeable {
       
       // Instruction name
       final LineOfCode loc = new LineOfCode(lineNumber,lineIndex);
-      final String name = readToWhitespace().toString();
+      instructionName = readToWhitespace().toString();
       
       // Instruction args
       List<Arg> args = new ArrayList<>();
       
-      // nextLine() may or may not be called, so check if null
-      while(line != null && hasLineChar()) {
+      while(hasLineChar()) {
         final int prevLineIndex = lineIndex;
         final int prevLineNumber = lineNumber;
         
@@ -162,7 +177,7 @@ public class BotBuddyCode implements Closeable {
           break;
         }
         
-        LineOfCode argLoc = new LineOfCode(lineNumber,lineIndex);
+        final LineOfCode argLoc = new LineOfCode(lineNumber,lineIndex);
         
         if(lineChar == '"' || lineChar == '\'') {
           readQuote(lineChar);
@@ -179,22 +194,26 @@ public class BotBuddyCode implements Closeable {
         
         // Was there a read/seek above? Or are we caught in an infinite loop parsing the same char?
         if(lineIndex == prevLineIndex && lineNumber == prevLineNumber) {
-          throw new ParseCodeException("Internal code is broken causing an infinite loop",lineNumber
-            ,lineIndex);
+          throw buildParseCodeException("Internal code is broken causing an infinite loop");
         }
         
         args.add(new Arg(buffer.toString(),argLoc));
+        
+        // nextLine() might have been called (e.g., heredoc), so check if null
+        if(line == null) {
+          break;
+        }
       }
       
       // Execute/output instruction
-      Instruction instruction = new Instruction(name,args,loc);
+      Instruction instruction = new Instruction(instructionName,args,loc);
       
       if(execute) {
         Executor executor = executors.get(instruction);
         
         if(executor == null) {
-          throw new ParseCodeException("Instruction '" + instruction.id + "' from '" + instruction.name
-            + "' does not exist",instruction.loc);
+          throw instruction.buildParseCodeException("Instruction '" + instruction.id + "' from '"
+            + instruction.name + "' does not exist");
         }
         
         executor.execute(buddy,instruction);
@@ -251,32 +270,32 @@ public class BotBuddyCode implements Closeable {
   public StringBuilder readHeredoc() throws IOException,ParseCodeException {
     // '<...' instead of '<<...'
     if(!hasLineChar() || nextLineChar() != '<') {
-      throw new ParseCodeException("Invalid heredoc '<' instead of '<<' or unquoted string",lineNumber
-        ,lineIndex);
+      throw buildParseCodeException("Invalid heredoc '<' instead of '<<' or unquoted string");
     }
     // '<<' with EOL
     if(!hasLineChar()) {
-      throw new ParseCodeException("Invalid heredoc without a tag or unquoted string",lineNumber,lineIndex);
+      throw buildParseCodeException("Invalid heredoc without a tag or unquoted string");
     }
     
     boolean isIndent = (nextLineChar() == '-');
     
     if(isIndent) {
-      nextLineChar();
+      if(hasLineChar()) {
+        nextLineChar(); // Skip '-'
+      }
+      else {
+        // '<<-' with EOL
+        throw buildParseCodeException("Invalid heredoc without a tag or unquoted string");
+      }
     }
     
     final int prevLineColumn = lineIndex;
     final String endTag = readToLineEnd().toString();
     
-    // '<<-' with EOL
-    if(endTag.isEmpty()) {
-      throw new ParseCodeException("Invalid heredoc without a tag or unquoted string",lineNumber
-        ,prevLineColumn);
-    }
     // '<< ...' or '<<- ...'
     if(!endTag.equals(endTag.trim())) {
-      throw new ParseCodeException("Invalid heredoc with spaces or unquoted string",lineNumber
-        ,prevLineColumn);
+      throw ParseCodeException.build(lineNumber,prevLineColumn,
+        "Invalid heredoc with spaces or unquoted string",instructionName);
     }
     
     // Read the heredoc lines and (possible) indent (<<-)
@@ -449,8 +468,8 @@ public class BotBuddyCode implements Closeable {
   public StringBuilder readSpecialQuote() throws IOException,ParseCodeException {
     // '%' with EOL or '% ...'
     if(!hasLineChar() || Character.isWhitespace(nextLineChar())) {
-      throw new ParseCodeException("Invalid special quote '%' without a tag, with spaces, or unquoted string"
-        ,lineNumber,lineIndex);
+      throw buildParseCodeException(
+        "Invalid special quote '%' without a tag, with spaces, or unquoted string");
     }
     
     switch(lineChar) {
@@ -575,15 +594,6 @@ public class BotBuddyCode implements Closeable {
       this.value = value;
     }
     
-    public int parseInt() throws ParseCodeException {
-      try {
-        return Integer.parseInt(value);
-      }
-      catch(NumberFormatException ex) {
-        throw new ParseCodeException("Arg '" + value + "' must be an int",loc,ex);
-      }
-    }
-    
     @Override
     public String toString() {
       StringBuilder str = new StringBuilder(11 + value.length());
@@ -613,6 +623,14 @@ public class BotBuddyCode implements Closeable {
     
     public Builder(Path path,Charset charset) {
       path(path,charset);
+    }
+    
+    public Builder(CharSequence str) {
+      input(str);
+    }
+    
+    public Builder(List<String> strList) {
+      input(strList);
     }
     
     public BotBuddyCode build() throws AWTException,IOException {
@@ -655,6 +673,18 @@ public class BotBuddyCode implements Closeable {
       return this;
     }
     
+    public Builder input(CharSequence str) {
+      this.input = new BufferedReader(new StringReader(str.toString()));
+      
+      return this;
+    }
+    
+    public Builder input(List<String> strList) {
+      this.input = new BufferedReader(new StringListReader(strList));
+      
+      return this;
+    }
+    
     public Builder path(Path path) {
       this.path = path;
       
@@ -670,7 +700,6 @@ public class BotBuddyCode implements Closeable {
   }
   
   public static class DefaultExecutors {
-    // TODO: init capacity
     public static final Executors defaultExecutors = new Executors();
     
     static {
@@ -745,59 +774,51 @@ public class BotBuddyCode implements Closeable {
       put("beginsafemode",(buddy,inst) -> buddy.beginSafeMode());
       put("click",(buddy,inst) -> {
         switch(inst.args.length) {
-          case 0: buddy.click(); break;
-          case 1: buddy.click(inst.args[0].parseInt()); break;
-          case 2: buddy.click(inst.args[0].parseInt(),inst.args[1].parseInt()); break;
-          default:
-            buddy.click(inst.args[0].parseInt(),inst.args[1].parseInt(),inst.args[2].parseInt());
-            break;
+          case 0:  buddy.click(); break;
+          case 1:  buddy.click(inst.getInt(0)); break;
+          case 2:  buddy.click(inst.getInt(0),inst.getInt(1)); break;
+          default: buddy.click(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
         }
       });
-      put("copy",(buddy,inst) -> buddy.copy(inst.getArg(0).value));
-      put("delay",(buddy,inst) -> buddy.delay(inst.getArg(0).parseInt()));
+      put("copy",(buddy,inst) -> buddy.copy(inst.getStr(0)));
+      put("delay",(buddy,inst) -> buddy.delay(inst.getInt(0)));
       put("delayauto",(buddy,inst) -> buddy.delayAuto());
       put("delayfast",(buddy,inst) -> buddy.delayFast());
       put("delaylong",(buddy,inst) -> buddy.delayLong());
       put("delayshort",(buddy,inst) -> buddy.delayShort());
       put("doubleclick",(buddy,inst) -> {
         switch(inst.args.length) {
-          case 0: buddy.doubleClick(); break;
-          case 1: buddy.doubleClick(inst.args[0].parseInt()); break;
-          case 2: buddy.doubleClick(inst.args[0].parseInt(),inst.args[1].parseInt()); break;
-          default:
-            buddy.doubleClick(inst.args[0].parseInt(),inst.args[1].parseInt(),inst.args[2].parseInt());
-            break;
+          case 0:  buddy.doubleClick(); break;
+          case 1:  buddy.doubleClick(inst.getInt(0)); break;
+          case 2:  buddy.doubleClick(inst.getInt(0),inst.getInt(1)); break;
+          default: buddy.doubleClick(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
         }
       });
       put("endsafemode",(buddy,inst) -> buddy.endSafeMode());
       put("enter",(buddy,inst) -> {
         switch(inst.args.length) {
-          case 0: buddy.enter(); break;
-          case 1: buddy.enter(inst.args[0].value); break;
-          case 2: buddy.enter(inst.args[0].parseInt(),inst.args[1].parseInt()); break;
-          default:
-            buddy.enter(inst.args[0].parseInt(),inst.args[1].parseInt(),inst.args[2].value);
-            break;
+          case 0:  buddy.enter(); break;
+          case 1:  buddy.enter(inst.getStr(0)); break;
+          case 2:  buddy.enter(inst.getInt(0),inst.getInt(1)); break;
+          default: buddy.enter(inst.getInt(0),inst.getInt(1),inst.getStr(2)); break;
         }
       });
-      put("key",(buddy,inst) -> buddy.key(inst.getArg(0).parseInt()));
-      put("move",(buddy,inst) -> buddy.move(inst.getArg(0).parseInt(),inst.getArg(1).parseInt()));
+      put("key",(buddy,inst) -> buddy.key(inst.getInt(0)));
+      put("move",(buddy,inst) -> buddy.move(inst.getInt(0),inst.getInt(1)));
       put("paste",(buddy,inst) -> {
         switch(inst.args.length) {
-          case 0: buddy.paste(); break;
-          case 1: buddy.paste(inst.args[0].value); break;
-          case 2: buddy.paste(inst.args[0].parseInt(),inst.args[1].parseInt()); break;
-          default:
-            buddy.paste(inst.args[0].parseInt(),inst.args[1].parseInt(),inst.args[2].value);
-            break;
+          case 0:  buddy.paste(); break;
+          case 1:  buddy.paste(inst.getStr(0)); break;
+          case 2:  buddy.paste(inst.getInt(0),inst.getInt(1)); break;
+          default: buddy.paste(inst.getInt(0),inst.getInt(1),inst.getStr(2)); break;
         }
       });
-      put("presskey",(buddy,inst) -> buddy.pressKey(inst.getArg(0).parseInt()));
-      put("pressmouse",(buddy,inst) -> buddy.pressMouse(inst.getArg(0).parseInt()));
-      put("releasekey",(buddy,inst) -> buddy.releaseKey(inst.getArg(0).parseInt()));
-      put("releasemouse",(buddy,inst) -> buddy.releaseMouse(inst.getArg(0).parseInt()));
+      put("presskey",(buddy,inst) -> buddy.pressKey(inst.getInt(0)));
+      put("pressmouse",(buddy,inst) -> buddy.pressMouse(inst.getInt(0)));
+      put("releasekey",(buddy,inst) -> buddy.releaseKey(inst.getInt(0)));
+      put("releasemouse",(buddy,inst) -> buddy.releaseMouse(inst.getInt(0)));
       put("waitforidle",(buddy,inst) -> buddy.waitForIdle());
-      put("wheel",(buddy,inst) -> buddy.wheel(inst.getArg(0).parseInt()));
+      put("wheel",(buddy,inst) -> buddy.wheel(inst.getInt(0)));
       
       // Extra methods
       put("puts",(buddy,inst) -> {
@@ -817,7 +838,7 @@ public class BotBuddyCode implements Closeable {
       // Getters
       put("getpixel",(buddy,inst) -> {
         // Probably don't need alpha I think; probably always 255
-        Color pixel = buddy.getPixel(inst.getArg(0).parseInt(),inst.getArg(1).parseInt());
+        Color pixel = buddy.getPixel(inst.getInt(0),inst.getInt(1));
         int pixelWord = (pixel.getRed() << 16) | (pixel.getGreen() << 8) | (pixel.getBlue());
         StringBuilder str = new StringBuilder(47);
         
@@ -926,12 +947,37 @@ public class BotBuddyCode implements Closeable {
       this(name,args.toArray(new Arg[args.size()]),loc);
     }
     
+    public ParseCodeException buildParseCodeException(String message) {
+      return ParseCodeException.build(loc,message,name);
+    }
+    
+    public ParseCodeException buildParseCodeException(String message,Throwable cause) {
+      return ParseCodeException.build(loc,message,name,cause);
+    }
+    
     public Arg getArg(int index) throws ParseCodeException {
       if(index >= args.length) {
-        throw new ParseCodeException("Not enough args",loc);
+        throw buildParseCodeException("Not enough args");
       }
       
       return args[index];
+    }
+    
+    public int getInt(int index) throws ParseCodeException {
+      Arg arg = getArg(index);
+      String value = arg.value;
+      
+      try {
+        return Integer.parseInt(value);
+      }
+      catch(NumberFormatException ex) {
+        // Use arg loc
+        throw ParseCodeException.build(arg.loc,"Arg '" + value + "' must be an int",name,ex);
+      }
+    }
+    
+    public String getStr(int index) throws ParseCodeException {
+      return getArg(index).value;
     }
     
     @Override
@@ -950,7 +996,14 @@ public class BotBuddyCode implements Closeable {
   
   // TODO: make own simple app here; take in file, can do dry run; ButBuddyCodeApp or here?
   public static void main(String[] args) {
+    List<String> l = new LinkedList<>();
+    l.add("get_coords");
+    l.add("get_os_family");
+    l.add("");
+    l.add("puts 'hi'");
+    
     try(BotBuddyCode bbc = BotBuddyCode.builder(Paths.get("bb.rb")).build()) {
+    //try(BotBuddyCode bbc = BotBuddyCode.builder(l).build()) {
       //System.out.print(bbc.interpretDryRun());
       bbc.interpret();
     }
