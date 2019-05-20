@@ -61,6 +61,7 @@ import java.util.regex.Pattern;
 public class BotBuddyCode implements Closeable {
   public static final int DEFAULT_COMMENT_CHAR = '#';
   public static final int DEFAULT_ESCAPE_CHAR = '\\';
+  public static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+",Pattern.UNICODE_CHARACTER_CLASS);
   
   public static Builder builder(BufferedReader input) {
     return new Builder(input);
@@ -292,10 +293,12 @@ public class BotBuddyCode implements Closeable {
     final int prevLineColumn = lineIndex;
     final String endTag = readToLineEnd().toString();
     
-    // '<< ...' or '<<- ...'
-    if(!endTag.equals(endTag.trim())) {
+    // End tag cannot have whitespaces
+    // - To help prevent the user from fat-fingering "<<-EOS" as "<< -EOS"
+    // - Because a whitespace denotes a new arg "EOS 10 20" ("E O S 10 20" would be impossible)
+    if(!endTag.equals(WHITESPACE_PATTERN.matcher(endTag).replaceAll(""))) {
       throw ParseCodeException.build(lineNumber,prevLineColumn,
-        "Invalid heredoc with spaces or unquoted string",instructionName);
+        "Invalid heredoc with whitespaces in the tag or unquoted string",instructionName);
     }
     
     // Read the heredoc lines and (possible) indent (<<-)
@@ -347,7 +350,7 @@ public class BotBuddyCode implements Closeable {
             
             break;
           }
-          if(isLineEnd()) {
+          if(isEndOfLine()) {
             break;
           }
           
@@ -566,12 +569,12 @@ public class BotBuddyCode implements Closeable {
     return executors;
   }
   
-  public boolean hasLineChar() {
-    return lineIndex < line.length();
+  public boolean isEndOfLine() {
+    return lineIndex >= line.length();
   }
   
-  public boolean isLineEnd() {
-    return lineIndex >= line.length();
+  public boolean hasLineChar() {
+    return lineIndex < line.length();
   }
   
   public static class Arg {
@@ -907,10 +910,11 @@ public class BotBuddyCode implements Closeable {
   }
   
   public static class Instruction {
-    public static final Pattern ID_PATTERN = Pattern.compile("[\\s_\\-\\.]+",Pattern.UNICODE_CHARACTER_CLASS);
+    public static final Pattern TO_ID_PATTERN = Pattern.compile("[\\s_\\-\\.]+"
+      ,Pattern.UNICODE_CHARACTER_CLASS);
     
     public static String toId(String name) {
-      return ID_PATTERN.matcher(name).replaceAll("").toLowerCase(Locale.ENGLISH);
+      return TO_ID_PATTERN.matcher(name).replaceAll("").toLowerCase(Locale.ENGLISH);
     }
     
     public Arg[] args;
