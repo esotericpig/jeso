@@ -45,7 +45,7 @@ public class LineOfCode {
   }
   
   public LineOfCode nextNumber() {
-    return new LineOfCode(number + 1,column + 1);
+    return new LineOfCode(number + 1,column);
   }
   
   public int getColumn() {

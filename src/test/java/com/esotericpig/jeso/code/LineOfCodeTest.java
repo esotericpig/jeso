@@ -82,5 +82,15 @@ public class LineOfCodeTest {
       assertNotEquals(loc1.hashCode(),loc.hashCode());
       assertNotEquals(loc1.toString(),loc.toString());
     }
+    
+    loc2 = loc1.nextColumn();
+    
+    assertEquals(loc1.getColumn() + 1,loc2.getColumn());
+    assertEquals(loc1.getNumber(),loc2.getNumber());
+    
+    loc2 = loc1.nextNumber();
+    
+    assertEquals(loc1.getColumn(),loc2.getColumn());
+    assertEquals(loc1.getNumber() + 1,loc2.getNumber());
   }
 }
