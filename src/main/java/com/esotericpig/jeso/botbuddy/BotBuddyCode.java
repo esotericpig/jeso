@@ -18,6 +18,8 @@
 
 package com.esotericpig.jeso.botbuddy;
 
+import com.esotericpig.jeso.OSFamily;
+
 import com.esotericpig.jeso.code.LineOfCode;
 import com.esotericpig.jeso.code.ParseCodeException;
 
@@ -25,6 +27,7 @@ import com.esotericpig.jeso.io.StringListReader;
 
 import java.awt.AWTException;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Point;
 
 import java.io.BufferedReader;
@@ -719,10 +722,10 @@ public class BotBuddyCode implements Closeable {
     /**
      * <pre>
      * This MUST match the number of base entries in #addBase() for testing,
-     *   because the test will fail if an entry has been overridden accidentally.
+     *   because a JUnit test will fail if an entry has been overwritten accidentally.
      * </pre>
      */
-    public static final int BASE_COUNT = 27;
+    public static final int BASE_COUNT = 36;
     
     protected Map<String,Executor> entries;
     
@@ -751,18 +754,23 @@ public class BotBuddyCode implements Closeable {
       this(new HashMap<>(initCapacity,loadFactor));
     }
     
+    /**
+     * <pre>
+     * WARNING:
+     *   If you add a new executor in this method, you MUST update #BASE_COUNT.
+     *   There is a JUnit test that checks to make sure #BASE_COUNT and
+     *     DefaultExecutors size are equal.
+     *   This helps prevent forgetting to change the ID when copy & pasting:
+     *     // "getxcoord" is overwritten by the 2nd line
+     *     put("getxcoord",(buddy,inst) -> BotBuddy.getXCoord());
+     *     put("getxcoord",(buddy,inst) -> BotBuddy.getYCoord());
+     * </pre>
+     */
     public void addBase() {
       // TODO: printScreen(): save to file or clipboard?
       // TODO: shortcut/shortcutFast(): load 2nd file or add logic for methods?
       //                                1) can use Shortcuts.PASTE, etc.
       //                                2) shortcut "getcoords\nbeep" (use heredoc/string); StringReader
-      // TODO: setAutoDelay(): parse int/boolean?
-      // TODO: setAutoWaitForIdle(): parseBoolean()
-      
-      // TODO:
-      //   setFastDelay,setLongDelay,setShortDelay
-      //   setOSFamily
-      //   getters
       
       // Static methods
       put("getcoords",(buddy,inst) -> {
@@ -837,6 +845,42 @@ public class BotBuddyCode implements Closeable {
       });
       
       // Setters
+      put("setautodelay",(buddy,inst) -> {
+        String msg = "setAutoDelay: ";
+        
+        try {
+          buddy.setAutoDelay(inst.getInt(0));
+          msg += buddy.getAutoDelay();
+        }
+        catch(ParseCodeException ex) {
+          buddy.setAutoDelay(inst.getBool(0));
+          msg += buddy.isAutoDelay();
+        }
+        
+        System.out.println(msg);
+      });
+      put("setautowaitforidle",(buddy,inst) -> {
+        buddy.setAutoWaitForIdle(inst.getBool(0));
+        System.out.println("setAutoWaitForIdle: " + buddy.isAutoWaitForIdle());
+      });
+      put("setfastdelay",(buddy,inst) -> {
+        buddy.setFastDelay(inst.getInt(0));
+        System.out.println("setFastDelay: " + buddy.getFastDelay());
+      });
+      put("setlongdelay",(buddy,inst) -> {
+        buddy.setLongDelay(inst.getInt(0));
+        System.out.println("setLongDelay: " + buddy.getLongDelay());
+      });
+      put("setosfamily",(buddy,inst) -> {
+        OSFamily osf = OSFamily.guessFromName(inst.getStr(0));
+        
+        buddy.setOSFamily(osf);
+        System.out.println("setOSFamily: " + buddy.getOSFamily());
+      });
+      put("setshortdelay",(buddy,inst) -> {
+        buddy.setShortDelay(inst.getInt(0));
+        System.out.println("setShortDelay: " + buddy.getShortDelay());
+      });
       
       // Getters
       put("getpixel",(buddy,inst) -> {
@@ -854,6 +898,13 @@ public class BotBuddyCode implements Closeable {
         System.out.println(str);
       });
       put("getosfamily",(buddy,inst) -> System.out.println(buddy.getOSFamily()));
+      put("getscreenheight",(buddy,inst) -> System.out.println(buddy.getScreenHeight()));
+      put("getscreensize",(buddy,inst) -> {
+        Dimension size = buddy.getScreenSize();
+        
+        System.out.println("" + size.width + "x" + size.height);
+      });
+      put("getscreenwidth",(buddy,inst) -> System.out.println(buddy.getScreenWidth()));
     }
     
     public boolean contains(Instruction inst) {
@@ -861,31 +912,31 @@ public class BotBuddyCode implements Closeable {
     }
     
     public Executor put(String id,Executor executor) {
-      return putWithId(id,executor);
+      return putWithID(id,executor);
     }
     
-    public Executor putWithId(String id,Executor executor) {
+    public Executor putWithID(String id,Executor executor) {
       return entries.put(id,executor);
     }
     
     public Executor putWithName(String name,Executor executor) {
-      return entries.put(Instruction.toId(name),executor);
+      return entries.put(Instruction.toID(name),executor);
     }
     
     public Executor remove(String id) {
-      return removeWithId(id);
+      return removeWithID(id);
     }
     
-    public Executor removeWithId(String id) {
+    public Executor removeWithID(String id) {
       return entries.remove(id);
     }
     
     public Executor removeWithName(String name) {
-      return entries.remove(Instruction.toId(name));
+      return entries.remove(Instruction.toID(name));
     }
     
     public Executor get(String id) {
-      return getWithId(id);
+      return getWithID(id);
     }
     
     public Executor get(Instruction inst) {
@@ -900,20 +951,21 @@ public class BotBuddyCode implements Closeable {
       return entries.size();
     }
     
-    public Executor getWithId(String id) {
+    public Executor getWithID(String id) {
       return entries.get(id);
     }
     
     public Executor getWithName(String name) {
-      return entries.get(Instruction.toId(name));
+      return entries.get(Instruction.toID(name));
     }
   }
   
   public static class Instruction {
     public static final Pattern TO_ID_PATTERN = Pattern.compile("[\\s_\\-\\.]+"
       ,Pattern.UNICODE_CHARACTER_CLASS);
+    public static final String[] TRUE_BOOLS = new String[]{"1","on","t","true","y","yes"};
     
-    public static String toId(String name) {
+    public static String toID(String name) {
       return TO_ID_PATTERN.matcher(name).replaceAll("").toLowerCase(Locale.ENGLISH);
     }
     
@@ -938,7 +990,7 @@ public class BotBuddyCode implements Closeable {
       }
       
       this.args = args;
-      this.id = toId(name);
+      this.id = toID(name);
       this.loc = loc;
       this.name = name;
     }
@@ -967,16 +1019,30 @@ public class BotBuddyCode implements Closeable {
       return args[index];
     }
     
+    public boolean getBool(int index) throws ParseCodeException {
+      Arg arg = getArg(index);
+      String value = WHITESPACE_PATTERN.matcher(arg.value).replaceAll("").toLowerCase(Locale.ENGLISH);
+      
+      // TODO: puts this code in a Strs or Bools class
+      // Boolean.parseBoolean() only does a case-insensitive match on "true", so don't use it
+      for(String trueBool: TRUE_BOOLS) {
+        if(value.equals(trueBool)) {
+          return true;
+        }
+      }
+      
+      return false;
+    }
+    
     public int getInt(int index) throws ParseCodeException {
       Arg arg = getArg(index);
-      String value = arg.value;
       
       try {
-        return Integer.parseInt(value);
+        return Integer.parseInt(arg.value);
       }
       catch(NumberFormatException ex) {
         // Use arg loc
-        throw ParseCodeException.build(arg.loc,"Arg '" + value + "' must be an int",name,ex);
+        throw ParseCodeException.build(arg.loc,"Arg '" + arg.value + "' must be an int",name,ex);
       }
     }
     
@@ -1006,7 +1072,7 @@ public class BotBuddyCode implements Closeable {
     l.add("");
     l.add("puts 'hi'");
     
-    try(BotBuddyCode bbc = BotBuddyCode.builder(Paths.get("bb.rb")).build()) {
+    try(BotBuddyCode bbc = BotBuddyCode.builder(Paths.get("stock/bb.rb")).build()) {
     //try(BotBuddyCode bbc = BotBuddyCode.builder(l).build()) {
       //System.out.print(bbc.interpretDryRun());
       bbc.interpret();

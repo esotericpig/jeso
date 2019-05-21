@@ -72,7 +72,7 @@ public class BotBuddyCodeTest {
     
     for(String id: executors.getEntries().keySet()) {
       // Possible if "delay_Auto" or something was typed in instead of "delayauto"
-      assertEquals(BotBuddyCode.Instruction.toId(id),id);
+      assertEquals(BotBuddyCode.Instruction.toID(id),id);
     }
   }
   
