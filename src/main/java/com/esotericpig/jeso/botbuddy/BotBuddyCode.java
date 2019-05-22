@@ -725,7 +725,7 @@ public class BotBuddyCode implements Closeable {
      *   because a JUnit test will fail if an entry has been overwritten accidentally.
      * </pre>
      */
-    public static final int BASE_COUNT = 36;
+    public static final int BASE_COUNT = 47;
     
     protected Map<String,Executor> entries;
     
@@ -756,14 +756,14 @@ public class BotBuddyCode implements Closeable {
     
     /**
      * <pre>
-     * WARNING:
+     * <b>WARNING:</b>
      *   If you add a new executor in this method, you MUST update #BASE_COUNT.
      *   There is a JUnit test that checks to make sure #BASE_COUNT and
      *     DefaultExecutors size are equal.
-     *   This helps prevent forgetting to change the ID when copy & pasting:
+     *   This helps prevent forgetting to change the ID when copy &amp; pasting:
      *     // "getxcoord" is overwritten by the 2nd line
-     *     put("getxcoord",(buddy,inst) -> BotBuddy.getXCoord());
-     *     put("getxcoord",(buddy,inst) -> BotBuddy.getYCoord());
+     *     put("getxcoord",(buddy,inst) -&gt; BotBuddy.getXCoord());
+     *     put("getxcoord",(buddy,inst) -&gt; BotBuddy.getYCoord());
      * </pre>
      */
     public void addBase() {
@@ -805,6 +805,7 @@ public class BotBuddyCode implements Closeable {
           default: buddy.doubleClick(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
         }
       });
+      put("drag",(buddy,inst) -> buddy.drag(inst.getInt(0),inst.getInt(1),inst.getInt(2),inst.getInt(3)));
       put("endsafemode",(buddy,inst) -> buddy.endSafeMode());
       put("enter",(buddy,inst) -> {
         switch(inst.args.length) {
@@ -815,6 +816,18 @@ public class BotBuddyCode implements Closeable {
         }
       });
       put("key",(buddy,inst) -> buddy.key(inst.getInt(0)));
+      put("leftclick",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 0:  buddy.leftClick(); break;
+          default: buddy.leftClick(inst.getInt(0),inst.getInt(1)); break;
+        }
+      });
+      put("middleclick",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 0:  buddy.middleClick(); break;
+          default: buddy.middleClick(inst.getInt(0),inst.getInt(1)); break;
+        }
+      });
       put("move",(buddy,inst) -> buddy.move(inst.getInt(0),inst.getInt(1)));
       put("paste",(buddy,inst) -> {
         switch(inst.args.length) {
@@ -824,10 +837,39 @@ public class BotBuddyCode implements Closeable {
           default: buddy.paste(inst.getInt(0),inst.getInt(1),inst.getStr(2)); break;
         }
       });
-      put("presskey",(buddy,inst) -> buddy.pressKey(inst.getInt(0)));
-      put("pressmouse",(buddy,inst) -> buddy.pressMouse(inst.getInt(0)));
-      put("releasekey",(buddy,inst) -> buddy.releaseKey(inst.getInt(0)));
-      put("releasemouse",(buddy,inst) -> buddy.releaseMouse(inst.getInt(0)));
+      put("presskey",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 1:  buddy.pressKey(inst.getInt(0)); break;
+          default: buddy.pressKey(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
+        }
+      });
+      put("pressmouse",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 1:  buddy.pressMouse(inst.getInt(0)); break;
+          default: buddy.pressMouse(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
+        }
+      });
+      put("releaseall",(buddy,inst) -> buddy.releaseAll());
+      put("releaseallkeys",(buddy,inst) -> buddy.releaseAllKeys());
+      put("releaseallmice",(buddy,inst) -> buddy.releaseAllMice());
+      put("releasekey",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 1:  buddy.releaseKey(inst.getInt(0)); break;
+          default: buddy.releaseKey(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
+        }
+      });
+      put("releasemouse",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 1:  buddy.releaseMouse(inst.getInt(0)); break;
+          default: buddy.releaseMouse(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
+        }
+      });
+      put("rightclick",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 0:  buddy.rightClick(); break;
+          default: buddy.rightClick(inst.getInt(0),inst.getInt(1)); break;
+        }
+      });
       put("waitforidle",(buddy,inst) -> buddy.waitForIdle());
       put("wheel",(buddy,inst) -> buddy.wheel(inst.getInt(0)));
       
@@ -845,6 +887,9 @@ public class BotBuddyCode implements Closeable {
       });
       
       // Setters
+      put("clearallpressed",(buddy,inst) -> buddy.clearAllPressed());
+      put("clearallpressedkeys",(buddy,inst) -> buddy.clearAllPressedKeys());
+      put("clearallpressedmice",(buddy,inst) -> buddy.clearAllPressedMice());
       put("setautodelay",(buddy,inst) -> {
         String msg = "setAutoDelay: ";
         
@@ -876,6 +921,10 @@ public class BotBuddyCode implements Closeable {
         
         buddy.setOSFamily(osf);
         System.out.println("setOSFamily: " + buddy.getOSFamily());
+      });
+      put("setreleasemode",(buddy,inst) -> {
+        buddy.setReleaseMode(inst.getBool(0));
+        System.out.println("setReleaseMode: " + buddy.isReleaseMode());
       });
       put("setshortdelay",(buddy,inst) -> {
         buddy.setShortDelay(inst.getInt(0));
@@ -1064,7 +1113,7 @@ public class BotBuddyCode implements Closeable {
     }
   }
   
-  // TODO: make own simple app here; take in file, can do dry run; ButBuddyCodeApp or here?
+  // TODO: make own simple app here; take in file, can do dry run; BotBuddyCodeApp or here?
   public static void main(String[] args) {
     List<String> l = new LinkedList<>();
     l.add("get_coords");
@@ -1072,14 +1121,22 @@ public class BotBuddyCode implements Closeable {
     l.add("");
     l.add("puts 'hi'");
     
+    BotBuddy bb = null;
+    
     try(BotBuddyCode bbc = BotBuddyCode.builder(Paths.get("stock/bb.rb")).build()) {
     //try(BotBuddyCode bbc = BotBuddyCode.builder(l).build()) {
       //System.out.print(bbc.interpretDryRun());
+      bb = bbc.getBuddy();
       bbc.interpret();
     }
     catch(Exception ex) {
       System.out.println(ex);
       ex.printStackTrace();
+    }
+    finally {
+      if(bb != null) {
+        bb.releaseAll();
+      }
     }
   }
 }
