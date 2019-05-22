@@ -41,7 +41,10 @@ import java.awt.event.KeyEvent;
 
 import java.awt.image.BufferedImage;
 
-// TODO: add leftClick, rightClick, drag
+import java.util.LinkedList;
+import java.util.ListIterator;
+
+// TODO: add begin/endFastMode()?
 
 /**
  * <pre>
@@ -59,7 +62,10 @@ import java.awt.image.BufferedImage;
  *   new BotBuddy.Builder().build();       // Not recommended, but fine
  *   new BotBuddy(new BotBuddy.Builder()); // Not recommended, but fine
  * 
- * There's a Safe Mode that throws UserIsActiveException if the user moves the mouse:
+ * There's a Safe Mode that throws UserIsActiveException if the user moves the mouse.
+ * In addition, the pressed keys and pressed mouse buttons are stored internally if
+ * Release Mode is on (on by default), so that you can release everything currently
+ * pressed down to alleviate problems for the user when active.
  *   try {
  *     buddy.beginSafeMode()
  *          .enter(1470,131,"Mommy")
@@ -68,6 +74,9 @@ import java.awt.image.BufferedImage;
  *          .endSafeMode();
  *   }
  *   catch(UserIsActiveException ex) {
+ *     // Release all keys and/or mouse buttons pressed down by our automatic operations
+ *     buddy.releaseAll();
+ *     
  *     // If you move your mouse, "Daddy" will not be executed
  *     System.out.println("User is active! Stopping all automatic operations.");
  *   }
@@ -150,9 +159,12 @@ public class BotBuddy implements Cloneable {
   protected Clipboard clip;
   protected int fastDelay;
   protected boolean isAutoDelay;
+  protected boolean isReleaseMode;
   protected boolean isSafeMode = false;
   protected int longDelay;
   protected OSFamily osFamily;
+  protected LinkedList<Integer> pressedKeys = new LinkedList<>();
+  protected LinkedList<Integer> pressedMice = new LinkedList<>();
   protected Point safeCoords = null;
   protected int shortDelay;
   protected Toolkit tool;
@@ -162,10 +174,13 @@ public class BotBuddy implements Cloneable {
   }
   
   public BotBuddy(BotBuddy buddy) {
+    // Do NOT copy over #pressedKeys and #pressedMice, as it could cause a double release
+    
     bot = buddy.bot;
     clip = buddy.clip;
     fastDelay = buddy.fastDelay;
     isAutoDelay = buddy.isAutoDelay;
+    isReleaseMode = buddy.isReleaseMode;
     isSafeMode = buddy.isSafeMode;
     longDelay = buddy.longDelay;
     osFamily = buddy.osFamily;
@@ -192,6 +207,7 @@ public class BotBuddy implements Cloneable {
     setFastDelay(builder.fastDelay);
     setLongDelay(builder.longDelay);
     setOSFamily(builder.osFamily);
+    setReleaseMode(builder.isReleaseMode);
     setShortDelay(builder.shortDelay);
     
     if(builder.isAutoDelay) {
@@ -320,6 +336,11 @@ public class BotBuddy implements Cloneable {
     return move(x,y).doubleClick(button);
   }
   
+  public BotBuddy drag(int fromX,int fromY,int toX,int toY) {
+    return pressMouse(fromX,fromY,DEFAULT_MOUSE_BUTTON)
+           .releaseMouse(toX,toY,DEFAULT_MOUSE_BUTTON);
+  }
+  
   public BotBuddy endSafeMode() {
     isSafeMode = false;
     safeCoords = null;
@@ -353,6 +374,28 @@ public class BotBuddy implements Cloneable {
     return checkIfSafe();
   }
   
+  public BotBuddy leftClick() {
+    bot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
+    bot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
+    
+    return checkIfSafe();
+  }
+  
+  public BotBuddy leftClick(int x,int y) {
+    return move(x,y).leftClick();
+  }
+  
+  public BotBuddy middleClick() {
+    bot.mousePress(InputEvent.BUTTON2_DOWN_MASK);
+    bot.mouseRelease(InputEvent.BUTTON2_DOWN_MASK);
+    
+    return checkIfSafe();
+  }
+  
+  public BotBuddy middleClick(int x,int y) {
+    return move(x,y).middleClick();
+  }
+  
   public BotBuddy move(int x,int y) {
     bot.mouseMove(x,y);
     
@@ -378,13 +421,29 @@ public class BotBuddy implements Cloneable {
   public BotBuddy pressKey(int keyCode) {
     bot.keyPress(keyCode);
     
+    if(isReleaseMode) {
+      pressedKeys.addFirst(keyCode);
+    }
+    
     return checkIfSafe();
+  }
+  
+  public BotBuddy pressKey(int x,int y,int keyCode) {
+    return move(x,y).pressKey(keyCode);
   }
   
   public BotBuddy pressMouse(int button) {
     bot.mousePress(button);
     
+    if(isReleaseMode) {
+      pressedMice.addFirst(button);
+    }
+    
     return checkIfSafe();
+  }
+  
+  public BotBuddy pressMouse(int x,int y,int button) {
+    return move(x,y).pressMouse(button);
   }
   
   public BufferedImage printScreen(Rectangle screenRect) {
@@ -399,16 +458,63 @@ public class BotBuddy implements Cloneable {
     return printScreen(new Rectangle(x,y,width,height));
   }
   
+  public BotBuddy releaseAll() {
+    return releaseAllKeys().releaseAllMice();
+  }
+  
+  public BotBuddy releaseAllKeys() {
+    for(ListIterator<Integer> it = pressedKeys.listIterator(); it.hasNext(); it.remove()) {
+      bot.keyRelease(it.next());
+    }
+    
+    return this;
+  }
+  
+  public BotBuddy releaseAllMice() {
+    for(ListIterator<Integer> it = pressedMice.listIterator(); it.hasNext(); it.remove()) {
+      bot.mouseRelease(it.next());
+    }
+    
+    return this;
+  }
+  
   public BotBuddy releaseKey(int keyCode) {
     bot.keyRelease(keyCode);
     
+    if(isReleaseMode) {
+      pressedKeys.remove(keyCode);
+    }
+    
     return checkIfSafe();
+  }
+  
+  public BotBuddy releaseKey(int x,int y,int keyCode) {
+    return move(x,y).releaseKey(keyCode);
   }
   
   public BotBuddy releaseMouse(int button) {
     bot.mouseRelease(button);
     
+    if(isReleaseMode) {
+      pressedMice.remove(button);
+    }
+    
     return checkIfSafe();
+  }
+  
+  public BotBuddy releaseMouse(int x,int y,int button) {
+    return move(x,y).releaseMouse(button);
+  }
+  
+  public BotBuddy rightClick() {
+    bot.mousePress(InputEvent.BUTTON3_DOWN_MASK);
+    bot.mouseRelease(InputEvent.BUTTON3_DOWN_MASK);
+    
+    return checkIfSafe();
+  }
+  
+  public BotBuddy rightClick(int x,int y) {
+    return move(x,y).rightClick();
   }
   
   public BotBuddy shortcut(Shortcut shortcut) {
@@ -440,6 +546,22 @@ public class BotBuddy implements Cloneable {
     bot.mouseWheel(amount);
     
     return checkIfSafe();
+  }
+  
+  public BotBuddy clearAllPressed() {
+    return clearAllPressedKeys().clearAllPressedMice();
+  }
+  
+  public BotBuddy clearAllPressedKeys() {
+    pressedKeys.clear();
+    
+    return this;
+  }
+  
+  public BotBuddy clearAllPressedMice() {
+    pressedMice.clear();
+    
+    return this;
   }
   
   public BotBuddy setAutoDelay(int autoDelay) {
@@ -503,6 +625,12 @@ public class BotBuddy implements Cloneable {
     return this;
   }
   
+  public BotBuddy setReleaseMode(boolean isReleaseMode) {
+    this.isReleaseMode = isReleaseMode;
+    
+    return this;
+  }
+  
   public BotBuddy setShortDelay(int shortDelay) {
     this.shortDelay = shortDelay;
     
@@ -559,6 +687,10 @@ public class BotBuddy implements Cloneable {
     return osFamily;
   }
   
+  public boolean isReleaseMode() {
+    return isReleaseMode;
+  }
+  
   public boolean isSafeMode() {
     return isSafeMode;
   }
@@ -601,6 +733,7 @@ public class BotBuddy implements Cloneable {
     protected int fastDelay = DEFAULT_FAST_DELAY;
     protected boolean isAutoDelay = true;
     protected boolean isAutoWaitForIdle = true;
+    protected boolean isReleaseMode = true;
     protected int longDelay = DEFAULT_LONG_DELAY;
     protected OSFamily osFamily = Sys.OS_FAMILY;
     protected int shortDelay = DEFAULT_SHORT_DELAY;
@@ -677,6 +810,12 @@ public class BotBuddy implements Cloneable {
     
     public Builder osFamily(OSFamily osFamily) {
       this.osFamily = osFamily;
+      
+      return this;
+    }
+    
+    public Builder releaseMode(boolean isReleaseMode) {
+      this.isReleaseMode = isReleaseMode;
       
       return this;
     }
