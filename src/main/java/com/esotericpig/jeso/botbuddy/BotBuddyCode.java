@@ -98,6 +98,7 @@ public class BotBuddyCode implements Closeable {
   protected int lineIndex = 0;
   protected int lineNumber = 0;
   protected StringBuilder output = new StringBuilder();
+  protected Map<String,UserMethod> userMethods = new HashMap<>();
   
   public BotBuddyCode(Builder builder) throws AWTException,IOException {
     if(builder.buddy == null) {
@@ -143,12 +144,73 @@ public class BotBuddyCode implements Closeable {
     }
   }
   
+  public UserMethod addUserMethod(LineOfCode loc) throws ParseCodeException {
+    if(!seekToNonWhitespace()) {
+      buildParseCodeException("Method has no name");
+    }
+    
+    final LineOfCode prevLoc = new LineOfCode(lineNumber,lineIndex);
+    final String methodName = readToEndOfLine().toString().trim();
+    
+    if(!methodName.equals(WHITESPACE_PATTERN.matcher(methodName).replaceAll(""))) {
+      throw ParseCodeException.build(prevLoc,"Method names cannot contain whitespaces",methodName);
+    }
+    
+    UserMethod userMethod = new UserMethod(loc,methodName);
+    
+    if(userMethods.containsKey(userMethod.id)) {
+      throw ParseCodeException.build(prevLoc,"Method name is already defined",methodName);
+    }
+    
+    userMethods.put(userMethod.id,userMethod);
+    
+    return userMethod;
+  }
+  
   public ParseCodeException buildParseCodeException(String message) {
     return ParseCodeException.build(lineNumber,lineIndex,message,instructionName);
   }
   
   public ParseCodeException buildParseCodeException(String message,Throwable cause) {
     return ParseCodeException.build(lineNumber,lineIndex,message,instructionName,cause);
+  }
+  
+  public void callUserMethod(LineOfCode loc,boolean execute) throws ParseCodeException {
+    if(!seekToNonWhitespace()) {
+      buildParseCodeException("Not enough args");
+    }
+    
+    final LineOfCode prevLoc = new LineOfCode(lineNumber,lineIndex);
+    final String methodName = readToEndOfLine().toString().trim();
+    final String methodID = Instruction.toID(methodName);
+    UserMethod userMethod = userMethods.get(methodID);
+    
+    if(userMethod == null) {
+      ParseCodeException.build(prevLoc,"Method '" + methodID + "' from '" + methodName + "' does not exist"
+        ,methodName);
+    }
+    
+    if(execute) {
+      for(Instruction inst: userMethod.instructions) {
+        execute(inst);
+      }
+    }
+    else {
+      // TODO: implement
+      System.out.println("[call:call]:exists");
+      System.out.println("- [0]: " + methodID + ":" + methodName);
+    }
+  }
+  
+  public void execute(Instruction instruction) throws ParseCodeException {
+    Executor executor = executors.get(instruction);
+    
+    if(executor == null) {
+      throw instruction.buildParseCodeException("Instruction '" + instruction.id + "' from '"
+        + instruction.name + "' does not exist");
+    }
+    
+    executor.execute(buddy,instruction);
   }
   
   public void interpret() throws IOException,ParseCodeException {
@@ -161,6 +223,8 @@ public class BotBuddyCode implements Closeable {
     lineNumber = 0;
     output.setLength(0);
     
+    UserMethod userMethod = null;
+    
     while(nextLine() != null) {
       if(!seekToNonWhitespace()) {
         continue; // Ignore empty line or comment (handled in seek)
@@ -169,6 +233,43 @@ public class BotBuddyCode implements Closeable {
       // Instruction name
       final LineOfCode loc = new LineOfCode(lineNumber,lineIndex);
       instructionName = readToWhitespace().toString();
+      String lowerInstructionName = instructionName.toLowerCase(Locale.ENGLISH);
+      
+      // Special cases
+      if(lowerInstructionName.equals("call")) {
+        callUserMethod(loc,execute);
+        
+        continue;
+      }
+      else if(lowerInstructionName.equals("def")) {
+        if(userMethod != null) {
+          buildParseCodeException("Methods cannot be defined within methods");
+        }
+        
+        userMethod = addUserMethod(loc);
+        
+        if(!execute) {
+          // TODO: implement
+          System.out.println("[" + userMethod.id + ":" + userMethod.name + "]:user");
+        }
+        
+        continue;
+      }
+      else if(lowerInstructionName.equals("end")) {
+        if(userMethod == null) {
+          buildParseCodeException("Invalid instruction; a method can only have one 'end'");
+        }
+        
+        final LineOfCode prevLoc = new LineOfCode(lineNumber,lineIndex);
+        
+        if(!readToEndOfLine().toString().trim().isEmpty()) {
+          ParseCodeException.build(prevLoc,"'end' cannot have args",instructionName);
+        }
+        
+        userMethod = null;
+        
+        continue;
+      }
       
       // Instruction args
       List<Arg> args = new ArrayList<>();
@@ -178,7 +279,7 @@ public class BotBuddyCode implements Closeable {
         final int prevLineNumber = lineNumber;
         
         if(!seekToNonWhitespace()) {
-          break;
+          break; // No more args (or comment)
         }
         
         final LineOfCode argLoc = new LineOfCode(lineNumber,lineIndex);
@@ -210,39 +311,21 @@ public class BotBuddyCode implements Closeable {
       }
       
       // Execute/output instruction
-      Instruction instruction = new Instruction(instructionName,args,loc);
+      Instruction instruction = new Instruction(loc,instructionName,args);
       
-      if(execute) {
-        Executor executor = executors.get(instruction);
+      if(userMethod != null) {
+        userMethod.instructions.add(instruction);
         
-        if(executor == null) {
-          throw instruction.buildParseCodeException("Instruction '" + instruction.id + "' from '"
-            + instruction.name + "' does not exist");
+        if(!execute) {
+          outputUser(instruction);
         }
-        
-        executor.execute(buddy,instruction);
       }
       else {
-        // WARNING: If you change this, update "/src/test/resources/BotBuddyCodeTestOutput.txt",
-        //            else, the test will fail. For this reason, don't use #toString() methods.
-        output.append('[');
-        output.append(instruction.id).append(':').append(instruction.name);
-        output.append("]:(");
-        output.append(instruction.loc.getNumber()).append(':').append(instruction.loc.getColumn());
-        output.append("):");
-        output.append(executors.contains(instruction) ? "exists" : "none");
-        output.append('\n');
-        
-        for(int i = 0; i < instruction.args.length; ++i) {
-          Arg arg = instruction.args[i];
-          
-          output.append("- [");
-          output.append(i);
-          output.append("]:(");
-          output.append(arg.loc.getNumber()).append(':').append(arg.loc.getColumn());
-          output.append("): '");
-          output.append(arg.value);
-          output.append("'\n");
+        if(execute) {
+          execute(instruction);
+        }
+        else {
+          output(instruction);
         }
       }
     }
@@ -271,6 +354,46 @@ public class BotBuddyCode implements Closeable {
     return lineChar;
   }
   
+  public void output(Instruction instruction) {
+    output(instruction,false);
+  }
+  
+  // TODO: change to use toString(); add warnings to all toStrings()
+  //       except, don't use LineOfCode.toString() or others outside of this class
+  public void output(Instruction instruction,boolean isUser) {
+    // WARNING: If you change this, update "/src/test/resources/BotBuddyCodeTestOutput.txt",
+    //            else, the JUnit test will fail. For this reason, don't use #toString() methods.
+    
+    String prefix = isUser ? "  > " : "";
+    String newlinePrefix = "\n" + prefix;
+    
+    output.append(prefix);
+    output.append('[');
+    output.append(instruction.id).append(':').append(instruction.name);
+    output.append("]:(");
+    output.append(instruction.loc.getNumber()).append(':').append(instruction.loc.getColumn());
+    output.append("):");
+    output.append(executors.contains(instruction) ? "exists" : "none");
+    output.append('\n');
+    
+    for(int i = 0; i < instruction.args.length; ++i) {
+      Arg arg = instruction.args[i];
+      
+      output.append(prefix);
+      output.append("- [");
+      output.append(i);
+      output.append("]:(");
+      output.append(arg.loc.getNumber()).append(':').append(arg.loc.getColumn());
+      output.append("): '");
+      output.append(arg.value.replace("\n",newlinePrefix));
+      output.append("'\n");
+    }
+  }
+  
+  public void outputUser(Instruction instruction) {
+    output(instruction,true);
+  }
+  
   public StringBuilder readHeredoc() throws IOException,ParseCodeException {
     // '<...' instead of '<<...'
     if(!hasLineChar() || nextLineChar() != '<') {
@@ -293,15 +416,15 @@ public class BotBuddyCode implements Closeable {
       }
     }
     
-    final int prevLineColumn = lineIndex;
-    final String endTag = readToLineEnd().toString();
+    final LineOfCode prevLoc = new LineOfCode(lineNumber,lineIndex);
+    final String endTag = readToEndOfLine().toString();
     
     // End tag cannot have whitespaces
     // - To help prevent the user from fat-fingering "<<-EOS" as "<< -EOS"
     // - Because a whitespace denotes a new arg "EOS 10 20" ("E O S 10 20" would be impossible)
     if(!endTag.equals(WHITESPACE_PATTERN.matcher(endTag).replaceAll(""))) {
-      throw ParseCodeException.build(lineNumber,prevLineColumn,
-        "Invalid heredoc with whitespaces in the tag or unquoted string",instructionName);
+      throw ParseCodeException.build(prevLoc,"Invalid heredoc with whitespaces in the tag or unquoted string"
+        ,instructionName);
     }
     
     // Read the heredoc lines and (possible) indent (<<-)
@@ -488,7 +611,7 @@ public class BotBuddyCode implements Closeable {
     return readQuote(lineChar);
   }
   
-  public StringBuilder readToLineEnd() {
+  public StringBuilder readToEndOfLine() {
     buffer.setLength(0);
     
     if(lineIndex > 0) {
@@ -1023,11 +1146,15 @@ public class BotBuddyCode implements Closeable {
     public LineOfCode loc;
     public String name;
     
-    public Instruction(String name,Arg[] args,int lineNumber,int lineColumn) {
-      this(name,args,new LineOfCode(lineNumber,lineColumn));
+    public Instruction(int lineNumber,int lineColumn,String name,Arg[] args) {
+      this(new LineOfCode(lineNumber,lineColumn),name,args);
     }
     
-    public Instruction(String name,Arg[] args,LineOfCode loc) {
+    public Instruction(int lineNumber,int lineColumn,String name,List<Arg> args) {
+      this(new LineOfCode(lineNumber,lineColumn),name,args);
+    }
+    
+    public Instruction(LineOfCode loc,String name,Arg[] args) {
       if(name == null) {
         throw new IllegalArgumentException("Name cannot be null");
       }
@@ -1044,12 +1171,8 @@ public class BotBuddyCode implements Closeable {
       this.name = name;
     }
     
-    public Instruction(String name,List<Arg> args,int lineNumber,int lineColumn) {
-      this(name,args,new LineOfCode(lineNumber,lineColumn));
-    }
-    
-    public Instruction(String name,List<Arg> args,LineOfCode loc) {
-      this(name,args.toArray(new Arg[args.size()]),loc);
+    public Instruction(LineOfCode loc,String name,List<Arg> args) {
+      this(loc,name,args.toArray(new Arg[args.size()]));
     }
     
     public ParseCodeException buildParseCodeException(String message) {
@@ -1110,6 +1233,30 @@ public class BotBuddyCode implements Closeable {
       }
       
       return str.toString();
+    }
+  }
+  
+  public static class UserMethod {
+    public String id;
+    public List<Instruction> instructions = new LinkedList<>();
+    public LineOfCode loc;
+    public String name;
+    
+    public UserMethod(int lineNumber,int lineColumn,String name) {
+      this(new LineOfCode(lineNumber,lineColumn),name);
+    }
+    
+    public UserMethod(LineOfCode loc,String name) {
+      if(name == null) {
+        throw new IllegalArgumentException("Name cannot be null");
+      }
+      if(loc == null) {
+        throw new IllegalArgumentException("LineOfCode cannot be null");
+      }
+      
+      this.id = Instruction.toID(name);
+      this.loc = loc;
+      this.name = name;
     }
   }
   
