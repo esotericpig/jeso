@@ -79,3 +79,29 @@ E?'
 - [1]: '2'
 [test23:test23]:none
 [test24:test24]:none
+[mymethod1:my_method1]:user
+  > [test25:test25]:none
+  > - [0]: 'Hello World'
+  > [test26:test26]:none
+  > [test27:test27]:none
+  > - [0]: '1'
+  > - [1]: '2'
+  > [test28:test28]:none
+  > - [0]: '12'
+  > - [1]: '345'
+[mymethod2:my_method2]:user
+  > [call:call]:exists
+  > - [0]: [mymethod1:my_method1]:exists
+  > [test29:test29]:none
+  > [test30:test30]:none
+  > - [0]: 'Yes'
+  > [test31:test31]:none
+  > - [0]: '---'
+  > [test32:test32]:none
+  > - [0]: 'The
+  > End'
+[call:call]:exists
+- [0]: [mymethod1:my_method1]:exists
+- [1]: [mymethod2:my_method2]:exists
+[test33:test33]:none
+- [0]: 'Hello World'

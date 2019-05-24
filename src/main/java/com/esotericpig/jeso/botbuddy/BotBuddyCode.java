@@ -18,7 +18,9 @@
 
 package com.esotericpig.jeso.botbuddy;
 
+import com.esotericpig.jeso.Bools;
 import com.esotericpig.jeso.OSFamily;
+import com.esotericpig.jeso.Strs;
 
 import com.esotericpig.jeso.code.LineOfCode;
 import com.esotericpig.jeso.code.ParseCodeException;
@@ -40,7 +42,6 @@ import java.nio.charset.StandardCharsets;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,6 +65,7 @@ import java.util.regex.Pattern;
 public class BotBuddyCode implements Closeable {
   public static final int DEFAULT_COMMENT_CHAR = '#';
   public static final int DEFAULT_ESCAPE_CHAR = '\\';
+  public static final String INSTRUCTION_CALL_ID = "call";
   public static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+",Pattern.UNICODE_CHARACTER_CLASS);
   
   public static Builder builder(BufferedReader input) {
@@ -137,6 +139,7 @@ public class BotBuddyCode implements Closeable {
     instructionName = null;
     line = null;
     output = null;
+    userMethods = null;
     
     if(input != null) {
       input.close();
@@ -145,12 +148,14 @@ public class BotBuddyCode implements Closeable {
   }
   
   public UserMethod addUserMethod(LineOfCode loc) throws ParseCodeException {
+    LineOfCode prevLoc = new LineOfCode(lineNumber,lineIndex);
+    
     if(!seekToNonWhitespace()) {
-      buildParseCodeException("Method has no name");
+      throw ParseCodeException.build(prevLoc,"Method has no name",instructionName);
     }
     
-    final LineOfCode prevLoc = new LineOfCode(lineNumber,lineIndex);
-    final String methodName = readToEndOfLine().toString().trim();
+    prevLoc = new LineOfCode(lineNumber,lineIndex);
+    String methodName = readToEndOfLine().toString().trim();
     
     if(!methodName.equals(WHITESPACE_PATTERN.matcher(methodName).replaceAll(""))) {
       throw ParseCodeException.build(prevLoc,"Method names cannot contain whitespaces",methodName);
@@ -175,49 +180,47 @@ public class BotBuddyCode implements Closeable {
     return ParseCodeException.build(lineNumber,lineIndex,message,instructionName,cause);
   }
   
-  public void callUserMethod(LineOfCode loc,boolean execute) throws ParseCodeException {
-    if(!seekToNonWhitespace()) {
-      buildParseCodeException("Not enough args");
-    }
+  public void callUserMethod(Instruction instruction) throws ParseCodeException {
+    instruction.getArg(0); // Throw an error if not at least 1 arg
     
-    final LineOfCode prevLoc = new LineOfCode(lineNumber,lineIndex);
-    final String methodName = readToEndOfLine().toString().trim();
-    final String methodID = Instruction.toID(methodName);
-    UserMethod userMethod = userMethods.get(methodID);
-    
-    if(userMethod == null) {
-      ParseCodeException.build(prevLoc,"Method '" + methodID + "' from '" + methodName + "' does not exist"
-        ,methodName);
-    }
-    
-    if(execute) {
+    for(Arg arg: instruction.args) {
+      String methodName = arg.value;
+      String methodID = Instruction.toID(methodName);
+      UserMethod userMethod = userMethods.get(methodID);
+      
+      if(userMethod == null) {
+        throw ParseCodeException.build(arg.loc,"Method '" + methodID + "' from '" + methodName
+          + "' does not exist",instruction.name);
+      }
+      
       for(Instruction inst: userMethod.instructions) {
         execute(inst);
       }
     }
-    else {
-      // TODO: implement
-      System.out.println("[call:call]:exists");
-      System.out.println("- [0]: " + methodID + ":" + methodName);
-    }
   }
   
   public void execute(Instruction instruction) throws ParseCodeException {
-    Executor executor = executors.get(instruction);
-    
-    if(executor == null) {
-      throw instruction.buildParseCodeException("Instruction '" + instruction.id + "' from '"
-        + instruction.name + "' does not exist");
+    // Special keywords
+    if(instruction.id.equals(INSTRUCTION_CALL_ID)) {
+      callUserMethod(instruction);
     }
-    
-    executor.execute(buddy,instruction);
+    else {
+      Executor executor = executors.get(instruction);
+      
+      if(executor == null) {
+        throw instruction.buildParseCodeException("Instruction '" + instruction.id + "' from '"
+          + instruction.name + "' does not exist");
+      }
+      
+      executor.execute(buddy,instruction);
+    }
   }
   
   public void interpret() throws IOException,ParseCodeException {
     interpret(true);
   }
   
-  public String interpret(boolean execute) throws IOException,ParseCodeException {
+  public String interpret(boolean isExecute) throws IOException,ParseCodeException {
     instructionName = null;
     line = null;
     lineNumber = 0;
@@ -231,39 +234,29 @@ public class BotBuddyCode implements Closeable {
       }
       
       // Instruction name
-      final LineOfCode loc = new LineOfCode(lineNumber,lineIndex);
-      instructionName = readToWhitespace().toString();
-      String lowerInstructionName = instructionName.toLowerCase(Locale.ENGLISH);
+      LineOfCode loc = new LineOfCode(lineNumber,lineIndex);
       
-      // Special cases
-      if(lowerInstructionName.equals("call")) {
-        callUserMethod(loc,execute);
-        
-        continue;
-      }
-      else if(lowerInstructionName.equals("def")) {
+      instructionName = readToWhitespace().toString();
+      
+      Instruction instruction = new Instruction(loc,instructionName);
+      
+      // Special keywords
+      if(instruction.id.equals("def")) {
         if(userMethod != null) {
-          buildParseCodeException("Methods cannot be defined within methods");
+          throw instruction.buildParseCodeException("Methods cannot be defined within methods");
         }
         
         userMethod = addUserMethod(loc);
         
-        if(!execute) {
-          // TODO: implement
-          System.out.println("[" + userMethod.id + ":" + userMethod.name + "]:user");
+        if(!isExecute) {
+          output(userMethod);
         }
         
         continue;
       }
-      else if(lowerInstructionName.equals("end")) {
+      else if(instruction.id.equals("end")) {
         if(userMethod == null) {
-          buildParseCodeException("Invalid instruction; a method can only have one 'end'");
-        }
-        
-        final LineOfCode prevLoc = new LineOfCode(lineNumber,lineIndex);
-        
-        if(!readToEndOfLine().toString().trim().isEmpty()) {
-          ParseCodeException.build(prevLoc,"'end' cannot have args",instructionName);
+          throw instruction.buildParseCodeException("Invalid instruction; a method can only have one 'end'");
         }
         
         userMethod = null;
@@ -282,7 +275,7 @@ public class BotBuddyCode implements Closeable {
           break; // No more args (or comment)
         }
         
-        final LineOfCode argLoc = new LineOfCode(lineNumber,lineIndex);
+        loc = new LineOfCode(lineNumber,lineIndex);
         
         if(lineChar == '"' || lineChar == '\'') {
           readQuote(lineChar);
@@ -302,30 +295,30 @@ public class BotBuddyCode implements Closeable {
           throw buildParseCodeException("Internal code is broken causing an infinite loop");
         }
         
-        args.add(new Arg(buffer.toString(),argLoc));
+        args.add(new Arg(loc,buffer.toString()));
         
-        // nextLine() might have been called (e.g., heredoc), so check if null
+        // nextLine() might have been called (e.g., heredoc)
         if(line == null) {
           break;
         }
       }
       
-      // Execute/output instruction
-      Instruction instruction = new Instruction(loc,instructionName,args);
+      instruction.setArgs(args);
       
-      if(userMethod != null) {
-        userMethod.instructions.add(instruction);
-        
-        if(!execute) {
-          outputUser(instruction);
-        }
-      }
-      else {
-        if(execute) {
+      // Execute/Output instruction
+      if(userMethod == null) {
+        if(isExecute) {
           execute(instruction);
         }
         else {
           output(instruction);
+        }
+      }
+      else {
+        userMethod.instructions.add(instruction);
+        
+        if(!isExecute) {
+          outputWithIndent(instruction);
         }
       }
     }
@@ -355,17 +348,19 @@ public class BotBuddyCode implements Closeable {
   }
   
   public void output(Instruction instruction) {
-    output(instruction,false);
+    output(instruction,"");
   }
   
-  // TODO: change to use toString(); add warnings to all toStrings()
-  //       except, don't use LineOfCode.toString() or others outside of this class
-  public void output(Instruction instruction,boolean isUser) {
+  public void output(Instruction instruction,String prefix) {
     // WARNING: If you change this, update "/src/test/resources/BotBuddyCodeTestOutput.txt",
     //            else, the JUnit test will fail. For this reason, don't use #toString() methods.
     
-    String prefix = isUser ? "  > " : "";
-    String newlinePrefix = "\n" + prefix;
+    // Special keywords
+    boolean isCallInst = instruction.id.equals(INSTRUCTION_CALL_ID);
+    boolean isUserMethod = (instruction instanceof UserMethod);
+    
+    boolean hasPrefix = !prefix.isEmpty();
+    String newlinePrefix = hasPrefix ? ("\n" + prefix) : null;
     
     output.append(prefix);
     output.append('[');
@@ -373,7 +368,17 @@ public class BotBuddyCode implements Closeable {
     output.append("]:(");
     output.append(instruction.loc.getNumber()).append(':').append(instruction.loc.getColumn());
     output.append("):");
-    output.append(executors.contains(instruction) ? "exists" : "none");
+    
+    if(isCallInst) {
+      output.append("exists");
+    }
+    else if(isUserMethod) {
+      output.append("user");
+    }
+    else {
+      output.append(executors.contains(instruction) ? "exists" : "none");
+    }
+    
     output.append('\n');
     
     for(int i = 0; i < instruction.args.length; ++i) {
@@ -384,14 +389,28 @@ public class BotBuddyCode implements Closeable {
       output.append(i);
       output.append("]:(");
       output.append(arg.loc.getNumber()).append(':').append(arg.loc.getColumn());
-      output.append("): '");
-      output.append(arg.value.replace("\n",newlinePrefix));
-      output.append("'\n");
+      output.append("): ");
+      
+      if(isCallInst) {
+        String methodID = Instruction.toID(arg.value);
+        
+        output.append('[');
+        output.append(methodID).append(':').append(arg.value);
+        output.append("]:");
+        output.append(userMethods.containsKey(methodID) ? "exists" : "none");
+      }
+      else {
+        output.append('\'');
+        output.append(hasPrefix ? arg.value.replace("\n",newlinePrefix) : arg.value);
+        output.append('\'');
+      }
+      
+      output.append('\n');
     }
   }
   
-  public void outputUser(Instruction instruction) {
-    output(instruction,true);
+  public void outputWithIndent(Instruction instruction) {
+    output(instruction,"  > ");
   }
   
   public StringBuilder readHeredoc() throws IOException,ParseCodeException {
@@ -416,21 +435,20 @@ public class BotBuddyCode implements Closeable {
       }
     }
     
-    final LineOfCode prevLoc = new LineOfCode(lineNumber,lineIndex);
-    final String endTag = readToEndOfLine().toString();
+    LineOfCode prevLoc = new LineOfCode(lineNumber,lineIndex);
+    final String endTag = Strs.rtrim(readToEndOfLine()).toString();
     
     // End tag cannot have whitespaces
     // - To help prevent the user from fat-fingering "<<-EOS" as "<< -EOS"
     // - Because a whitespace denotes a new arg "EOS 10 20" ("E O S 10 20" would be impossible)
     if(!endTag.equals(WHITESPACE_PATTERN.matcher(endTag).replaceAll(""))) {
-      throw ParseCodeException.build(prevLoc,"Invalid heredoc with whitespaces in the tag or unquoted string"
-        ,instructionName);
+      throw ParseCodeException.build(prevLoc
+        ,"Invalid heredoc with whitespaces before or in the tag, or unquoted string",instructionName);
     }
     
     // Read the heredoc lines and (possible) indent (<<-)
     final int endTagChar0 = endTag.codePointAt(0);
     final int endTagChar0Count = Character.charCount(endTagChar0);
-    
     List<String> heredocLines = new LinkedList<>();
     int minIndent = Integer.MAX_VALUE;
     
@@ -460,8 +478,8 @@ public class BotBuddyCode implements Closeable {
             if(hasLineChar()) {
               nextLineChar();
               
-              // Is end tag: "EOS 10 20"
-              if(Character.isWhitespace(lineChar)) {
+              // Is end tag: "EOS 10 20" or "EOS#comment"
+              if(Character.isWhitespace(lineChar) || isCommentChar()) {
                 isEndTag = true;
               }
               // Not end tag: "EOS?"
@@ -519,7 +537,16 @@ public class BotBuddyCode implements Closeable {
         String hdLine = it.next();
         
         if(isIndent) {
-          for(int i = minIndent; i < hdLine.length();) {
+          int i = 0;
+          
+          // This is probably unnecessary, but just in case Unicode whitespace can be a surrogate pair
+          for(int indentIndex = 0; indentIndex < minIndent && i < hdLine.length(); ++indentIndex) {
+            int hdChar = hdLine.codePointAt(i);
+            
+            i += Character.charCount(hdChar);
+          }
+          
+          while(i < hdLine.length()) {
             int hdChar = hdLine.codePointAt(i);
             
             buffer.appendCodePoint(hdChar);
@@ -615,11 +642,21 @@ public class BotBuddyCode implements Closeable {
     buffer.setLength(0);
     
     if(lineIndex > 0) {
+      if(isCommentChar()) {
+        return buffer;
+      }
+      
       buffer.appendCodePoint(lineChar);
     }
     
     while(hasLineChar()) {
-      buffer.appendCodePoint(nextLineChar());
+      nextLineChar();
+      
+      if(isCommentChar()) {
+        break;
+      }
+      
+      buffer.appendCodePoint(lineChar);
     }
     
     return buffer;
@@ -629,11 +666,17 @@ public class BotBuddyCode implements Closeable {
     buffer.setLength(0);
     
     if(lineIndex > 0) {
+      if(isCommentChar()) {
+        return buffer;
+      }
+      
       buffer.appendCodePoint(lineChar);
     }
     
     while(hasLineChar()) {
-      if(Character.isWhitespace(nextLineChar())) {
+      nextLineChar();
+      
+      if(Character.isWhitespace(lineChar) || isCommentChar()) {
         break;
       }
       
@@ -649,10 +692,7 @@ public class BotBuddyCode implements Closeable {
   public boolean seekToNonWhitespace() {
     while(hasLineChar()) {
       if(!Character.isWhitespace(nextLineChar())) {
-        // Ignore comment
-        if(lineChar == commentChar) {
-          lineIndex = line.length(); // Go to end
-          
+        if(isCommentChar()) {
           return false;
         }
         
@@ -687,6 +727,17 @@ public class BotBuddyCode implements Closeable {
     return commentChar;
   }
   
+  public boolean isCommentChar() {
+    // Ignore comment
+    if(lineChar == commentChar) {
+      lineIndex = line.length(); // Go to end
+      
+      return true;
+    }
+    
+    return false;
+  }
+  
   public int getEscapeChar() {
     return escapeChar;
   }
@@ -707,16 +758,16 @@ public class BotBuddyCode implements Closeable {
     public LineOfCode loc;
     public String value;
     
-    public Arg(String value,int lineNumber,int lineColumn) {
-      this(value,new LineOfCode(lineNumber,lineColumn));
+    public Arg(int lineNumber,int lineColumn,String value) {
+      this(new LineOfCode(lineNumber,lineColumn),value);
     }
     
-    public Arg(String value,LineOfCode loc) {
-      if(value == null) {
-        throw new IllegalArgumentException("Value cannot be null");
-      }
+    public Arg(LineOfCode loc,String value) {
       if(loc == null) {
         throw new IllegalArgumentException("LineOfCode cannot be null");
+      }
+      if(value == null) {
+        throw new IllegalArgumentException("Value cannot be null");
       }
       
       this.loc = loc;
@@ -725,11 +776,11 @@ public class BotBuddyCode implements Closeable {
     
     @Override
     public String toString() {
-      StringBuilder str = new StringBuilder(11 + value.length());
+      StringBuilder sb = new StringBuilder(11 + value.length());
       
-      str.append(loc).append(": '").append(value).append('\'');
+      sb.append(loc).append(": '").append(value).append('\'');
       
-      return str.toString();
+      return sb.toString();
     }
   }
   
@@ -853,9 +904,8 @@ public class BotBuddyCode implements Closeable {
     protected Map<String,Executor> entries;
     
     public Executors() {
-      // Default loadFactor is 0.75, so make it so we have enough on init.
-      //   Use 0.74 because casting doesn't round, and don't want to use Math.round().
-      this((int)(BASE_COUNT / 0.74));
+      // Default loadFactor is 0.75, so make it so we have enough on init, and a little extra
+      this((int)Math.ceil(BASE_COUNT / 0.74));
     }
     
     /**
@@ -898,6 +948,7 @@ public class BotBuddyCode implements Closeable {
       // Static methods
       put("getcoords",(buddy,inst) -> {
         Point coords = BotBuddy.getCoords();
+        
         System.out.println("(" + coords.x + "," + coords.y + ")");
       });
       put("getxcoord",(buddy,inst) -> System.out.println(BotBuddy.getXCoord()));
@@ -1059,15 +1110,15 @@ public class BotBuddyCode implements Closeable {
         // Probably don't need alpha I think; probably always 255
         Color pixel = buddy.getPixel(inst.getInt(0),inst.getInt(1));
         int pixelWord = (pixel.getRed() << 16) | (pixel.getGreen() << 8) | (pixel.getBlue());
-        StringBuilder str = new StringBuilder(47);
+        StringBuilder sb = new StringBuilder(47);
         
-        str.append("(r=").append(pixel.getRed());
-        str.append(",g=").append(pixel.getGreen());
-        str.append(",b=").append(pixel.getBlue());
-        str.append(") | Hex=").append(Integer.toHexString(pixelWord).toUpperCase(Locale.ENGLISH));
-        str.append(" | RGB=").append(pixelWord);
+        sb.append("(r=").append(pixel.getRed());
+        sb.append(",g=").append(pixel.getGreen());
+        sb.append(",b=").append(pixel.getBlue());
+        sb.append(") | Hex=").append(Integer.toHexString(pixelWord).toUpperCase(Locale.ENGLISH));
+        sb.append(" | RGB=").append(pixelWord);
         
-        System.out.println(str);
+        System.out.println(sb);
       });
       put("getosfamily",(buddy,inst) -> System.out.println(buddy.getOSFamily()));
       put("getscreenheight",(buddy,inst) -> System.out.println(buddy.getScreenHeight()));
@@ -1079,8 +1130,20 @@ public class BotBuddyCode implements Closeable {
       put("getscreenwidth",(buddy,inst) -> System.out.println(buddy.getScreenWidth()));
     }
     
+    public boolean contains(String id) {
+      return containsID(id);
+    }
+    
     public boolean contains(Instruction inst) {
       return entries.containsKey(inst.id);
+    }
+    
+    public boolean containsID(String id) {
+      return entries.containsKey(id);
+    }
+    
+    public boolean containsName(String name) {
+      return entries.containsKey(Instruction.toID(name));
     }
     
     public Executor put(String id,Executor executor) {
@@ -1135,7 +1198,6 @@ public class BotBuddyCode implements Closeable {
   public static class Instruction {
     public static final Pattern TO_ID_PATTERN = Pattern.compile("[\\s_\\-\\.]+"
       ,Pattern.UNICODE_CHARACTER_CLASS);
-    public static final String[] TRUE_BOOLS = new String[]{"1","on","t","true","y","yes"};
     
     public static String toID(String name) {
       return TO_ID_PATTERN.matcher(name).replaceAll("").toLowerCase(Locale.ENGLISH);
@@ -1146,33 +1208,21 @@ public class BotBuddyCode implements Closeable {
     public LineOfCode loc;
     public String name;
     
-    public Instruction(int lineNumber,int lineColumn,String name,Arg[] args) {
-      this(new LineOfCode(lineNumber,lineColumn),name,args);
+    public Instruction(int lineNumber,int lineColumn,String name) {
+      this(new LineOfCode(lineNumber,lineColumn),name);
     }
     
-    public Instruction(int lineNumber,int lineColumn,String name,List<Arg> args) {
-      this(new LineOfCode(lineNumber,lineColumn),name,args);
-    }
-    
-    public Instruction(LineOfCode loc,String name,Arg[] args) {
-      if(name == null) {
-        throw new IllegalArgumentException("Name cannot be null");
-      }
-      if(args == null) {
-        throw new IllegalArgumentException("Args cannot be null");
-      }
+    public Instruction(LineOfCode loc,String name) {
       if(loc == null) {
         throw new IllegalArgumentException("LineOfCode cannot be null");
       }
+      if(name == null) {
+        throw new IllegalArgumentException("Name cannot be null");
+      }
       
-      this.args = args;
       this.id = toID(name);
       this.loc = loc;
       this.name = name;
-    }
-    
-    public Instruction(LineOfCode loc,String name,List<Arg> args) {
-      this(loc,name,args.toArray(new Arg[args.size()]));
     }
     
     public ParseCodeException buildParseCodeException(String message) {
@@ -1181,6 +1231,18 @@ public class BotBuddyCode implements Closeable {
     
     public ParseCodeException buildParseCodeException(String message,Throwable cause) {
       return ParseCodeException.build(loc,message,name,cause);
+    }
+    
+    public void setArgs(Arg[] args) {
+      if(args == null) {
+        throw new IllegalArgumentException("Args cannot be null");
+      }
+      
+      this.args = args;
+    }
+    
+    public void setArgs(List<Arg> args) {
+      setArgs(args.toArray(new Arg[args.size()]));
     }
     
     public Arg getArg(int index) throws ParseCodeException {
@@ -1192,18 +1254,7 @@ public class BotBuddyCode implements Closeable {
     }
     
     public boolean getBool(int index) throws ParseCodeException {
-      Arg arg = getArg(index);
-      String value = WHITESPACE_PATTERN.matcher(arg.value).replaceAll("").toLowerCase(Locale.ENGLISH);
-      
-      // TODO: puts this code in a Strs or Bools class
-      // Boolean.parseBoolean() only does a case-insensitive match on "true", so don't use it
-      for(String trueBool: TRUE_BOOLS) {
-        if(value.equals(trueBool)) {
-          return true;
-        }
-      }
-      
-      return false;
+      return Bools.parse(getStr(0));
     }
     
     public int getInt(int index) throws ParseCodeException {
@@ -1224,66 +1275,29 @@ public class BotBuddyCode implements Closeable {
     
     @Override
     public String toString() {
-      StringBuilder str = new StringBuilder();
+      StringBuilder sb = new StringBuilder();
       
-      str.append('[').append(id).append(':').append(name).append("]:").append(loc).append('\n');
+      sb.append('[').append(id).append(':').append(name).append("]:").append(loc).append('\n');
       
       for(int i = 0; i < args.length; ++i) {
-        str.append("- [").append(i).append("]:").append(args[i]).append('\n');
+        sb.append("- [").append(i).append("]:").append(args[i]).append('\n');
       }
       
-      return str.toString();
+      return sb.toString();
     }
   }
   
-  public static class UserMethod {
-    public String id;
+  public static class UserMethod extends Instruction {
     public List<Instruction> instructions = new LinkedList<>();
-    public LineOfCode loc;
-    public String name;
     
     public UserMethod(int lineNumber,int lineColumn,String name) {
       this(new LineOfCode(lineNumber,lineColumn),name);
     }
     
     public UserMethod(LineOfCode loc,String name) {
-      if(name == null) {
-        throw new IllegalArgumentException("Name cannot be null");
-      }
-      if(loc == null) {
-        throw new IllegalArgumentException("LineOfCode cannot be null");
-      }
+      super(loc,name);
       
-      this.id = Instruction.toID(name);
-      this.loc = loc;
-      this.name = name;
-    }
-  }
-  
-  // TODO: make own simple app here; take in file, can do dry run; BotBuddyCodeApp or here?
-  public static void main(String[] args) {
-    List<String> l = new LinkedList<>();
-    l.add("get_coords");
-    l.add("get_os_family");
-    l.add("");
-    l.add("puts 'hi'");
-    
-    BotBuddy bb = null;
-    
-    try(BotBuddyCode bbc = BotBuddyCode.builder(Paths.get("stock/bb.rb")).build()) {
-    //try(BotBuddyCode bbc = BotBuddyCode.builder(l).build()) {
-      //System.out.print(bbc.interpretDryRun());
-      bb = bbc.getBuddy();
-      bbc.interpret();
-    }
-    catch(Exception ex) {
-      System.out.println(ex);
-      ex.printStackTrace();
-    }
-    finally {
-      if(bb != null) {
-        bb.releaseAll();
-      }
+      setArgs(new Arg[0]);
     }
   }
 }

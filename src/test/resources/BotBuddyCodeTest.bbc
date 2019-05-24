@@ -88,3 +88,29 @@ test21 <<-E
 test22 1 2
  test23
   test24
+
+# Methods with weird comments
+def my_method1#comment
+  test25 "Hello World"#comment
+  test26#comment
+  test27 1 2#comment
+  test28 12 345#comment
+end#comment
+
+def my_method2#comment
+  call my_method1#comment
+  test29#comment
+  test30 Yes#comment
+  test31 '---'#comment
+  test32 <<-EOS#comment
+      The
+      End
+    EOS #comment
+end#comment
+
+call my_method1 my_method2#comment
+
+# Heredoc with weird comments
+test33 <<-EOS #comment
+    Hello World
+  EOS#comment
