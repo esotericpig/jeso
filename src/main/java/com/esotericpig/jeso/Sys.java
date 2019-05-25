@@ -21,7 +21,7 @@ package com.esotericpig.jeso;
 /**
  * @author Jonathan Bradley Whited (@esotericpig)
  */
-public class Sys {
+public final class Sys {
   public static final String OS_NAME = getSafeProp("os.name","Unknown");
   public static final OSFamily OS_FAMILY = OSFamily.guessFromName(OS_NAME);
   
@@ -35,5 +35,9 @@ public class Sys {
       se.printStackTrace();
       return def;
     }
+  }
+  
+  private Sys() {
+    throw new UnsupportedOperationException("Cannot construct a utility class");
   }
 }
