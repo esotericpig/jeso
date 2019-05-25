@@ -21,26 +21,34 @@ package com.esotericpig.jeso;
 /**
  * @author Jonathan Bradley Whited (@esotericpig)
  */
-public class Strs {
+public final class Strs {
   public static StringBuilder rtrim(StringBuilder sb) {
-    for(int i = sb.length() - 1; i >= 0;) {
+    int len = sb.length();
+    
+    if(len == 0) {
+      return sb;
+    }
+    
+    int i = len;
+    
+    while(i > 0) {
+      --i; // Do it this way, else you'll need to ++i after the loop
+      
+      // Trailing (2nd) surrogate code unit of a pair?
       if(Character.isLowSurrogate(sb.charAt(i))) {
-        --i;
-        
-        continue;
+        continue; // Go to high/leading (1st) surrogate code unit of the pair
       }
       
       int cp = sb.codePointAt(i);
       
       if(!Character.isWhitespace(cp)) {
+        i += Character.charCount(cp);
+        
         break;
       }
-      
-      int count = Character.charCount(cp);
-      
-      sb.delete(i,i + count + 1); // +1 because exclusive
-      i -= count;
     }
+    
+    sb.delete(i,len);
     
     return sb;
   }
