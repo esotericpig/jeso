@@ -155,7 +155,7 @@ public class BotBuddyCode implements Closeable {
     }
     
     prevLoc = new LineOfCode(lineNumber,lineIndex);
-    String methodName = readToEndOfLine().toString().trim();
+    String methodName = Strs.trim(readToEndOfLine()).toString();
     
     if(!methodName.equals(WHITESPACE_PATTERN.matcher(methodName).replaceAll(""))) {
       throw ParseCodeException.build(prevLoc,"Method names cannot contain whitespaces",methodName);
@@ -438,7 +438,7 @@ public class BotBuddyCode implements Closeable {
     LineOfCode prevLoc = new LineOfCode(lineNumber,lineIndex);
     final String endTag = Strs.rtrim(readToEndOfLine()).toString();
     
-    // End tag cannot have whitespaces
+    // End tag cannot have whitespaces (except for trailing whitespaces until EOL/comment)
     // - To help prevent the user from fat-fingering "<<-EOS" as "<< -EOS"
     // - Because a whitespace denotes a new arg "EOS 10 20" ("E O S 10 20" would be impossible)
     if(!endTag.equals(WHITESPACE_PATTERN.matcher(endTag).replaceAll(""))) {
