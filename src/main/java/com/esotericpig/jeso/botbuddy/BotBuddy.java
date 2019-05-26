@@ -44,8 +44,6 @@ import java.awt.image.BufferedImage;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
-// TODO: add begin/endFastMode()?
-
 /**
  * <pre>
  * <b>BotBuddy</b> is a simple wrapper around <b>{@link java.awt.Robot java.awt.Robot}</b>.
@@ -167,6 +165,7 @@ public class BotBuddy implements Cloneable {
   protected LinkedList<Integer> pressedMice = new LinkedList<>();
   protected Point safeCoords = null;
   protected int shortDelay;
+  protected Stash stash = new Stash();
   protected Toolkit tool;
   
   public BotBuddy() throws AWTException {
@@ -186,6 +185,7 @@ public class BotBuddy implements Cloneable {
     osFamily = buddy.osFamily;
     safeCoords = (buddy.safeCoords != null) ? (new Point(buddy.safeCoords)) : null;
     shortDelay = buddy.shortDelay;
+    stash = new Stash(buddy.stash);
     tool = buddy.tool;
   }
   
@@ -223,7 +223,15 @@ public class BotBuddy implements Cloneable {
   public BotBuddy beep() {
     tool.beep();
     
-    return this;
+    return checkIfSafe();
+  }
+  
+  public BotBuddy beginFastMode() {
+    if(getAutoDelay() == fastDelay) {
+      return this;
+    }
+    
+    return stashAutoDelay().setAutoDelay(fastDelay);
   }
   
   public BotBuddy beginSafeMode() {
@@ -325,7 +333,7 @@ public class BotBuddy implements Cloneable {
   }
   
   public BotBuddy doubleClick(int button) {
-    return shortcutFast((buddy) -> buddy.click(button).delayFast().click(button));
+    return beginFastMode().click(button).click(button).endFastMode().delayAuto();
   }
   
   public BotBuddy doubleClick(int x,int y) {
@@ -339,6 +347,10 @@ public class BotBuddy implements Cloneable {
   public BotBuddy drag(int fromX,int fromY,int toX,int toY) {
     return pressMouse(fromX,fromY,DEFAULT_MOUSE_BUTTON)
            .releaseMouse(toX,toY,DEFAULT_MOUSE_BUTTON);
+  }
+  
+  public BotBuddy endFastMode() {
+    return unstashAutoDelay();
   }
   
   public BotBuddy endSafeMode() {
@@ -518,22 +530,23 @@ public class BotBuddy implements Cloneable {
   }
   
   public BotBuddy shortcut(Shortcut shortcut) {
-    return shortcut.press(this).checkIfSafe();
+    return shortcut.press(this);
   }
   
   public BotBuddy shortcutFast(Shortcut shortcut) {
-    int autoDelay = getAutoDelay();
-    boolean isAutoDelay = this.isAutoDelay;
+    return beginFastMode().shortcut(shortcut).endFastMode();
+  }
+  
+  public BotBuddy stashAutoDelay() {
+    stash.stashAutoDelay();
     
-    setAutoDelay(false);
-    shortcut.press(this);
+    return this;
+  }
+  
+  public BotBuddy unstashAutoDelay() {
+    stash.unstashAutoDelay();
     
-    if(isAutoDelay) {
-      setAutoDelay(autoDelay);
-      bot.delay(autoDelay);
-    }
-    
-    return checkIfSafe();
+    return this;
   }
   
   public BotBuddy waitForIdle() {
@@ -675,16 +688,16 @@ public class BotBuddy implements Cloneable {
     return longDelay;
   }
   
+  public OSFamily getOSFamily() {
+    return osFamily;
+  }
+  
   public Color getPixel(Point coords) {
     return getPixel(coords.x,coords.y);
   }
   
   public Color getPixel(int x,int y) {
     return bot.getPixelColor(x,y);
-  }
-  
-  public OSFamily getOSFamily() {
-    return osFamily;
   }
   
   public boolean isReleaseMode() {
@@ -867,6 +880,48 @@ public class BotBuddy implements Cloneable {
         
         return PASTE_DEFAULT.press(buddy);
       };
+    }
+  }
+  
+  public class Stash implements Cloneable {
+    public int autoDelay;
+    public boolean isAutoDelay;
+    public boolean isAutoDelayStashed = false;
+    
+    public Stash() {
+    }
+    
+    public Stash(Stash stash) {
+      autoDelay = stash.autoDelay;
+      isAutoDelay = stash.isAutoDelay;
+      isAutoDelayStashed = stash.isAutoDelayStashed;
+    }
+    
+    @Override
+    public Stash clone() {
+      return new Stash(this);
+    }
+    
+    public void stashAutoDelay() {
+      if(isAutoDelayStashed) {
+        return;
+      }
+      
+      autoDelay = getAutoDelay();
+      isAutoDelay = isAutoDelay();
+      isAutoDelayStashed = true;
+    }
+    
+    public void unstashAutoDelay() {
+      if(!isAutoDelayStashed) {
+        return;
+      }
+      
+      if(isAutoDelay) {
+        setAutoDelay(autoDelay);
+      }
+      
+      isAutoDelayStashed = false;
     }
   }
 }
