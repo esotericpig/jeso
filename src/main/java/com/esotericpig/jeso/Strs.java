@@ -22,6 +22,28 @@ package com.esotericpig.jeso;
  * @author Jonathan Bradley Whited (@esotericpig)
  */
 public final class Strs {
+  public static StringBuilder ltrim(StringBuilder sb) {
+    int len = sb.length();
+    
+    if(len == 0) {
+      return sb;
+    }
+    
+    int i = 0;
+    
+    while(i < len) {
+      int cp = sb.codePointAt(i);
+      
+      if(!Character.isWhitespace(cp)) {
+        break;
+      }
+      
+      i += Character.charCount(cp); // Do it this way, else need to decrement after the loop
+    }
+    
+    return sb.delete(0,i);
+  }
+  
   public static StringBuilder rtrim(StringBuilder sb) {
     int len = sb.length();
     
@@ -32,7 +54,7 @@ public final class Strs {
     int i = len;
     
     while(i > 0) {
-      --i; // Do it this way, else you'll need to ++i after the loop
+      --i; // Do it this way, else need to increment after the loop
       
       // Trailing (2nd) surrogate code unit of a pair?
       if(Character.isLowSurrogate(sb.charAt(i))) {
@@ -48,9 +70,11 @@ public final class Strs {
       }
     }
     
-    sb.delete(i,len);
-    
-    return sb;
+    return sb.delete(i,len);
+  }
+  
+  public static StringBuilder trim(StringBuilder sb) {
+    return rtrim(ltrim(sb));
   }
   
   private Strs() {

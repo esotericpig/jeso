@@ -58,6 +58,8 @@ public class StrsTest {
   }
   
   public void testTrims(String str) {
+    assertEquals(str.replaceFirst("\\A\\s+",""),Strs.ltrim(new StringBuilder(str)).toString());
     assertEquals(str.replaceFirst("\\s+\\z",""),Strs.rtrim(new StringBuilder(str)).toString());
+    assertEquals(str.trim(),Strs.trim(new StringBuilder(str)).toString());
   }
 }
