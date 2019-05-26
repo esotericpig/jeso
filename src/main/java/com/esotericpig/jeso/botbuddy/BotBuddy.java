@@ -41,8 +41,11 @@ import java.awt.event.KeyEvent;
 
 import java.awt.image.BufferedImage;
 
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.ListIterator;
+
+// TODO: use MouseInfo.getNumberOfButtons() for middle/right click; primary click for left-handers?
 
 /**
  * <pre>
@@ -165,7 +168,7 @@ public class BotBuddy implements Cloneable {
   protected LinkedList<Integer> pressedMice = new LinkedList<>();
   protected Point safeCoords = null;
   protected int shortDelay;
-  protected Stash stash = new Stash();
+  protected Deque<Stash> stashes = new LinkedList<>();
   protected Toolkit tool;
   
   public BotBuddy() throws AWTException {
@@ -185,8 +188,11 @@ public class BotBuddy implements Cloneable {
     osFamily = buddy.osFamily;
     safeCoords = (buddy.safeCoords != null) ? (new Point(buddy.safeCoords)) : null;
     shortDelay = buddy.shortDelay;
-    stash = new Stash(buddy.stash);
     tool = buddy.tool;
+    
+    for(Stash stash: buddy.stashes) {
+      stashes.addLast(new Stash(stash));
+    }
   }
   
   public BotBuddy(Builder builder) {
@@ -227,11 +233,9 @@ public class BotBuddy implements Cloneable {
   }
   
   public BotBuddy beginFastMode() {
-    if(getAutoDelay() == fastDelay) {
-      return this;
-    }
-    
-    return stashAutoDelay().setAutoDelay(fastDelay);
+    // Do NOT check if "getAutoDelay() == fastDelay" and bail because it will mess up #endFastMode()
+    // - If #endFastMode() also checks it, then it will always be true (after this call)
+    return stash().setAutoDelay(fastDelay);
   }
   
   public BotBuddy beginSafeMode() {
@@ -263,6 +267,22 @@ public class BotBuddy implements Cloneable {
         throw new UserIsActiveException();
       }
     }
+    
+    return this;
+  }
+  
+  public BotBuddy clearAllPressed() {
+    return clearAllPressedKeys().clearAllPressedMice();
+  }
+  
+  public BotBuddy clearAllPressedKeys() {
+    pressedKeys.clear();
+    
+    return this;
+  }
+  
+  public BotBuddy clearAllPressedMice() {
+    pressedMice.clear();
     
     return this;
   }
@@ -333,7 +353,22 @@ public class BotBuddy implements Cloneable {
   }
   
   public BotBuddy doubleClick(int button) {
-    return beginFastMode().click(button).click(button).endFastMode().delayAuto();
+    Stash stash = null;
+    
+    if(getAutoDelay() != fastDelay) {
+      stash = new Stash();
+      setAutoDelay(fastDelay);
+    }
+    
+    click(button).click(button);
+    
+    if(stash != null) {
+      stash.clear();
+      stash = null;
+      delayAuto();
+    }
+    
+    return this;
   }
   
   public BotBuddy doubleClick(int x,int y) {
@@ -350,7 +385,7 @@ public class BotBuddy implements Cloneable {
   }
   
   public BotBuddy endFastMode() {
-    return unstashAutoDelay();
+    return unstash();
   }
   
   public BotBuddy endSafeMode() {
@@ -533,18 +568,18 @@ public class BotBuddy implements Cloneable {
     return shortcut.press(this);
   }
   
-  public BotBuddy shortcutFast(Shortcut shortcut) {
-    return beginFastMode().shortcut(shortcut).endFastMode();
-  }
-  
-  public BotBuddy stashAutoDelay() {
-    stash.stashAutoDelay();
+  public BotBuddy stash() {
+    stashes.push(new Stash());
     
     return this;
   }
   
-  public BotBuddy unstashAutoDelay() {
-    stash.unstashAutoDelay();
+  public BotBuddy unstash() {
+    Stash stash = stashes.poll();
+    
+    if(stash != null) {
+      stash.clear();
+    }
     
     return this;
   }
@@ -559,22 +594,6 @@ public class BotBuddy implements Cloneable {
     bot.mouseWheel(amount);
     
     return checkIfSafe();
-  }
-  
-  public BotBuddy clearAllPressed() {
-    return clearAllPressedKeys().clearAllPressedMice();
-  }
-  
-  public BotBuddy clearAllPressedKeys() {
-    pressedKeys.clear();
-    
-    return this;
-  }
-  
-  public BotBuddy clearAllPressedMice() {
-    pressedMice.clear();
-    
-    return this;
   }
   
   public BotBuddy setAutoDelay(int autoDelay) {
@@ -885,16 +904,17 @@ public class BotBuddy implements Cloneable {
   
   public class Stash implements Cloneable {
     public int autoDelay;
-    public boolean isAutoDelay;
-    public boolean isAutoDelayStashed = false;
+    public boolean isStashed = false;
     
     public Stash() {
+      autoDelay = getAutoDelay();
+      
+      isStashed = true;
     }
     
     public Stash(Stash stash) {
       autoDelay = stash.autoDelay;
-      isAutoDelay = stash.isAutoDelay;
-      isAutoDelayStashed = stash.isAutoDelayStashed;
+      isStashed = stash.isStashed;
     }
     
     @Override
@@ -902,26 +922,14 @@ public class BotBuddy implements Cloneable {
       return new Stash(this);
     }
     
-    public void stashAutoDelay() {
-      if(isAutoDelayStashed) {
+    public void clear() {
+      if(!isStashed) {
         return;
       }
       
-      autoDelay = getAutoDelay();
-      isAutoDelay = isAutoDelay();
-      isAutoDelayStashed = true;
-    }
-    
-    public void unstashAutoDelay() {
-      if(!isAutoDelayStashed) {
-        return;
-      }
+      isStashed = false;
       
-      if(isAutoDelay) {
-        setAutoDelay(autoDelay);
-      }
-      
-      isAutoDelayStashed = false;
+      setAutoDelay(autoDelay);
     }
   }
 }
