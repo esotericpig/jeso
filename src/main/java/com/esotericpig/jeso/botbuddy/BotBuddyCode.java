@@ -62,8 +62,6 @@ import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
-// TODO: use ReentrantLock
-
 /**
  * <pre>
  * <b>BotBuddyCode</b> is a simple scripting "language" for {@link com.esotericpig.jeso.botbuddy.BotBuddy}.
