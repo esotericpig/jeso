@@ -39,6 +39,6 @@ public final class Bools {
   }
   
   private Bools() {
-    throw new UnsupportedOperationException("Cannot construct a utility class");
+    throw new UtilClassException();
   }
 }

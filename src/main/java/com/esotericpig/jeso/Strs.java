@@ -78,6 +78,6 @@ public final class Strs {
   }
   
   private Strs() {
-    throw new UnsupportedOperationException("Cannot construct a utility class");
+    throw new UtilClassException();
   }
 }

@@ -38,6 +38,6 @@ public final class Sys {
   }
   
   private Sys() {
-    throw new UnsupportedOperationException("Cannot construct a utility class");
+    throw new UtilClassException();
   }
 }

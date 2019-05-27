@@ -239,11 +239,8 @@ public final class Arys {
     return list.toArray(newArray(ary,list.size()));
   }
   
-  public static void main(String[] args) {
-  }
-  
   private Arys() {
-    throw new UnsupportedOperationException("Cannot construct a utility class");
+    throw new UtilClassException();
   }
   
   public static final class Rand {
