@@ -48,7 +48,7 @@ import java.util.ListIterator;
 
 /**
  * <pre>
- * <b>BotBuddy</b> is a simple wrapper around <b>{@link java.awt.Robot java.awt.Robot}</b>.
+ * <b>BotBuddy</b> is a simple wrapper around {@link java.awt.Robot java.awt.Robot}.
  * 
  * Example:
  *   BotBuddy buddy = BotBuddy.builder().autoDelay(33).autoWaitForIdle(false).build();
@@ -62,7 +62,7 @@ import java.util.ListIterator;
  *   new BotBuddy.Builder().build();       // Not recommended, but fine
  *   new BotBuddy(new BotBuddy.Builder()); // Not recommended, but fine
  * 
- * There's a Safe Mode that throws UserIsActiveException if the user moves the mouse.
+ * There's a Safe Mode that throws {@link UserIsActiveException} if the user moves the mouse.
  * In addition, the pressed keys and pressed mouse buttons are stored internally if
  * Release Mode is on (on by default), so that you can release everything currently
  * pressed down to alleviate problems for the user when active.
@@ -75,7 +75,7 @@ import java.util.ListIterator;
  *   }
  *   catch(UserIsActiveException ex) {
  *     // Release all keys and/or mouse buttons pressed down by our automatic operations
- *     buddy.releaseAll();
+ *     buddy.releasePressed();
  *     
  *     // If you move your mouse, "Daddy" will not be executed
  *     System.out.println("User is active! Stopping all automatic operations.");
@@ -83,6 +83,9 @@ import java.util.ListIterator;
  * 
  * If you click into a virtual machine, you can change the OS for Shortcuts:
  *   buddy.setOSFamily(OSFamily.MACOS);
+ * 
+ * See {@link com.esotericpig.jeso.botbuddy.BotBuddyCode} for a simple scripting "language" for this class.
+ * See {@link com.esotericpig.jeso.botbuddy.BotBuddyCodeApp} for a simple app that can take in a file that uses BotBuddyCode.
  * </pre>
  * 
  * <p>Similar Projects:</p>
@@ -100,11 +103,13 @@ import java.util.ListIterator;
  * @author Jonathan Bradley Whited (@esotericpig)
  * 
  * @see BotBuddy.Builder
- * @see Robot
- * @see Clipboard
- * @see MouseInfo#getPointerInfo()
+ * @see java.awt.Robot
+ * @see java.awt.datatransfer.Clipboard
+ * @see java.awt.MouseInfo#getPointerInfo()
  * @see java.awt.PointerInfo#getLocation()
- * @see Toolkit
+ * @see java.awt.Toolkit
+ * @see com.esotericpig.jeso.botbuddy.BotBuddyCode
+ * @see com.esotericpig.jeso.botbuddy.BotBuddyCodeApp
  */
 public class BotBuddy implements Cloneable {
   /**
