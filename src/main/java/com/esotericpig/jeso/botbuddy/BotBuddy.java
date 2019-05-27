@@ -506,15 +506,21 @@ public class BotBuddy implements Cloneable {
     return move(x,y).pressMouse(button);
   }
   
-  public BufferedImage printScreen(Rectangle screenRect) {
+  public BufferedImage printScreen() throws SecurityException {
+    Dimension screenSize = getScreenSize();
+    
+    return printScreen(screenSize.width,screenSize.height);
+  }
+  
+  public BufferedImage printScreen(Rectangle screenRect) throws SecurityException {
     return bot.createScreenCapture(screenRect);
   }
   
-  public BufferedImage printScreen(int width,int height) {
+  public BufferedImage printScreen(int width,int height) throws SecurityException {
     return printScreen(new Rectangle(width,height));
   }
   
-  public BufferedImage printScreen(int x,int y,int width,int height) {
+  public BufferedImage printScreen(int x,int y,int width,int height) throws SecurityException {
     return printScreen(new Rectangle(x,y,width,height));
   }
   
