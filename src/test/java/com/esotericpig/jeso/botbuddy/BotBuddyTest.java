@@ -42,6 +42,8 @@ import org.junit.jupiter.api.Test;
  * @author Jonathan Bradley Whited (@esotericpig)
  */
 public class BotBuddyTest {
+  public static final int MAX_BUTTONS = 11;
+  
   /**
    * Max milliseconds for delays.
    */
@@ -70,28 +72,36 @@ public class BotBuddyTest {
     int autoDelay = rand.nextInt(MAX_MS);
     Robot bot = new Robot();
     Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
+    int defaultButton = rand.nextInt(MAX_BUTTONS);
     int fastDelay = rand.nextInt(MAX_MS);
     boolean isAutoDelay = rand.nextBoolean();
     boolean isAutoWaitForIdle = rand.nextBoolean();
     boolean isReleaseMode = rand.nextBoolean();
+    int leftButton = rand.nextInt(MAX_BUTTONS);
     int longDelay = rand.nextInt(MAX_MS);
+    int middleButton = rand.nextInt(MAX_BUTTONS);
     OSFamily osFamily = OSFamily.VALUES[rand.nextInt(OSFamily.VALUES.length)];
+    int rightButton = rand.nextInt(MAX_BUTTONS);
     int shortDelay = rand.nextInt(MAX_MS - 1) + 1; // Must be > 0 for isAutoDelay
     Toolkit tool = Toolkit.getDefaultToolkit();
     
-    buddy.clearAllPressed();
-    buddy.clearAllPressedKeys();
-    buddy.clearAllPressedMice();
+    buddy.clearPressed();
+    buddy.clearPressedButtons();
+    buddy.clearPressedKeys();
     
     assertEquals(autoDelay,buddy.setAutoDelay(autoDelay).getAutoDelay());
     assertEquals(bot,buddy.setBot(bot).getBot());
     assertEquals(clip,buddy.setClip(clip).getClip());
+    assertEquals(defaultButton,buddy.setDefaultButton(defaultButton).getDefaultButton());
     assertEquals(fastDelay,buddy.setFastDelay(fastDelay).getFastDelay());
     assertEquals(isAutoDelay,buddy.setAutoDelay(isAutoDelay).isAutoDelay());
     assertEquals(isAutoWaitForIdle,buddy.setAutoWaitForIdle(isAutoWaitForIdle).isAutoWaitForIdle());
     assertEquals(isReleaseMode,buddy.setReleaseMode(isReleaseMode).isReleaseMode());
+    assertEquals(leftButton,buddy.setLeftButton(leftButton).getLeftButton());
     assertEquals(longDelay,buddy.setLongDelay(longDelay).getLongDelay());
+    assertEquals(middleButton,buddy.setMiddleButton(middleButton).getMiddleButton());
     assertEquals(osFamily,buddy.setOSFamily(osFamily).getOSFamily());
+    assertEquals(rightButton,buddy.setRightButton(rightButton).getRightButton());
     assertEquals(shortDelay,buddy.setShortDelay(shortDelay).getShortDelay());
     assertEquals(tool,buddy.setTool(tool).getTool());
   }
@@ -113,12 +123,16 @@ public class BotBuddyTest {
     int autoDelay = rand.nextInt(MAX_MS - 1) + 1; // Must be > 0 for isAutoDelay
     Robot bot = new Robot();
     Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
+    int defaultButton = rand.nextInt(MAX_BUTTONS);
     int fastDelay = rand.nextInt(MAX_MS);
     boolean isAutoDelay = true; // Always true because autoDelay > 0
     boolean isAutoWaitForIdle = rand.nextBoolean();
     boolean isReleaseMode = rand.nextBoolean();
+    int leftButton = rand.nextInt(MAX_BUTTONS);
     int longDelay = rand.nextInt(MAX_MS);
+    int middleButton = rand.nextInt(MAX_BUTTONS);
     OSFamily osFamily = OSFamily.VALUES[rand.nextInt(OSFamily.VALUES.length)];
+    int rightButton = rand.nextInt(MAX_BUTTONS);
     int shortDelay = rand.nextInt(MAX_MS);
     Toolkit tool = Toolkit.getDefaultToolkit();
     
@@ -127,22 +141,30 @@ public class BotBuddyTest {
                      .autoWaitForIdle(isAutoWaitForIdle)
                      .bot(bot)
                      .clip(clip)
+                     .defaultButton(defaultButton)
                      .fastDelay(fastDelay)
+                     .leftButton(leftButton)
                      .longDelay(longDelay)
+                     .middleButton(middleButton)
                      .osFamily(osFamily)
                      .releaseMode(isReleaseMode)
+                     .rightButton(rightButton)
                      .shortDelay(shortDelay)
                      .tool(tool);
     
     assertEquals(autoDelay,builder.autoDelay);
     assertEquals(bot,builder.bot);
     assertEquals(clip,builder.clip);
+    assertEquals(defaultButton,builder.defaultButton);
     assertEquals(fastDelay,builder.fastDelay);
     assertEquals(isAutoDelay,builder.isAutoDelay);
     assertEquals(isAutoWaitForIdle,builder.isAutoWaitForIdle);
     assertEquals(isReleaseMode,builder.isReleaseMode);
+    assertEquals(leftButton,builder.leftButton);
     assertEquals(longDelay,builder.longDelay);
+    assertEquals(middleButton,builder.middleButton);
     assertEquals(osFamily,builder.osFamily);
+    assertEquals(rightButton,builder.rightButton);
     assertEquals(shortDelay,builder.shortDelay);
     assertEquals(tool,builder.tool);
     
@@ -151,12 +173,16 @@ public class BotBuddyTest {
     assertEquals(autoDelay,buddy.getAutoDelay());
     assertEquals(bot,buddy.getBot());
     assertEquals(clip,buddy.getClip());
+    assertEquals(defaultButton,buddy.getDefaultButton());
     assertEquals(fastDelay,buddy.getFastDelay());
     assertEquals(isAutoDelay,buddy.isAutoDelay());
     assertEquals(isAutoWaitForIdle,buddy.isAutoWaitForIdle());
     assertEquals(isReleaseMode,buddy.isReleaseMode());
+    assertEquals(leftButton,buddy.getLeftButton());
     assertEquals(longDelay,buddy.getLongDelay());
+    assertEquals(middleButton,buddy.getMiddleButton());
     assertEquals(osFamily,buddy.getOSFamily());
+    assertEquals(rightButton,buddy.getRightButton());
     assertEquals(shortDelay,buddy.getShortDelay());
     assertEquals(tool,buddy.getTool());
   }

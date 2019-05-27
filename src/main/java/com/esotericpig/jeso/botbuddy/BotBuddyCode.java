@@ -957,6 +957,9 @@ public class BotBuddyCode implements Closeable {
       // Main methods
       put("beep",(buddy,inst) -> buddy.beep());
       put("beginsafemode",(buddy,inst) -> buddy.beginSafeMode());
+      put("clearpressed",(buddy,inst) -> buddy.clearPressed());
+      put("clearpressedbuttons",(buddy,inst) -> buddy.clearPressedButtons());
+      put("clearpressedkeys",(buddy,inst) -> buddy.clearPressedKeys());
       put("click",(buddy,inst) -> {
         switch(inst.args.length) {
           case 0:  buddy.click(); break;
@@ -979,7 +982,16 @@ public class BotBuddyCode implements Closeable {
           default: buddy.doubleClick(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
         }
       });
-      put("drag",(buddy,inst) -> buddy.drag(inst.getInt(0),inst.getInt(1),inst.getInt(2),inst.getInt(3)));
+      put("drag",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 4:
+            buddy.drag(inst.getInt(0),inst.getInt(1),inst.getInt(2),inst.getInt(3));
+            break;
+          default:
+            buddy.drag(inst.getInt(0),inst.getInt(1),inst.getInt(2),inst.getInt(3),inst.getInt(4));
+            break;
+        }
+      });
       put("endsafemode",(buddy,inst) -> buddy.endSafeMode());
       put("enter",(buddy,inst) -> {
         switch(inst.args.length) {
@@ -1023,21 +1035,21 @@ public class BotBuddyCode implements Closeable {
           default: buddy.pressMouse(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
         }
       });
-      put("releaseall",(buddy,inst) -> buddy.releaseAll());
-      put("releaseallkeys",(buddy,inst) -> buddy.releaseAllKeys());
-      put("releaseallmice",(buddy,inst) -> buddy.releaseAllMice());
+      put("releasebuttons",(buddy,inst) -> buddy.releaseButtons());
       put("releasekey",(buddy,inst) -> {
         switch(inst.args.length) {
           case 1:  buddy.releaseKey(inst.getInt(0)); break;
           default: buddy.releaseKey(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
         }
       });
+      put("releasekeys",(buddy,inst) -> buddy.releaseKeys());
       put("releasemouse",(buddy,inst) -> {
         switch(inst.args.length) {
           case 1:  buddy.releaseMouse(inst.getInt(0)); break;
           default: buddy.releaseMouse(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
         }
       });
+      put("releasepressed",(buddy,inst) -> buddy.releasePressed());
       put("rightclick",(buddy,inst) -> {
         switch(inst.args.length) {
           case 0:  buddy.rightClick(); break;
@@ -1061,9 +1073,6 @@ public class BotBuddyCode implements Closeable {
       });
       
       // Setters
-      put("clearallpressed",(buddy,inst) -> buddy.clearAllPressed());
-      put("clearallpressedkeys",(buddy,inst) -> buddy.clearAllPressedKeys());
-      put("clearallpressedmice",(buddy,inst) -> buddy.clearAllPressedMice());
       put("setautodelay",(buddy,inst) -> {
         String msg = "setAutoDelay: ";
         
