@@ -42,7 +42,7 @@ Alternatively you can build everything into one jar:
 | Class | Summary |
 | ----- | ------- |
 | [BotBuddy](#botbuddy) | A simple wrapper around [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html) |
-| [BotBuddyCode](#botbuddycode) | A very simple scripting language interpreter for [BotBuddy](#botbuddy) |
+| [BotBuddyCode](#botbuddycode) | A very simple scripting "language" interpreter for [BotBuddy](#botbuddy) |
 
 ### [BotBuddy](#code)
 
@@ -167,7 +167,102 @@ Similar projects:
 
 ### [BotBuddyCode](#code)
 
-[BotBuddyCode](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddyCode.java) is a very simple scripting language interpreter for [BotBuddy](#botbuddy).
+[BotBuddyCode](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddyCode.java) is a very simple scripting "language" interpreter for [BotBuddy](#botbuddy). It is **not** Turing complete.
+
+See [BotBuddyCodeTest.bbc](src/test/resources/BotBuddyCodeTest.bbc) for a quick example of functionality. If you were to interpret this file dryly, then it would produce this output: [BotBuddyCodeTestOutput.txt](src/test/resources/BotBuddyCodeTestOutput.txt).
+
+The idea was to make a very simple parser, without including the overhead of Groovy/JRuby into *jeso*. In a future, separate project, I may add Groovy/JRuby support.
+
+It can handle Ruby-like string literals and [heredoc](https://en.wikipedia.org/wiki/Here_document), and simple methods (no params).
+
+It can accept the following input:
+
+- [java.io.BufferedReader](https://docs.oracle.com/javase/8/docs/api/java/io/BufferedReader.html)
+- [java.nio.file.Path](https://docs.oracle.com/javase/8/docs/api/java/nio/file/Path.html) [use [java.nio.file.Paths](https://docs.oracle.com/javase/8/docs/api/java/nio/file/Paths.html).get(...)]
+- [java.util.List](https://docs.oracle.com/javase/8/docs/api/java/util/List.html)&lt;[String](https://docs.oracle.com/javase/8/docs/api/java/lang/String.html)&gt; using [com.esotericpig.jeso.io.StringListReader](src/main/java/com/esotericpig/jeso/io/StringListReader.java)
+- [String](https://docs.oracle.com/javase/8/docs/api/java/lang/String.html) using [java.io.StringReader](https://docs.oracle.com/javase/8/docs/api/java/io/StringReader.html)
+
+Example usage with a file:
+```Java
+  try(BotBuddyCode bbc = BotBuddyCode.builder(Paths.get("file.txt")).build()) {
+    // Don't execute any code, just output result of interpreting:
+    System.out.println(bbc.interpretDryRun());
+  }
+```
+
+Example usage with a list of strings:
+```Java
+  List<String> list = new LinkedList<>();
+  list.add("puts 'Hello World'");
+  list.add("");
+  list.add("get_coords");
+  
+  try(BotBuddyCode bbc = BotBuddyCode.builder(list).build()) {
+    // Interpret and execute code
+    bbc.interpret();
+  }
+```
+
+Example of functionality:
+```Ruby
+  # This is a comment
+  
+  puts <<EOS # Heredoc
+      Hello World
+    EOS # End tag can be indented
+  
+  puts <<-EOS # ltrim to min indent
+      Hello World
+    EOS
+  
+  paste 592 254 <<-EOS # Heredoc with other args
+      Hello World
+    EOS
+  
+  # Method names are flexible
+  begin_safe_mode
+  endSafeMode
+  
+  # Quoted strings can also have newlines
+  puts "Hello \"
+  World\""
+  puts 'Hello \'World\''
+  
+  # Special quotes like Ruby, where you choose the terminator
+  puts %(Hello \) World)
+  puts %^Hello \^ World^
+  
+  # Define your own (user) method
+  # - Cannot take in args
+  def my_method
+    get_coords
+    get_pixel 1839 894
+    printscreen # Saves file to current directory
+    getOSFamily
+  end
+  
+  # Can call multiple methods in one line
+  call my_method myMethod}
+```
+
+Real world example:
+```Ruby
+  puts "Get ready..."
+  delay 2000
+  
+  begin_safe_mode
+  
+  paste 1187 492  "Sakana"
+  paste 1450 511  "Fish"
+  click 1851 1021
+  delay_long
+  
+  paste 1187 492  "Niku"
+  paste 1450 511  "Meat"
+  click 1851 1021
+  
+  end_safe_mode}
+```
 
 ## [License](#contents)
 [GNU LGPL v3+](LICENSE)
