@@ -66,10 +66,101 @@ import javax.imageio.ImageIO;
 
 /**
  * <pre>
- * // TODO: flesh this out
+ * <b>BotBuddyCode</b> is a simple scripting "language" for {@link com.esotericpig.jeso.botbuddy.BotBuddy}.
+ *   It is <b>not</b> Turing complete.
+ * 
+ * The idea was to make a very simple parser, without including the overhead of Groovy/JRuby into jeso.
+ * 
+ * It can handle Ruby-like string literals and heredoc, and simple methods (no params).
+ * 
+ * It can accept the following input:
+ * - {@link java.io.BufferedReader}
+ * - {@link java.nio.file.Path} [use {@link java.nio.file.Paths}.get(...)]
+ * - {@link java.util.List}&lt;String&gt; using {@link com.esotericpig.jeso.io.StringListReader}
+ * - {@link String} using {@link java.io.StringReader}
+ * 
+ * Example usage with a file:{@code
+ *   try(BotBuddyCode bbc = BotBuddyCode.builder(Paths.get("file.txt")).build()) {
+ *     // Don't execute any code, just output result of interpreting:
+ *     System.out.println(bbc.interpretDryRun());
+ *   }}
+ * 
+ * Example usage with a list of strings:{@code
+ *   List<String> list = new LinkedList<>();
+ *   list.add("puts 'Hello World'");
+ *   list.add("");
+ *   list.add("get_coords");
+ *   
+ *   try(BotBuddyCode bbc = BotBuddyCode.builder(list).build()) {
+ *     // Interpret and execute code
+ *     bbc.interpret();
+ *   }}
+ * 
+ * Example of functionality:{@code
+ *   # This is a comment
+ *   
+ *   puts <<EOS # Heredoc
+ *       Hello World
+ *     EOS # End tag can be indented
+ *   
+ *   puts <<-EOS # ltrim to min indent
+ *       Hello World
+ *     EOS
+ *   
+ *   paste 592 254 <<-EOS # Heredoc with other args
+ *       Hello World
+ *     EOS
+ *   
+ *   # Method names are flexible
+ *   begin_safe_mode
+ *   endSafeMode
+ *   
+ *   # Quoted strings can also have newlines
+ *   puts "Hello \"
+ *   World\""
+ *   puts 'Hello \'World\''
+ *   
+ *   # Special quotes like Ruby, where you choose the terminator
+ *   puts %(Hello \) World)
+ *   puts %^Hello \^ World^
+ *   
+ *   # Define your own (user) method
+ *   # - Cannot take in args
+ *   def my_method
+ *     get_coords
+ *     get_pixel 1839 894
+ *     printscreen # Saves file to current directory
+ *     getOSFamily
+ *   end
+ *   
+ *   # Can call multiple methods in one line
+ *   call my_method myMethod}
+ * 
+ * Real world example:{@code
+ *   puts "Get ready..."
+ *   delay 2000
+ *   
+ *   begin_safe_mode
+ *   
+ *   paste 1187 492  "Sakana"
+ *   paste 1450 511  "Fish"
+ *   click 1851 1021
+ *   delay_long
+ *   
+ *   paste 1187 492  "Niku"
+ *   paste 1450 511  "Meat"
+ *   click 1851 1021
+ *   
+ *   end_safe_mode}
  * </pre>
  * 
  * @author Jonathan Bradley Whited (@esotericpig)
+ * 
+ * @see com.esotericpig.jeso.botbuddy.BotBuddy
+ * @see java.nio.file.Paths
+ * @see com.esotericpig.jeso.io.StringListReader
+ * @see java.io.StringReader
+ * @see com.esotericpig.jeso.botbuddy.BotBuddyCodeApp
  */
 public class BotBuddyCode implements Closeable {
   public static final int DEFAULT_COMMENT_CHAR = '#';
