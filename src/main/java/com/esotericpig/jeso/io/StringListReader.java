@@ -42,7 +42,7 @@ public class StringListReader extends Reader {
     init(list);
   }
   
-  public StringListReader(List<String> list,Object lock) {
+  protected StringListReader(List<String> list,Object lock) {
     super(lock);
     
     init(list);
@@ -71,6 +71,10 @@ public class StringListReader extends Reader {
     if(list == null) {
       throw new IOException("Reader has been closed");
     }
+  }
+  
+  public void mark() throws IOException {
+    mark(0);
   }
   
   @Override
