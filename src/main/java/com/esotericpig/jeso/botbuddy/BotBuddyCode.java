@@ -166,6 +166,10 @@ public class BotBuddyCode implements Closeable {
   public static final String INSTRUCTION_CALL_ID = "call";
   public static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+",Pattern.UNICODE_CHARACTER_CLASS);
   
+  public static Builder builder() {
+    return new Builder();
+  }
+  
   public static Builder builder(BufferedReader input) {
     return new Builder(input);
   }
@@ -891,23 +895,36 @@ public class BotBuddyCode implements Closeable {
     protected BufferedReader input = null;
     protected Path path = null;
     
+    public Builder() {
+    }
+    
     public Builder(BufferedReader input) {
+      this();
+      
       input(input);
     }
     
     public Builder(Path path) {
+      this();
+      
       path(path);
     }
     
     public Builder(Path path,Charset charset) {
+      this();
+      
       path(path,charset);
     }
     
     public Builder(CharSequence str) {
+      this();
+      
       input(str);
     }
     
     public Builder(List<String> strList) {
+      this();
+      
       input(strList);
     }
     
