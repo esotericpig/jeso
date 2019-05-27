@@ -185,84 +185,84 @@ It can accept the following input:
 
 Example usage with a file:
 ```Java
-  try(BotBuddyCode bbc = BotBuddyCode.builder(Paths.get("file.txt")).build()) {
-    // Don't execute any code, just output result of interpreting:
-    System.out.println(bbc.interpretDryRun());
-  }
+try(BotBuddyCode bbc = BotBuddyCode.builder(Paths.get("file.txt")).build()) {
+  // Don't execute any code, just output result of interpreting:
+  System.out.println(bbc.interpretDryRun());
+}
 ```
 
 Example usage with a list of strings:
 ```Java
-  List<String> list = new LinkedList<>();
-  list.add("puts 'Hello World'");
-  list.add("");
-  list.add("get_coords");
-  
-  try(BotBuddyCode bbc = BotBuddyCode.builder(list).build()) {
-    // Interpret and execute code
-    bbc.interpret();
-  }
+List<String> list = new LinkedList<>();
+list.add("puts 'Hello World'");
+list.add("");
+list.add("get_coords");
+
+try(BotBuddyCode bbc = BotBuddyCode.builder(list).build()) {
+  // Interpret and execute code
+  bbc.interpret();
+}
 ```
 
 Example of functionality:
 ```Ruby
-  # This is a comment
-  
-  puts <<EOS # Heredoc
-      Hello World
-    EOS # End tag can be indented
-  
-  puts <<-EOS # ltrim to min indent
-      Hello World
-    EOS
-  
-  paste 592 254 <<-EOS # Heredoc with other args
-      Hello World
-    EOS
-  
-  # Method names are flexible
-  begin_safe_mode
-  endSafeMode
-  
-  # Quoted strings can also have newlines
-  puts "Hello \"
-  World\""
-  puts 'Hello \'World\''
-  
-  # Special quotes like Ruby, where you choose the terminator
-  puts %(Hello \) World)
-  puts %^Hello \^ World^
-  
-  # Define your own (user) method
-  # - Cannot take in args
-  def my_method
-    get_coords
-    get_pixel 1839 894
-    printscreen # Saves file to current directory
-    getOSFamily
-  end
-  
-  # Can call multiple methods in one line
-  call my_method myMethod}
+# This is a comment
+
+puts <<EOS # Heredoc
+    Hello World
+  EOS # End tag can be indented
+
+puts <<-EOS # ltrim to min indent
+    Hello World
+  EOS
+
+paste 592 254 <<-EOS # Heredoc with other args
+    Hello World
+  EOS
+
+# Method names are flexible
+begin_safe_mode
+endSafeMode
+
+# Quoted strings can also have newlines
+puts "Hello \"
+World\""
+puts 'Hello \'World\''
+
+# Special quotes like Ruby, where you choose the terminator
+puts %(Hello \) World)
+puts %^Hello \^ World^
+
+# Define your own (user) method
+# - Cannot take in args
+def my_method
+  get_coords
+  get_pixel 1839 894
+  printscreen # Saves file to current directory
+  getOSFamily
+end
+
+# Can call multiple methods in one line
+call my_method myMethod
 ```
 
 Real world example:
 ```Ruby
-  puts "Get ready..."
-  delay 2000
-  
-  begin_safe_mode
-  
-  paste 1187 492  "Sakana"
-  paste 1450 511  "Fish"
-  click 1851 1021
-  delay_long
-  
-  paste 1187 492  "Niku"
-  paste 1450 511  "Meat"
-  click 1851 1021
-  
-  end_safe_mode}
+puts "Get ready..."
+delay 2000
+
+begin_safe_mode
+
+paste 1187 492  "Sakana"
+paste 1450 511  "Fish"
+click 1851 1021
+delay_long
+
+paste 1187 492  "Niku"
+paste 1450 511  "Meat"
+click 1851 1021
+
+end_safe_mode
 ```
 
 ## [License](#contents)
