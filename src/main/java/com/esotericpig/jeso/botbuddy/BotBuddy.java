@@ -541,7 +541,7 @@ public class BotBuddy implements Cloneable {
     bot.keyRelease(keyCode);
     
     if(isReleaseMode) {
-      pressedKeys.remove(keyCode);
+      pressedKeys.removeFirstOccurrence(keyCode);
     }
     
     return checkIfSafe();
@@ -563,7 +563,7 @@ public class BotBuddy implements Cloneable {
     bot.mouseRelease(button);
     
     if(isReleaseMode) {
-      pressedButtons.remove(button);
+      pressedButtons.removeFirstOccurrence(button);
     }
     
     return checkIfSafe();
