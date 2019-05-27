@@ -18,44 +18,165 @@
 
 package com.esotericpig.jeso.botbuddy;
 
-import java.nio.file.Paths;
+import com.esotericpig.jeso.code.ParseCodeException;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.awt.AWTException;
+
+import java.io.IOException;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * @author Jonathan Bradley Whited (@esotericpig)
  */
 public class BotBuddyCodeApp {
   public static void main(String[] args) {
-    test0();
-  }
-  
-  public static void test0() {
-    List<String> l = new LinkedList<>();
-    l.add("right_click 658 317");
-    //l.add("printscreen");
-    
-    BotBuddy bb = null;
-    
-    //try(BotBuddyCode bbc = BotBuddyCode.builder(Paths.get("stock/bb.rb")).build()) {
-    try(BotBuddyCode bbc = BotBuddyCode.builder(l).build()) {
-      bb = bbc.getBuddy();
+    try {
+      BotBuddyCodeApp app = new BotBuddyCodeApp(args);
       
-      //System.out.print(bbc.interpretDryRun());
-      bbc.interpret();
+      app.parseArgs();
+      app.interpretFile();
+    }
+    catch(ParseCodeException ex) {
+      System.out.println("ParseCodeException: " + ex.getMessage());
+      
+      if(ex.getCause() != null) {
+        ex.getCause().printStackTrace();
+      }
     }
     catch(Exception ex) {
-      System.out.println(ex);
       ex.printStackTrace();
-    }
-    finally {
-      if(bb != null) {
-        bb.releasePressed();
+      
+      if(ex.getCause() != null) {
+        ex.getCause().printStackTrace();
       }
     }
   }
   
-  public static void test1() {
+  protected String[] args;
+  protected BotBuddyCode.Builder builder = BotBuddyCode.builder();
+  protected int indent = 4;
+  protected boolean isDryRun = false;
+  protected String name = getClass().getSimpleName();
+  protected int optionsIndent = 24;
+  protected Path path = null;
+  
+  public BotBuddyCodeApp(String[] args) {
+    this.args = args;
+  }
+  
+  public void interpretFile() throws AWTException,IOException,ParseCodeException {
+    try(BotBuddyCode bbc = builder.path(path).build()) {
+      if(isDryRun) {
+        System.out.println(bbc.interpretDryRun());
+      }
+      else {
+        bbc.interpret();
+      }
+    }
+  }
+  
+  public void parseArgs() {
+    if(args.length < 1) {
+      printHelp();
+    }
+    
+    for(String arg: args) {
+      if(arg.equals("-h") || arg.equals("--help")) {
+        printHelp();
+      }
+      else if(arg.equals("-n") || arg.equals("--dry-run")) {
+        isDryRun = true;
+      }
+      else {
+        if(path != null) {
+          printHelp("Error: Too many files specified; only one file is allowed.");
+        }
+        
+        path = Paths.get(arg.trim());
+      }
+    }
+    
+    if(path == null) {
+      printHelp("Error: No file specified.");
+    }
+  }
+  
+  public void printHelp() {
+    printHelp(null);
+  }
+  
+  public void printHelp(String errorMessage) {
+    if(errorMessage != null) {
+      println(errorMessage);
+      println();
+    }
+    
+    println("Usage: {n} [options] <file>");
+    println();
+    println("Interprets the contents of <file> using BotBuddyCode.");
+    println();
+    println("Options:");
+    println("{i}-n, --dry-run {o} Do not execute any code, only output the interpretation");
+    println("{i}---");
+    println("{i}-h, --help {o} Print this help");
+    println();
+    println("Examples:");
+    println("{i}{n} -n mydir/myfile.bbc");
+    println("{i}{n} 'My Dir/My File.bbc'");
+    
+    System.exit(0);
+  }
+  
+  public void println() {
+    System.out.println();
+  }
+  
+  public void println(String message) {
+    StringBuilder sb = new StringBuilder(message.length());
+    int totalIndent = 0;
+    
+    for(int i = 0; i < message.length();) {
+      int cp = message.codePointAt(i);
+      
+      i += Character.charCount(cp);
+      
+      if(cp == '{') {
+        int j = message.indexOf('}',i);
+        
+        if(j < 0) {
+          throw new IllegalArgumentException("No matching curly brace: " + message);
+        }
+        
+        String id = message.substring(i,j);
+        
+        if(id.equals("i")) {
+          for(int k = 0; k < indent; ++k) {
+            sb.append(' ');
+          }
+          
+          totalIndent += indent;
+        }
+        else if(id.equals("n")) {
+          sb.append(name);
+        }
+        else if(id.equals("o")) {
+          for(int k = (i - totalIndent); k < optionsIndent; ++k) {
+            sb.append(' ');
+          }
+        }
+        else {
+          throw new IllegalArgumentException("Invalid message format ID: " + message);
+        }
+        
+        i = j + 1; // +1 for '}'
+      }
+      else {
+        sb.appendCodePoint(cp);
+      }
+    }
+    
+    System.out.println(sb);
   }
 }
