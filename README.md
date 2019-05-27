@@ -50,7 +50,8 @@ Alternatively you can build everything into one jar:
 [BotBuddy](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddy.java) is a simple wrapper around [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html).
 
 **Warning** for **Linux** users:  
-> On Wayland, Java's Robot will not work. You will need to either use X11 or XWayland, until either OpenJDK or Wayland is fixed.
+
+- On Wayland, Java's Robot will not work. You will need to either use X11 or XWayland, until either OpenJDK or Wayland is fixed.
 
 For one example, it can be used for moving the mouse and pasting in text.
 
