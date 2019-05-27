@@ -32,8 +32,11 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
 
+import java.awt.image.BufferedImage;
+
 import java.io.BufferedReader;
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 
@@ -42,6 +45,10 @@ import java.nio.charset.StandardCharsets;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import java.time.ZonedDateTime;
+
+import java.time.format.DateTimeFormatter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,6 +59,8 @@ import java.util.Locale;
 import java.util.Map;
 
 import java.util.regex.Pattern;
+
+import javax.imageio.ImageIO;
 
 // TODO: use ReentrantLock
 
@@ -899,7 +908,7 @@ public class BotBuddyCode implements Closeable {
      *   because a JUnit test will fail if an entry has been overwritten accidentally.
      * </pre>
      */
-    public static final int BASE_COUNT = 47;
+    public static final int BASE_COUNT = 52;
     
     protected Map<String,Executor> entries;
     
@@ -940,11 +949,6 @@ public class BotBuddyCode implements Closeable {
      * </pre>
      */
     public void addBase() {
-      // TODO: printScreen(): save to file or clipboard?
-      // TODO: shortcut/shortcutFast(): load 2nd file or add logic for methods?
-      //                                1) can use Shortcuts.PASTE, etc.
-      //                                2) shortcut "getcoords\nbeep" (use heredoc/string); StringReader
-      
       // Static methods
       put("getcoords",(buddy,inst) -> {
         Point coords = BotBuddy.getCoords();
@@ -956,6 +960,7 @@ public class BotBuddyCode implements Closeable {
       
       // Main methods
       put("beep",(buddy,inst) -> buddy.beep());
+      put("beginfastmode",(buddy,inst) -> buddy.beginFastMode());
       put("beginsafemode",(buddy,inst) -> buddy.beginSafeMode());
       put("clearpressed",(buddy,inst) -> buddy.clearPressed());
       put("clearpressedbuttons",(buddy,inst) -> buddy.clearPressedButtons());
@@ -992,6 +997,7 @@ public class BotBuddyCode implements Closeable {
             break;
         }
       });
+      put("endfastmode",(buddy,inst) -> buddy.endFastMode());
       put("endsafemode",(buddy,inst) -> buddy.endSafeMode());
       put("enter",(buddy,inst) -> {
         switch(inst.args.length) {
@@ -1035,6 +1041,37 @@ public class BotBuddyCode implements Closeable {
           default: buddy.pressMouse(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
         }
       });
+      put("printscreen",(buddy,inst) -> {
+        BufferedImage image = null;
+        
+        switch(inst.args.length) {
+          case 0: image = buddy.printScreen(); break;
+          case 2: image = buddy.printScreen(inst.getInt(0),inst.getInt(1)); break;
+          default:
+            image = buddy.printScreen(inst.getInt(0),inst.getInt(1),inst.getInt(2),inst.getInt(3));
+            break;
+        }
+        
+        ZonedDateTime dateTime = ZonedDateTime.now();
+        DateTimeFormatter dateTimeF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss-SSS VV");
+        String dateTimeS = dateTime.format(dateTimeF).replace('/','-');
+        
+        String fileFormat = "png";
+        File file = new File("BotBuddy Screenshot " + dateTimeS + "." + fileFormat);
+        
+        if(file.exists()) {
+          throw inst.buildParseCodeException("File already exists: " + file.getAbsolutePath());
+        }
+        
+        System.out.println("Saving screenshot to: " + file.getAbsolutePath());
+        
+        try {
+          ImageIO.write(image,fileFormat,file);
+        }
+        catch(IOException ex) {
+          throw inst.buildParseCodeException("Failed to save screenshot: " + file.getAbsolutePath(),ex);
+        }
+      });
       put("releasebuttons",(buddy,inst) -> buddy.releaseButtons());
       put("releasekey",(buddy,inst) -> {
         switch(inst.args.length) {
@@ -1056,6 +1093,8 @@ public class BotBuddyCode implements Closeable {
           default: buddy.rightClick(inst.getInt(0),inst.getInt(1)); break;
         }
       });
+      put("stash",(buddy,inst) -> buddy.stash());
+      put("unstash",(buddy,inst) -> buddy.unstash());
       put("waitforidle",(buddy,inst) -> buddy.waitForIdle());
       put("wheel",(buddy,inst) -> buddy.wheel(inst.getInt(0)));
       
