@@ -14,6 +14,7 @@ Name = Java + gesso + esoteric.
 - [Using](#using)
 - [Code](#code)
     - [BotBuddy](#botbuddy)
+    - [BotBuddyCode](#botbuddycode)
 - [License](#license)
 
 ## [Requirements](#contents)
