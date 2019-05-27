@@ -10,7 +10,7 @@
         - `enter 1427 500  "Sakana"`
         - `click 1853 1015`
     - [x] Make #doubleClick() more generic; use above method
-    - [ ] Store history of keys/mouse pressed, so can release them if UserIsActiveException during Safe Mode
+    - [x] Store history of keys/mouse pressed, so can release them if UserIsActiveException during Safe Mode
 - [ ] Add appropriate logging (Logback?); search and remove printlns
 - [ ] CSV class
 - [x] In Gradle, add a task to check/download the Wrapper checksum. [Release Checksums](https://gradle.org/release-checksums/)
@@ -41,5 +41,6 @@
     - [ ] In all classes (Javadoc)
     - [ ] In README.md
     - [ ] In HACKING.md?
+    - [ ] Add @since for all (use library version)
 - [ ] Mimic Ruby's [OptionParser](https://ruby-doc.org/stdlib-2.6.3/libdoc/optparse/rdoc/OptionParser.html), but add sub-commands capability? Now possible thanks to Java 8 lambdas.
 - [ ] Move BigDecBase, etc. from senpi to here (jeso.math)?
