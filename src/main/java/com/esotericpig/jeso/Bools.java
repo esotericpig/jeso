@@ -18,13 +18,17 @@
 
 package com.esotericpig.jeso;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 /**
  * @author Jonathan Bradley Whited (@esotericpig)
  */
 public final class Bools {
-  public static final String[] TRUE_BOOL_STRS = new String[]{"1","on","t","true","y","yes"};
+  public static final List<String> TRUE_BOOL_STRS = Collections.unmodifiableList(Arrays.asList(
+    "1","on","t","true","y","yes"));
   
   public static boolean parse(String str) {
     str = str.trim().toLowerCase(Locale.ENGLISH);

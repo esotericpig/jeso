@@ -80,7 +80,7 @@ public class BotBuddyTest {
     int leftButton = rand.nextInt(MAX_BUTTONS);
     int longDelay = rand.nextInt(MAX_MS);
     int middleButton = rand.nextInt(MAX_BUTTONS);
-    OSFamily osFamily = OSFamily.VALUES[rand.nextInt(OSFamily.VALUES.length)];
+    OSFamily osFamily = OSFamily.getRandValue(rand);
     int rightButton = rand.nextInt(MAX_BUTTONS);
     int shortDelay = rand.nextInt(MAX_MS - 1) + 1; // Must be > 0 for isAutoDelay
     Toolkit tool = Toolkit.getDefaultToolkit();
@@ -131,7 +131,7 @@ public class BotBuddyTest {
     int leftButton = rand.nextInt(MAX_BUTTONS);
     int longDelay = rand.nextInt(MAX_MS);
     int middleButton = rand.nextInt(MAX_BUTTONS);
-    OSFamily osFamily = OSFamily.VALUES[rand.nextInt(OSFamily.VALUES.length)];
+    OSFamily osFamily = OSFamily.getRandValue(rand);
     int rightButton = rand.nextInt(MAX_BUTTONS);
     int shortDelay = rand.nextInt(MAX_MS);
     Toolkit tool = Toolkit.getDefaultToolkit();
@@ -199,6 +199,7 @@ public class BotBuddyTest {
     buddy = new BotBuddy(buddy);
     buddy = new BotBuddy(BotBuddy.builder());
     buddy = new BotBuddy(new BotBuddy.Builder());
+    buddy = buddy.clone();
   }
   
   @Test

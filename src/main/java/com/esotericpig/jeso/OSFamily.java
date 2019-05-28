@@ -18,7 +18,11 @@
 
 package com.esotericpig.jeso;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 
 /**
  * @author Jonathan Bradley Whited (@esotericpig)
@@ -27,7 +31,11 @@ import java.util.Locale;
 public enum OSFamily {
   LINUX("linux"),MACOS("darwin mac osx"),WINDOWS("win","darwin"),UNKNOWN;
   
-  public static final OSFamily[] VALUES = values();
+  public static final List<OSFamily> VALUES = Collections.unmodifiableList(Arrays.asList(values()));
+  
+  public static OSFamily getRandValue(Random rand) {
+    return VALUES.get(rand.nextInt(VALUES.size()));
+  }
   
   public static OSFamily guessFromName(String osName) {
     osName = osName.replaceAll("\\s+","").toLowerCase(Locale.ENGLISH);
@@ -76,8 +84,8 @@ public enum OSFamily {
     return osFamily;
   }
   
-  protected String[] badWords;
-  protected String[] goodWords;
+  protected final List<String> badWords;
+  protected final List<String> goodWords;
   
   private OSFamily() {
     this(null);
@@ -88,15 +96,17 @@ public enum OSFamily {
   }
   
   private OSFamily(String goodWords,String badWords) {
-    this.badWords = (badWords != null) ? badWords.split("\\s+") : null;
-    this.goodWords = (goodWords != null) ? goodWords.split("\\s+") : null;
+    this.badWords = (badWords != null)
+      ? Collections.unmodifiableList(Arrays.asList(badWords.split("\\s+"))) : null;
+    this.goodWords = (goodWords != null)
+      ? Collections.unmodifiableList(Arrays.asList(goodWords.split("\\s+"))) : null;
   }
   
-  public String[] getBadWords() {
+  public List<String> getBadWords() {
     return badWords;
   }
   
-  public String[] getGoodWords() {
+  public List<String> getGoodWords() {
     return goodWords;
   }
 }

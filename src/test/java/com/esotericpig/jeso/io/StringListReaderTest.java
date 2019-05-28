@@ -79,6 +79,7 @@ public class StringListReaderTest {
   public void testMarkResetSkip() throws IOException {
     try(StringListReader in = new StringListReader(list)) {
       StringBuilder output = new StringBuilder();
+      long skipped = 0L;
       
       in.mark();
       for(int i = 0; i < 13; ++i) {
@@ -86,7 +87,8 @@ public class StringListReaderTest {
       }
       
       in.reset();
-      in.skip(13);
+      skipped = in.skip(13L);
+      assertEquals(13L,skipped);
       
       in.mark();
       for(int i = 0; i < 5; ++i) {
@@ -94,7 +96,8 @@ public class StringListReaderTest {
       }
       
       in.reset();
-      in.skip(5);
+      skipped = in.skip(5L);
+      assertEquals(5L,skipped);
       
       int readChar = -1;
       
@@ -137,7 +140,7 @@ public class StringListReaderTest {
         int length = rand.nextInt(BUFFER_LEN - offset);
         
         int readCount = in.read(buffer,offset,length);
-        sin.read(bufferS,offset,length);
+        int readCountS = sin.read(bufferS,offset,length);
         
         if(readCount == -1) {
           break;

@@ -68,7 +68,7 @@ public class BotBuddyCodeApp {
   protected Path path = null;
   
   public BotBuddyCodeApp(String[] args) {
-    this.args = args;
+    this.args = args.clone();
   }
   
   public void interpretFile() throws AWTException,IOException,ParseCodeException {
