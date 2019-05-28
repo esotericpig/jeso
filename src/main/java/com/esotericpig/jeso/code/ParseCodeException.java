@@ -21,7 +21,7 @@ package com.esotericpig.jeso.code;
 /**
  * @author Jonathan Bradley Whited (@esotericpig)
  */
-public class ParseCodeException extends Exception {
+public class ParseCodeException extends RuntimeException {
   public static ParseCodeException build(int lineNumber,int lineColumn,String message) {
     return new ParseCodeException(lineNumber,lineColumn,buildMessage(lineNumber,lineColumn,message));
   }

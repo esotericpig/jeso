@@ -151,7 +151,7 @@ public class BotBuddyCodeApp {
         int j = message.indexOf('}',i);
         
         if(j < 0) {
-          throw new IllegalArgumentException("No matching curly brace: " + message);
+          throw ParseCodeException.build(1,i,"No matching curly brace: " + message);
         }
         
         String id = message.substring(i,j);
@@ -172,7 +172,7 @@ public class BotBuddyCodeApp {
           }
         }
         else {
-          throw new IllegalArgumentException("Invalid message format ID: " + message);
+          throw ParseCodeException.build(1,i,"Invalid message format ID: " + message);
         }
         
         i = j + 1; // +1 for '}'
