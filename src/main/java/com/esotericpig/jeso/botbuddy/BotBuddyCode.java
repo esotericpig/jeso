@@ -58,6 +58,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
@@ -201,6 +204,7 @@ public class BotBuddyCode implements Closeable {
   protected int lineChar = 0;
   protected int lineIndex = 0;
   protected int lineNumber = 0;
+  protected ReadWriteLock lock = new ReentrantReadWriteLock();
   protected StringBuilder output = new StringBuilder();
   protected Map<String,UserMethod> userMethods = new HashMap<>();
   
@@ -233,45 +237,59 @@ public class BotBuddyCode implements Closeable {
   
   @Override
   public void close() throws IOException {
-    // For Garbage Collection (GC)
-    // - Do NOT call clear(), etc., as Builder may be used again to build a new one
-    buddy = null;
-    buffer = null;
-    executors = null;
-    instructionName = null;
-    line = null;
-    output = null;
-    userMethods = null;
+    lock.writeLock().lock();
     
-    if(input != null) {
-      input.close();
-      input = null;
+    try {
+      // For Garbage Collection (GC)
+      // - Do NOT call clear(), etc., as Builder may be used again to build a new one
+      buddy = null;
+      buffer = null;
+      executors = null;
+      instructionName = null;
+      line = null;
+      output = null;
+      userMethods = null;
+      
+      if(input != null) {
+        input.close();
+        input = null;
+      }
+    }
+    finally {
+      lock.writeLock().unlock();
     }
   }
   
   public UserMethod addUserMethod(LineOfCode loc) throws ParseCodeException {
-    LineOfCode prevLoc = new LineOfCode(lineNumber,lineIndex);
+    lock.writeLock().lock();
     
-    if(!seekToNonWhitespace()) {
-      throw ParseCodeException.build(prevLoc,"Method has no name",instructionName);
+    try {
+      LineOfCode prevLoc = new LineOfCode(lineNumber,lineIndex);
+      
+      if(!seekToNonWhitespace()) {
+        throw ParseCodeException.build(prevLoc,"Method has no name",instructionName);
+      }
+      
+      prevLoc = new LineOfCode(lineNumber,lineIndex);
+      String methodName = Strs.trim(readToEndOfLine()).toString();
+      
+      if(!methodName.equals(WHITESPACE_PATTERN.matcher(methodName).replaceAll(""))) {
+        throw ParseCodeException.build(prevLoc,"Method names cannot contain whitespaces",methodName);
+      }
+      
+      UserMethod userMethod = new UserMethod(loc,methodName);
+      
+      if(userMethods.containsKey(userMethod.id)) {
+        throw ParseCodeException.build(prevLoc,"Method name is already defined",methodName);
+      }
+      
+      userMethods.put(userMethod.id,userMethod);
+      
+      return userMethod;
     }
-    
-    prevLoc = new LineOfCode(lineNumber,lineIndex);
-    String methodName = Strs.trim(readToEndOfLine()).toString();
-    
-    if(!methodName.equals(WHITESPACE_PATTERN.matcher(methodName).replaceAll(""))) {
-      throw ParseCodeException.build(prevLoc,"Method names cannot contain whitespaces",methodName);
+    finally {
+      lock.writeLock().unlock();
     }
-    
-    UserMethod userMethod = new UserMethod(loc,methodName);
-    
-    if(userMethods.containsKey(userMethod.id)) {
-      throw ParseCodeException.build(prevLoc,"Method name is already defined",methodName);
-    }
-    
-    userMethods.put(userMethod.id,userMethod);
-    
-    return userMethod;
   }
   
   public ParseCodeException buildParseCodeException(String message) {
@@ -283,38 +301,52 @@ public class BotBuddyCode implements Closeable {
   }
   
   public void callUserMethod(Instruction instruction) throws ParseCodeException {
-    instruction.getArg(0); // Throw an error if not at least 1 arg
+    lock.readLock().lock();
     
-    for(Arg arg: instruction.args) {
-      String methodName = arg.value;
-      String methodID = Instruction.toID(methodName);
-      UserMethod userMethod = userMethods.get(methodID);
+    try {
+      instruction.getArg(0); // Throw an error if not at least 1 arg
       
-      if(userMethod == null) {
-        throw ParseCodeException.build(arg.loc,"Method '" + methodID + "' from '" + methodName
-          + "' does not exist",instruction.name);
+      for(Arg arg: instruction.args) {
+        String methodName = arg.value;
+        String methodID = Instruction.toID(methodName);
+        UserMethod userMethod = userMethods.get(methodID);
+        
+        if(userMethod == null) {
+          throw ParseCodeException.build(arg.loc,"Method '" + methodID + "' from '" + methodName
+            + "' does not exist",instruction.name);
+        }
+        
+        for(Instruction inst: userMethod.instructions) {
+          execute(inst);
+        }
       }
-      
-      for(Instruction inst: userMethod.instructions) {
-        execute(inst);
-      }
+    }
+    finally {
+      lock.readLock().unlock();
     }
   }
   
   public void execute(Instruction instruction) throws ParseCodeException {
-    // Special keywords
-    if(instruction.id.equals(INSTRUCTION_CALL_ID)) {
-      callUserMethod(instruction);
-    }
-    else {
-      Executor executor = executors.get(instruction);
-      
-      if(executor == null) {
-        throw instruction.buildParseCodeException("Instruction '" + instruction.id + "' from '"
-          + instruction.name + "' does not exist");
+    lock.readLock().lock();
+    
+    try {
+      // Special keywords
+      if(instruction.id.equals(INSTRUCTION_CALL_ID)) {
+        callUserMethod(instruction);
       }
-      
-      executor.execute(buddy,instruction);
+      else {
+        Executor executor = executors.get(instruction);
+        
+        if(executor == null) {
+          throw instruction.buildParseCodeException("Instruction '" + instruction.id + "' from '"
+            + instruction.name + "' does not exist");
+        }
+        
+        executor.execute(buddy,instruction);
+      }
+    }
+    finally {
+      lock.readLock().unlock();
     }
   }
   
@@ -323,109 +355,117 @@ public class BotBuddyCode implements Closeable {
   }
   
   public String interpret(boolean isExecute) throws IOException,ParseCodeException {
-    instructionName = null;
-    line = null;
-    lineNumber = 0;
-    output.setLength(0);
+    lock.writeLock().lock();
     
-    UserMethod userMethod = null;
-    
-    while(nextLine() != null) {
-      if(!seekToNonWhitespace()) {
-        continue; // Ignore empty line or comment (handled in seek)
-      }
+    try {
+      instructionName = null;
+      line = null;
+      lineNumber = 0;
+      output.setLength(0);
       
-      // Instruction name
-      LineOfCode loc = new LineOfCode(lineNumber,lineIndex);
+      UserMethod userMethod = null;
       
-      instructionName = readToWhitespace().toString();
-      
-      Instruction instruction = new Instruction(loc,instructionName);
-      
-      // Special keywords
-      if(instruction.id.equals("def")) {
-        if(userMethod != null) {
-          throw instruction.buildParseCodeException("Methods cannot be defined within methods");
-        }
-        
-        userMethod = addUserMethod(loc);
-        
-        if(!isExecute) {
-          output(userMethod);
-        }
-        
-        continue;
-      }
-      else if(instruction.id.equals("end")) {
-        if(userMethod == null) {
-          throw instruction.buildParseCodeException("Invalid instruction; a method can only have one 'end'");
-        }
-        
-        userMethod = null;
-        
-        continue;
-      }
-      
-      // Instruction args
-      List<Arg> args = new ArrayList<>();
-      
-      while(hasLineChar()) {
-        final int prevLineIndex = lineIndex;
-        final int prevLineNumber = lineNumber;
-        
+      while(nextLine() != null) {
         if(!seekToNonWhitespace()) {
-          break; // No more args (or comment)
+          continue; // Ignore empty line or comment (handled in seek)
         }
         
-        loc = new LineOfCode(lineNumber,lineIndex);
+        // Instruction name
+        LineOfCode loc = new LineOfCode(lineNumber,lineIndex);
         
-        if(lineChar == '"' || lineChar == '\'') {
-          readQuote(lineChar);
+        instructionName = readToWhitespace().toString();
+        
+        Instruction instruction = new Instruction(loc,instructionName);
+        
+        // Special keywords
+        if(instruction.id.equals("def")) {
+          if(userMethod != null) {
+            throw instruction.buildParseCodeException("Methods cannot be defined within methods");
+          }
+          
+          userMethod = addUserMethod(loc);
+          
+          if(!isExecute) {
+            output(userMethod);
+          }
+          
+          continue;
         }
-        else if(lineChar == '%') {
-          readSpecialQuote();
+        else if(instruction.id.equals("end")) {
+          if(userMethod == null) {
+            throw instruction.buildParseCodeException(
+              "Invalid instruction; a method can only have one 'end'");
+          }
+          
+          userMethod = null;
+          
+          continue;
         }
-        else if(lineChar == '<') {
-          readHeredoc();
+        
+        // Instruction args
+        List<Arg> args = new ArrayList<>();
+        
+        while(hasLineChar()) {
+          final int prevLineIndex = lineIndex;
+          final int prevLineNumber = lineNumber;
+          
+          if(!seekToNonWhitespace()) {
+            break; // No more args (or comment)
+          }
+          
+          loc = new LineOfCode(lineNumber,lineIndex);
+          
+          if(lineChar == '"' || lineChar == '\'') {
+            readQuote(lineChar);
+          }
+          else if(lineChar == '%') {
+            readSpecialQuote();
+          }
+          else if(lineChar == '<') {
+            readHeredoc();
+          }
+          else {
+            readToWhitespace();
+          }
+          
+          // Was there a read/seek above? Or are we caught in an infinite loop parsing the same char?
+          if(lineIndex == prevLineIndex && lineNumber == prevLineNumber) {
+            throw buildParseCodeException("Internal code is broken causing an infinite loop");
+          }
+          
+          args.add(new Arg(loc,buffer.toString()));
+          
+          // nextLine() might have been called (e.g., heredoc)
+          if(line == null) {
+            break;
+          }
+        }
+        
+        instruction.setArgs(args);
+        
+        // Execute/Output instruction
+        if(userMethod == null) {
+          if(isExecute) {
+            execute(instruction);
+          }
+          else {
+            output(instruction);
+          }
         }
         else {
-          readToWhitespace();
-        }
-        
-        // Was there a read/seek above? Or are we caught in an infinite loop parsing the same char?
-        if(lineIndex == prevLineIndex && lineNumber == prevLineNumber) {
-          throw buildParseCodeException("Internal code is broken causing an infinite loop");
-        }
-        
-        args.add(new Arg(loc,buffer.toString()));
-        
-        // nextLine() might have been called (e.g., heredoc)
-        if(line == null) {
-          break;
+          userMethod.instructions.add(instruction);
+          
+          if(!isExecute) {
+            outputWithIndent(instruction);
+          }
         }
       }
       
-      instruction.setArgs(args);
-      
-      // Execute/Output instruction
-      if(userMethod == null) {
-        if(isExecute) {
-          execute(instruction);
-        }
-        else {
-          output(instruction);
-        }
-      }
-      else {
-        userMethod.instructions.add(instruction);
-        
-        if(!isExecute) {
-          outputWithIndent(instruction);
-        }
-      }
+      return output.toString();
     }
-    
-    return output.toString();
+    finally {
+      lock.writeLock().unlock();
+    }
   }
   
   public String interpretDryRun() throws IOException,ParseCodeException {
@@ -433,20 +473,34 @@ public class BotBuddyCode implements Closeable {
   }
   
   public String nextLine() throws IOException {
-    if((line = input.readLine()) != null) {
-      lineChar = 0;
-      lineIndex = 0;
-      ++lineNumber;
-    }
+    lock.writeLock().lock();
     
-    return line;
+    try {
+      if((line = input.readLine()) != null) {
+        lineChar = 0;
+        lineIndex = 0;
+        ++lineNumber;
+      }
+      
+      return line;
+    }
+    finally {
+      lock.writeLock().unlock();
+    }
   }
   
   public int nextLineChar() {
-    lineChar = line.codePointAt(lineIndex);
-    lineIndex += Character.charCount(lineChar);
+    lock.writeLock().lock();
     
-    return lineChar;
+    try {
+      lineChar = line.codePointAt(lineIndex);
+      lineIndex += Character.charCount(lineChar);
+      
+      return lineChar;
+    }
+    finally {
+      lock.writeLock().unlock();
+    }
   }
   
   public void output(Instruction instruction) {
@@ -457,57 +511,64 @@ public class BotBuddyCode implements Closeable {
     // WARNING: If you change this, update "/src/test/resources/BotBuddyCodeTestOutput.txt",
     //            else, the JUnit test will fail. For this reason, don't use #toString() methods.
     
-    // Special keywords
-    boolean isCallInst = instruction.id.equals(INSTRUCTION_CALL_ID);
-    boolean isUserMethod = (instruction instanceof UserMethod);
+    lock.writeLock().lock();
     
-    boolean hasPrefix = !prefix.isEmpty();
-    String newlinePrefix = hasPrefix ? ("\n" + prefix) : null;
-    
-    output.append(prefix);
-    output.append('[');
-    output.append(instruction.id).append(':').append(instruction.name);
-    output.append("]:(");
-    output.append(instruction.loc.getNumber()).append(':').append(instruction.loc.getColumn());
-    output.append("):");
-    
-    if(isCallInst) {
-      output.append("exists");
-    }
-    else if(isUserMethod) {
-      output.append("user");
-    }
-    else {
-      output.append(executors.contains(instruction) ? "exists" : "none");
-    }
-    
-    output.append('\n');
-    
-    for(int i = 0; i < instruction.args.length; ++i) {
-      Arg arg = instruction.args[i];
+    try {
+      // Special keywords
+      boolean isCallInst = instruction.id.equals(INSTRUCTION_CALL_ID);
+      boolean isUserMethod = (instruction instanceof UserMethod);
+      
+      boolean hasPrefix = !prefix.isEmpty();
+      String newlinePrefix = hasPrefix ? ("\n" + prefix) : null;
       
       output.append(prefix);
-      output.append("- [");
-      output.append(i);
+      output.append('[');
+      output.append(instruction.id).append(':').append(instruction.name);
       output.append("]:(");
-      output.append(arg.loc.getNumber()).append(':').append(arg.loc.getColumn());
-      output.append("): ");
+      output.append(instruction.loc.getNumber()).append(':').append(instruction.loc.getColumn());
+      output.append("):");
       
       if(isCallInst) {
-        String methodID = Instruction.toID(arg.value);
-        
-        output.append('[');
-        output.append(methodID).append(':').append(arg.value);
-        output.append("]:");
-        output.append(userMethods.containsKey(methodID) ? "exists" : "none");
+        output.append("exists");
+      }
+      else if(isUserMethod) {
+        output.append("user");
       }
       else {
-        output.append('\'');
-        output.append(hasPrefix ? arg.value.replace("\n",newlinePrefix) : arg.value);
-        output.append('\'');
+        output.append(executors.contains(instruction) ? "exists" : "none");
       }
       
       output.append('\n');
+      
+      for(int i = 0; i < instruction.args.length; ++i) {
+        Arg arg = instruction.args[i];
+        
+        output.append(prefix);
+        output.append("- [");
+        output.append(i);
+        output.append("]:(");
+        output.append(arg.loc.getNumber()).append(':').append(arg.loc.getColumn());
+        output.append("): ");
+        
+        if(isCallInst) {
+          String methodID = Instruction.toID(arg.value);
+          
+          output.append('[');
+          output.append(methodID).append(':').append(arg.value);
+          output.append("]:");
+          output.append(userMethods.containsKey(methodID) ? "exists" : "none");
+        }
+        else {
+          output.append('\'');
+          output.append(hasPrefix ? arg.value.replace("\n",newlinePrefix) : arg.value);
+          output.append('\'');
+        }
+        
+        output.append('\n');
+      }
+    }
+    finally {
+      lock.writeLock().unlock();
     }
   }
   
@@ -516,344 +577,463 @@ public class BotBuddyCode implements Closeable {
   }
   
   public StringBuilder readHeredoc() throws IOException,ParseCodeException {
-    // '<...' instead of '<<...'
-    if(!hasLineChar() || nextLineChar() != '<') {
-      throw buildParseCodeException("Invalid heredoc '<' instead of '<<' or unquoted string");
-    }
-    // '<<' with EOL
-    if(!hasLineChar()) {
-      throw buildParseCodeException("Invalid heredoc without a tag or unquoted string");
-    }
+    lock.writeLock().lock();
     
-    boolean isIndent = (nextLineChar() == '-');
-    
-    if(isIndent) {
-      if(hasLineChar()) {
-        nextLineChar(); // Skip '-'
+    try {
+      // '<...' instead of '<<...'
+      if(!hasLineChar() || nextLineChar() != '<') {
+        throw buildParseCodeException("Invalid heredoc '<' instead of '<<' or unquoted string");
       }
-      else {
-        // '<<-' with EOL
+      // '<<' with EOL
+      if(!hasLineChar()) {
         throw buildParseCodeException("Invalid heredoc without a tag or unquoted string");
       }
+      
+      boolean isIndent = (nextLineChar() == '-');
+      
+      if(isIndent) {
+        if(hasLineChar()) {
+          nextLineChar(); // Skip '-'
+        }
+        else {
+          // '<<-' with EOL
+          throw buildParseCodeException("Invalid heredoc without a tag or unquoted string");
+        }
+      }
+      
+      LineOfCode prevLoc = new LineOfCode(lineNumber,lineIndex);
+      final String endTag = Strs.rtrim(readToEndOfLine()).toString();
+      
+      // End tag cannot have whitespaces (except for trailing whitespaces until EOL/comment)
+      // - To help prevent the user from fat-fingering "<<-EOS" as "<< -EOS"
+      // - Because a whitespace denotes a new arg "EOS 10 20" ("E O S 10 20" would be impossible)
+      if(!endTag.equals(WHITESPACE_PATTERN.matcher(endTag).replaceAll(""))) {
+        throw ParseCodeException.build(prevLoc
+          ,"Invalid heredoc with whitespaces before or in the tag, or unquoted string",instructionName);
+      }
+      
+      // Read the heredoc lines and (possible) indent (<<-)
+      final int endTagChar0 = endTag.codePointAt(0);
+      final int endTagChar0Count = Character.charCount(endTagChar0);
+      List<String> heredocLines = new LinkedList<>();
+      int minIndent = Integer.MAX_VALUE;
+      
+      while(nextLine() != null) {
+        int indent = 0;
+        
+        buffer.setLength(0);
+        
+        // Read to non-whitespace for (possible) indent (<<-)
+        // - Do NOT do "indent += Character.charCount(lineChar)"; indent code after loop uses charCount()
+        for(; hasLineChar(); ++indent) {
+          buffer.appendCodePoint(nextLineChar());
+          
+          if(!Character.isWhitespace(lineChar)) {
+            break;
+          }
+        }
+        
+        // Is end tag?
+        if(lineChar == endTagChar0) {
+          boolean isEndTag = false;
+          
+          // End tag might be a single char (e.g., "E") with EOL, so don't test "hasLineChar()"
+          for(int i = endTagChar0Count;;) {
+            // Last char of end tag?
+            if(i >= endTag.length()) {
+              if(hasLineChar()) {
+                nextLineChar();
+                
+                // Is end tag: "EOS 10 20" or "EOS#comment"
+                if(Character.isWhitespace(lineChar) || isCommentChar()) {
+                  isEndTag = true;
+                }
+                // Not end tag: "EOS?"
+                else {
+                  buffer.appendCodePoint(lineChar);
+                }
+              }
+              // Is end tag: "EOS" with EOL
+              else {
+                isEndTag = true;
+              }
+              
+              break;
+            }
+            if(isEndOfLine()) {
+              break;
+            }
+            
+            int endTagChar = endTag.codePointAt(i);
+            
+            buffer.appendCodePoint(nextLineChar());
+            
+            // Not end tag: "Everybody!"
+            if(lineChar != endTagChar) {
+              break;
+            }
+            
+            i += Character.charCount(endTagChar);
+          }
+          
+          if(isEndTag) {
+            break;
+          }
+        }
+        
+        // Read rest of chars to line end
+        while(hasLineChar()) {
+          buffer.appendCodePoint(nextLineChar());
+        }
+        
+        heredocLines.add(buffer.toString());
+        
+        // Update min indent
+        if(isIndent && indent < minIndent) {
+          minIndent = indent;
+        }
+      }
+      
+      // Convert heredoc lines to one string
+      isIndent = (isIndent && minIndent > 0 && minIndent != Integer.MAX_VALUE);
+      buffer.setLength(0);
+      
+      if(!heredocLines.isEmpty()) {
+        for(Iterator<String> it = heredocLines.iterator();;) {
+          String hdLine = it.next();
+          
+          if(isIndent) {
+            int i = 0;
+            
+            // This is probably unnecessary, but just in case Unicode whitespace can be a surrogate pair
+            for(int indentIndex = 0; indentIndex < minIndent && i < hdLine.length(); ++indentIndex) {
+              int hdChar = hdLine.codePointAt(i);
+              
+              i += Character.charCount(hdChar);
+            }
+            
+            while(i < hdLine.length()) {
+              int hdChar = hdLine.codePointAt(i);
+              
+              buffer.appendCodePoint(hdChar);
+              i += Character.charCount(hdChar);
+            }
+          }
+          else {
+            buffer.append(hdLine);
+          }
+          
+          // Don't add last newline (chomp)
+          if(!it.hasNext()) {
+            break;
+          }
+          
+          buffer.append('\n');
+        }
+      }
+      
+      return buffer;
     }
-    
-    LineOfCode prevLoc = new LineOfCode(lineNumber,lineIndex);
-    final String endTag = Strs.rtrim(readToEndOfLine()).toString();
-    
-    // End tag cannot have whitespaces (except for trailing whitespaces until EOL/comment)
-    // - To help prevent the user from fat-fingering "<<-EOS" as "<< -EOS"
-    // - Because a whitespace denotes a new arg "EOS 10 20" ("E O S 10 20" would be impossible)
-    if(!endTag.equals(WHITESPACE_PATTERN.matcher(endTag).replaceAll(""))) {
-      throw ParseCodeException.build(prevLoc
-        ,"Invalid heredoc with whitespaces before or in the tag, or unquoted string",instructionName);
+    finally {
+      lock.writeLock().unlock();
     }
+  }
+  
+  public StringBuilder readQuote(int endQuote) throws IOException {
+    lock.writeLock().lock();
     
-    // Read the heredoc lines and (possible) indent (<<-)
-    final int endTagChar0 = endTag.codePointAt(0);
-    final int endTagChar0Count = Character.charCount(endTagChar0);
-    List<String> heredocLines = new LinkedList<>();
-    int minIndent = Integer.MAX_VALUE;
-    
-    while(nextLine() != null) {
-      int indent = 0;
+    try {
+      boolean hasEndQuote = false;
       
       buffer.setLength(0);
       
-      // Read to non-whitespace for (possible) indent (<<-)
-      // - Do NOT do "indent += Character.charCount(lineChar)"; indent code after loop uses charCount()
-      for(; hasLineChar(); ++indent) {
-        buffer.appendCodePoint(nextLineChar());
-        
-        if(!Character.isWhitespace(lineChar)) {
-          break;
-        }
-      }
-      
-      // Is end tag?
-      if(lineChar == endTagChar0) {
-        boolean isEndTag = false;
-        
-        // End tag might be a single char (e.g., "E") with EOL, so don't test "hasLineChar()"
-        for(int i = endTagChar0Count;;) {
-          // Last char of end tag?
-          if(i >= endTag.length()) {
+      while(true) {
+        while(hasLineChar()) {
+          nextLineChar();
+          
+          if(lineChar == endQuote) {
+            hasEndQuote = true;
+            
+            break;
+          }
+          
+          // Escaped char?
+          if(lineChar == escapeChar) {
             if(hasLineChar()) {
               nextLineChar();
               
-              // Is end tag: "EOS 10 20" or "EOS#comment"
-              if(Character.isWhitespace(lineChar) || isCommentChar()) {
-                isEndTag = true;
-              }
-              // Not end tag: "EOS?"
-              else {
+              // Escaped end quote (e.g., \") or escaped escape (e.g., \\)
+              if(lineChar == endQuote || lineChar == escapeChar) {
                 buffer.appendCodePoint(lineChar);
               }
+              else {
+                // To make it easier for non-programmers, don't output lineChar only.
+                //   For example, "\a" will output that exactly (with the backslash).
+                buffer.appendCodePoint(escapeChar).appendCodePoint(lineChar);
+              }
             }
-            // Is end tag: "EOS" with EOL
+            // EOL
             else {
-              isEndTag = true;
+              // To make it easier for non-programmers, just output as is with no error.
+              //   For example, "\" with EOL will output that exactly (a backslash).
+              buffer.appendCodePoint(lineChar);
             }
-            
-            break;
           }
-          if(isEndOfLine()) {
-            break;
+          else {
+            buffer.appendCodePoint(lineChar);
           }
-          
-          int endTagChar = endTag.codePointAt(i);
-          
-          buffer.appendCodePoint(nextLineChar());
-          
-          // Not end tag: "Everybody!"
-          if(lineChar != endTagChar) {
-            break;
-          }
-          
-          i += Character.charCount(endTagChar);
         }
         
-        if(isEndTag) {
-          break;
-        }
-      }
-      
-      // Read rest of chars to line end
-      while(hasLineChar()) {
-        buffer.appendCodePoint(nextLineChar());
-      }
-      
-      heredocLines.add(buffer.toString());
-      
-      // Update min indent
-      if(isIndent && indent < minIndent) {
-        minIndent = indent;
-      }
-    }
-    
-    // Convert heredoc lines to one string
-    isIndent = (isIndent && minIndent > 0 && minIndent != Integer.MAX_VALUE);
-    buffer.setLength(0);
-    
-    if(!heredocLines.isEmpty()) {
-      for(Iterator<String> it = heredocLines.iterator();;) {
-        String hdLine = it.next();
-        
-        if(isIndent) {
-          int i = 0;
-          
-          // This is probably unnecessary, but just in case Unicode whitespace can be a surrogate pair
-          for(int indentIndex = 0; indentIndex < minIndent && i < hdLine.length(); ++indentIndex) {
-            int hdChar = hdLine.codePointAt(i);
-            
-            i += Character.charCount(hdChar);
-          }
-          
-          while(i < hdLine.length()) {
-            int hdChar = hdLine.codePointAt(i);
-            
-            buffer.appendCodePoint(hdChar);
-            i += Character.charCount(hdChar);
-          }
-        }
-        else {
-          buffer.append(hdLine);
-        }
-        
-        // Don't add last newline (chomp)
-        if(!it.hasNext()) {
+        if(hasEndQuote || nextLine() == null) {
           break;
         }
         
         buffer.append('\n');
       }
-    }
-    
-    return buffer;
-  }
-  
-  public StringBuilder readQuote(int endQuote) throws IOException {
-    boolean hasEndQuote = false;
-    
-    buffer.setLength(0);
-    
-    while(true) {
-      while(hasLineChar()) {
-        nextLineChar();
-        
-        if(lineChar == endQuote) {
-          hasEndQuote = true;
-          
-          break;
-        }
-        
-        // Escaped char?
-        if(lineChar == escapeChar) {
-          if(hasLineChar()) {
-            nextLineChar();
-            
-            // Escaped end quote (e.g., \") or escaped escape (e.g., \\)
-            if(lineChar == endQuote || lineChar == escapeChar) {
-              buffer.appendCodePoint(lineChar);
-            }
-            else {
-              // To make it easier for non-programmers, don't output lineChar only.
-              //   For example, "\a" will output that exactly (with the backslash).
-              buffer.appendCodePoint(escapeChar).appendCodePoint(lineChar);
-            }
-          }
-          // EOL
-          else {
-            // To make it easier for non-programmers, just output as is with no error.
-            //   For example, "\" with EOL will output that exactly (a backslash).
-            buffer.appendCodePoint(lineChar);
-          }
-        }
-        else {
-          buffer.appendCodePoint(lineChar);
-        }
-      }
       
-      if(hasEndQuote || nextLine() == null) {
-        break;
-      }
-      
-      buffer.append('\n');
+      return buffer;
     }
-    
-    return buffer;
+    finally {
+      lock.writeLock().unlock();
+    }
   }
   
   public StringBuilder readSpecialQuote() throws IOException,ParseCodeException {
-    // '%' with EOL or '% ...'
-    if(!hasLineChar() || Character.isWhitespace(nextLineChar())) {
-      throw buildParseCodeException(
-        "Invalid special quote '%' without a tag, with spaces, or unquoted string");
-    }
+    lock.writeLock().lock();
     
-    switch(lineChar) {
-      case '(': return readQuote(')');
-      case '<': return readQuote('>');
-      case '[': return readQuote(']');
-      case '{': return readQuote('}');
+    try {
+      // '%' with EOL or '% ...'
+      if(!hasLineChar() || Character.isWhitespace(nextLineChar())) {
+        throw buildParseCodeException(
+          "Invalid special quote '%' without a tag, with spaces, or unquoted string");
+      }
+      
+      switch(lineChar) {
+        case '(': return readQuote(')');
+        case '<': return readQuote('>');
+        case '[': return readQuote(']');
+        case '{': return readQuote('}');
+      }
+      
+      return readQuote(lineChar);
     }
-    
-    return readQuote(lineChar);
+    finally {
+      lock.writeLock().unlock();
+    }
   }
   
   public StringBuilder readToEndOfLine() {
-    buffer.setLength(0);
+    lock.writeLock().lock();
     
-    if(lineIndex > 0) {
-      if(isCommentChar()) {
-        return buffer;
+    try {
+      buffer.setLength(0);
+      
+      if(lineIndex > 0) {
+        if(isCommentChar()) {
+          return buffer;
+        }
+        
+        buffer.appendCodePoint(lineChar);
       }
       
-      buffer.appendCodePoint(lineChar);
-    }
-    
-    while(hasLineChar()) {
-      nextLineChar();
-      
-      if(isCommentChar()) {
-        break;
+      while(hasLineChar()) {
+        nextLineChar();
+        
+        if(isCommentChar()) {
+          break;
+        }
+        
+        buffer.appendCodePoint(lineChar);
       }
       
-      buffer.appendCodePoint(lineChar);
+      return buffer;
     }
-    
-    return buffer;
+    finally {
+      lock.writeLock().unlock();
+    }
   }
   
   public StringBuilder readToWhitespace() {
-    buffer.setLength(0);
+    lock.writeLock().lock();
     
-    if(lineIndex > 0) {
-      if(isCommentChar()) {
-        return buffer;
+    try {
+      buffer.setLength(0);
+      
+      if(lineIndex > 0) {
+        if(isCommentChar()) {
+          return buffer;
+        }
+        
+        buffer.appendCodePoint(lineChar);
       }
       
-      buffer.appendCodePoint(lineChar);
-    }
-    
-    while(hasLineChar()) {
-      nextLineChar();
-      
-      if(Character.isWhitespace(lineChar) || isCommentChar()) {
-        break;
+      while(hasLineChar()) {
+        nextLineChar();
+        
+        if(Character.isWhitespace(lineChar) || isCommentChar()) {
+          break;
+        }
+        
+        buffer.appendCodePoint(lineChar);
       }
       
-      buffer.appendCodePoint(lineChar);
+      return buffer;
     }
-    
-    return buffer;
+    finally {
+      lock.writeLock().unlock();
+    }
   }
   
   /**
    * @return true if found a non-whitespace char, else false
    */
   public boolean seekToNonWhitespace() {
-    while(hasLineChar()) {
-      if(!Character.isWhitespace(nextLineChar())) {
-        if(isCommentChar()) {
-          return false;
-        }
-        
-        return true;
-      }
-    }
+    lock.writeLock().lock();
     
-    return false;
+    try {
+      while(hasLineChar()) {
+        if(!Character.isWhitespace(nextLineChar())) {
+          if(isCommentChar()) {
+            return false;
+          }
+          
+          return true;
+        }
+      }
+      
+      return false;
+    }
+    finally {
+      lock.writeLock().unlock();
+    }
   }
   
   public void setBuddy(BotBuddy buddy) {
-    this.buddy = buddy;
+    lock.writeLock().lock();
+    
+    try {
+      this.buddy = buddy;
+    }
+    finally {
+      lock.writeLock().unlock();
+    }
   }
   
   public void setCommentChar(int commentChar) {
-    this.commentChar = commentChar;
+    lock.writeLock().lock();
+    
+    try {
+      this.commentChar = commentChar;
+    }
+    finally {
+      lock.writeLock().unlock();
+    }
   }
   
   public void setEscapeChar(int escapeChar) {
-    this.escapeChar = escapeChar;
+    lock.writeLock().lock();
+    
+    try {
+      this.escapeChar = escapeChar;
+    }
+    finally {
+      lock.writeLock().unlock();
+    }
   }
   
   public void setExecutors(Executors executors) {
-    this.executors = executors;
+    lock.writeLock().lock();
+    
+    try {
+      this.executors = executors;
+    }
+    finally {
+      lock.writeLock().unlock();
+    }
   }
   
   public BotBuddy getBuddy() {
-    return buddy;
+    lock.readLock().lock();
+    
+    try {
+      return buddy;
+    }
+    finally {
+      lock.readLock().unlock();
+    }
   }
   
   public int getCommentChar() {
-    return commentChar;
+    lock.readLock().lock();
+    
+    try {
+      return commentChar;
+    }
+    finally {
+      lock.readLock().unlock();
+    }
   }
   
   public boolean isCommentChar() {
-    // Ignore comment
-    if(lineChar == commentChar) {
-      lineIndex = line.length(); // Go to end
-      
-      return true;
-    }
+    lock.writeLock().lock();
     
-    return false;
-  }
-  
-  public int getEscapeChar() {
-    return escapeChar;
-  }
-  
-  public Executors getExecutors() {
-    return executors;
+    try {
+      // Ignore comment
+      if(lineChar == commentChar) {
+        lineIndex = line.length(); // Go to end
+        
+        return true;
+      }
+      
+      return false;
+    }
+    finally {
+      lock.writeLock().unlock();
+    }
   }
   
   public boolean isEndOfLine() {
-    return lineIndex >= line.length();
+    lock.readLock().lock();
+    
+    try {
+      return lineIndex >= line.length();
+    }
+    finally {
+      lock.readLock().unlock();
+    }
+  }
+  
+  public int getEscapeChar() {
+    lock.readLock().lock();
+    
+    try {
+      return escapeChar;
+    }
+    finally {
+      lock.readLock().unlock();
+    }
+  }
+  
+  public Executors getExecutors() {
+    lock.readLock().lock();
+    
+    try {
+      return executors;
+    }
+    finally {
+      lock.readLock().unlock();
+    }
   }
   
   public boolean hasLineChar() {
-    return lineIndex < line.length();
+    lock.readLock().lock();
+    
+    try {
+      return lineIndex < line.length();
+    }
+    finally {
+      lock.readLock().unlock();
+    }
   }
   
   public static class Arg {
