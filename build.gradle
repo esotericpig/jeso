@@ -92,7 +92,7 @@ spotless {
  */
 defaultTasks 'clean','buildRelease'
 
-task(buildFatRelease,type: Jar,dependsOn: ['test','javadoc','classes']) {
+task(buildFatRelease,type: Jar,dependsOn: ['classes','test','check','javadoc']) {
   group       'Build'
   description 'Assembles everything necessary for a release into one "fat" jar.'
   
@@ -107,11 +107,10 @@ task(buildFatRelease,type: Jar,dependsOn: ['test','javadoc','classes']) {
   from sourceSets.main.output
 }
 
-task(buildRelease,type: GradleBuild) {
+// Do not use "GradleBuild" because then you cannot do "-x check"
+task(buildRelease,dependsOn: ['build','test','check','jar','javadoc','javadocZip','sourcesJar']) {
   group       'Build'
   description 'Assembles everything necessary for a release: Jar, Javadoc Zip, Sources Jar, etc.'
-  
-  tasks = ['test','jar','javadoc','javadocZip','sourcesJar']
 }
 
 task(checkGradleW) {
