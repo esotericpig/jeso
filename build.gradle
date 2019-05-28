@@ -19,6 +19,7 @@
 plugins {
   id 'java-library'
   id 'com.github.spotbugs' version '2.0.0'
+  id 'com.diffplug.gradle.spotless' version '3.23.0'
 }
 
 import java.util.regex.Pattern
@@ -78,6 +79,12 @@ spotbugs {
   toolVersion = '3.1.12'
   
   excludeFilter = file('spotbugs_exclude.xml')
+}
+
+spotless {
+  java {
+    removeUnusedImports()
+  }
 }
 
 /**
