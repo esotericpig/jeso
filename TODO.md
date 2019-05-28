@@ -36,7 +36,7 @@
      - Can add/remove what is escaped/unescaped in Map
      - Can specify end tag; default: "
      - Can specify escape char; default: \
-- [ ] Add [SpotBugs](https://spotbugs.github.io/) to Gradle?
+- [x] Add [SpotBugs](https://spotbugs.github.io/) to Gradle?
 - [ ] Add appropriate documentation
     - [ ] In all classes (Javadoc)
     - [ ] In README.md
