@@ -26,7 +26,7 @@ import java.util.regex.Pattern
 /**
  * Properties
  */
-version                 = '0.0.1'
+version                 = '0.2.0'
 ext.author              = 'Jonathan Bradley Whited (@esotericpig)'
 ext.license             = 'LGPL-3.0-or-later'
 
