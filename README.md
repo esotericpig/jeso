@@ -25,7 +25,9 @@ Name = Java + gesso + esoteric.
 
 Currently, an official release hasn't been made yet, but you can go ahead and use it in your project by building a pre-release yourself:
 
-- `$ ./gradlew(.bat) clean buildRelease`
+- `$ ./gradlew(.bat) clean buildRelease -x check -x test`
+
+You can probably safely exclude "check" and "test" to build it faster, as those checks should have already been run when committing the code.
 
 Then use the following files in your project:
 
@@ -33,9 +35,9 @@ Then use the following files in your project:
 - build/libs/jeso-*-sources.jar
 - build/distributions/jeso-*-javadoc.zip
 
-Alternatively you can build everything into one jar:
+Alternatively, you can build everything into one "fat" jar (including dependent jars):
 
-- `$ ./gradlew(.bat) clean buildFatRelease`
+- `$ ./gradlew(.bat) clean buildFatRelease -x check -x test`
 - build/libs/jeso-*-all.jar
 
 ## [Code](#contents)
@@ -183,9 +185,9 @@ It can handle Ruby-like string literals and [heredoc](https://en.wikipedia.org/w
 It can accept the following input:
 
 - [java.io.BufferedReader](https://docs.oracle.com/javase/8/docs/api/java/io/BufferedReader.html)
-- [java.nio.file.Path](https://docs.oracle.com/javase/8/docs/api/java/nio/file/Path.html) [use [java.nio.file.Paths](https://docs.oracle.com/javase/8/docs/api/java/nio/file/Paths.html).get(...)]
-- [java.util.List](https://docs.oracle.com/javase/8/docs/api/java/util/List.html)&lt;[String](https://docs.oracle.com/javase/8/docs/api/java/lang/String.html)&gt; using [com.esotericpig.jeso.io.StringListReader](src/main/java/com/esotericpig/jeso/io/StringListReader.java)
-- [String](https://docs.oracle.com/javase/8/docs/api/java/lang/String.html) using [java.io.StringReader](https://docs.oracle.com/javase/8/docs/api/java/io/StringReader.html)
+- [java.nio.file.Path](https://docs.oracle.com/javase/8/docs/api/java/nio/file/Path.html) [use [java.nio.file.Paths.get(...)](https://docs.oracle.com/javase/8/docs/api/java/nio/file/Paths.html#get-java.lang.String-java.lang.String...-)]
+- List&lt;String&gt; using [com.esotericpig.jeso.io.StringListReader](src/main/java/com/esotericpig/jeso/io/StringListReader.java)
+- String using [java.io.StringReader](https://docs.oracle.com/javase/8/docs/api/java/io/StringReader.html)
 
 Example usage with a file:
 ```Java
