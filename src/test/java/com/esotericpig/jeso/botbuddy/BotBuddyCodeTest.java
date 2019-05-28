@@ -66,7 +66,7 @@ public class BotBuddyCodeTest {
   public void testExecutors() {
     BotBuddyCode.Executors executors = BotBuddyCode.DefaultExecutors.defaultExecutors;
     
-    // If this doesn't match, then an entry was accidentally overridden in #addBase().
+    // If this doesn't match, then an entry was accidentally overwritten in #addBase().
     //   For example, "put("delayauto",...);" was called twice with the same ID, instead of using a new ID.
     assertEquals(BotBuddyCode.Executors.BASE_COUNT,executors.getSize());
     
