@@ -111,7 +111,7 @@ import java.util.ListIterator;
  * @see com.esotericpig.jeso.botbuddy.BotBuddyCode
  * @see com.esotericpig.jeso.botbuddy.BotBuddyCodeApp
  */
-public class BotBuddy implements Cloneable {
+public class BotBuddy {
   /**
    * For double clicks, etc.
    */
@@ -233,11 +233,6 @@ public class BotBuddy implements Cloneable {
     if(builder.isAutoDelay) {
       setAutoDelay(builder.autoDelay);
     }
-  }
-  
-  @Override
-  public BotBuddy clone() {
-    return new BotBuddy(this);
   }
   
   public BotBuddy beep() {
@@ -1013,7 +1008,7 @@ public class BotBuddy implements Cloneable {
     }
   }
   
-  public class Stash implements Cloneable {
+  public class Stash {
     public int autoDelay;
     public boolean isStashed = false;
     
@@ -1026,11 +1021,6 @@ public class BotBuddy implements Cloneable {
     public Stash(Stash stash) {
       autoDelay = stash.autoDelay;
       isStashed = stash.isStashed;
-    }
-    
-    @Override
-    public Stash clone() {
-      return new Stash(this);
     }
     
     public void clear() {

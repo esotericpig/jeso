@@ -49,6 +49,17 @@ public class BotBuddyTest {
    */
   public static final int MAX_MS = 55000;
   
+  public static boolean isHeadless() {
+    boolean isHeadless = BotBuddy.isHeadless();
+    
+    if(isHeadless) {
+      // TODO: add test name; make more meaningful
+      System.out.println("This environment is headless. Ignoring Robot test.");
+    }
+    
+    return isHeadless;
+  }
+  
   protected Random rand;
   
   @BeforeEach
@@ -188,7 +199,7 @@ public class BotBuddyTest {
   }
   
   @Test
-  public void testConstructors() throws AWTException {
+  public void testMainMethods() throws AWTException {
     if(isHeadless()) {
       return;
     }
@@ -199,34 +210,16 @@ public class BotBuddyTest {
     buddy = new BotBuddy(buddy);
     buddy = new BotBuddy(BotBuddy.builder());
     buddy = new BotBuddy(new BotBuddy.Builder());
-    buddy = buddy.clone();
-  }
-  
-  @Test
-  public void testMainMethods() throws AWTException {
-    if(isHeadless()) {
-      return;
-    }
+    buddy = BotBuddy.builder().build();
     
-    BotBuddy buddy = BotBuddy.builder().build();
-    
-    buddy = buddy.clone(); // Don't do assertEquals(); don't feel like implementing equals() and hashCode()
+    buddy.beginFastMode().endFastMode();
     buddy.beginSafeMode().endSafeMode();
+    buddy.stash().stash().stash()
+         .unstash().unstash().unstash().unstash(); // 4th unstash() should not throw an error
     
     // Don't do assertEquals(), as the mouse might have moved in that time
     System.out.println("Coords:  " + BotBuddy.getCoords());
     System.out.println("X coord: " + BotBuddy.getXCoord());
     System.out.println("Y coord: " + BotBuddy.getYCoord());
-  }
-  
-  public static boolean isHeadless() {
-    boolean isHeadless = BotBuddy.isHeadless();
-    
-    if(isHeadless) {
-      // TODO: add test name; make more meaningful
-      System.out.println("This environment is headless. Ignoring Robot test.");
-    }
-    
-    return isHeadless;
   }
 }

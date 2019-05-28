@@ -1,6 +1,4 @@
 <FindBugsFilter>
-  <!-- super.clone() not called -->
-  <Bug pattern="CN_IDIOM_NO_SUPER_CALL" />
   <!-- System.exit() called -->
   <Bug pattern="DM_EXIT" />
 </FindBugsFilter>
