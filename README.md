@@ -89,6 +89,11 @@ Most methods can also be chained together:
 
 ```Java
 buddy.beep()
+     .beginFastMode()
+     .beginSafeMode()
+     .clearPressed()
+     .clearPressedButtons()
+     .clearPressedKeys()
      .click([int button])
      .click([int x,int y,int button])
      .copy(String text,[ClipboardOwner owner])
@@ -99,18 +104,28 @@ buddy.beep()
      .delayShort()
      .doubleClick([int button])
      .doubleClick([int x,int y,int button])
+     .drag(int fromX,int fromY,int toX,int toY,[int button])
+     .endFastMode()
+     .endSafeMode()
      .enter([String text])
      .enter([int x,int y,String text])
      .key(int keyCode)
+     .leftClick([int x,int y])
+     .middleClick([int x,int y])
      .move(int x,int y)
      .paste([String text])
      .paste([int x,int y,String text])
-     .pressKey(int keyCode)
-     .pressMouse(int button)
-     .releaseKey(int keyCode)
-     .releaseMouse(int button)
+     .pressKey([int x,int y],int keyCode)
+     .pressMouse([int x,int y],int button)
+     .releaseButtons()
+     .releaseKey([int x,int y],int keyCode)
+     .releaseKeys()
+     .releaseMouse([int x,int y],int button)
+     .releasePressed()
+     .rightClick([int x,int y])
      .shortcut(BotBuddy.Shortcut shortcut)
-     .shortcutFast(BotBuddy.Shortcut shortcut)
+     .stash()
+     .unstash()
      .waitForIdle()
      .wheel(int amount)
      .set*(*);
@@ -119,6 +134,7 @@ buddy.beep()
 Unchainable methods:
 
 ```Java
+buddy.printScreen()
 buddy.printScreen(Rectangle screenRect);
 buddy.printScreen(int width,int height);
 buddy.printScreen(int x,int y,int width,int height);
@@ -130,7 +146,11 @@ buddy.getScreenWidth();
 buddy.get*(*);
 ```
 
-A Safe Mode has been added for convenience. If the user ever moves their mouse, then **UserIsActiveException** will be thrown. After each operation, it just checks the mouse coordinates, while updating its internal coordinates accordingly to the operations. Example:
+A Safe Mode has been added for convenience. If the user ever moves their mouse, then **UserIsActiveException** will be thrown. After each operation, it just checks the mouse coordinates, while updating its internal coordinates accordingly to the operations.
+
+In addition, the pressed keys and pressed mouse buttons are stored internally if Release Mode is on (on by default), so that you can release everything currently pressed down to alleviate problems for the user when active.
+
+Example:
 
 ```Java
 BotBuddy buddy = BotBuddy.builder().build();
@@ -146,6 +166,9 @@ try {
        .endSafeMode();
 }
 catch(UserIsActiveException ex) {
+  // Release all keys and/or mouse buttons pressed down by the automatic operations
+  buddy.releasePressed();
+  
   // If you move your mouse, "Daddy" will not be executed
   System.out.println("User is active! Stopping all automatic operations.");
 }
