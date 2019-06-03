@@ -22,8 +22,11 @@ import com.esotericpig.jeso.code.ParseCodeException;
 
 import java.awt.AWTException;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.IOException;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -40,15 +43,25 @@ public class BotBuddyCodeApp {
     try {
       BotBuddyCodeApp app = new BotBuddyCodeApp(args);
       
-      app.parseArgs();
-      app.interpretFile();
+      if(app.parseArgs()) {
+        return;
+      }
+      if(app.interpretPipe()) {
+        return;
+      }
+      if(app.interpretFile()) {
+        return;
+      }
     }
     catch(ParseCodeException ex) {
-      System.out.println("ParseCodeException: " + ex.getMessage());
+      System.out.println("ParseCodeError: " + ex.getMessage());
       
       if(ex.getCause() != null) {
         ex.getCause().printStackTrace();
       }
+    }
+    catch(UserIsActiveException ex) {
+      System.out.println("Error: " + ex.getMessage());
     }
     catch(Exception ex) {
       ex.printStackTrace();
@@ -59,37 +72,88 @@ public class BotBuddyCodeApp {
     }
   }
   
-  protected String[] args;
+  protected static final int indent = 4;
+  protected static final int optionsIndent = 24;
+  
+  protected final String[] args;
+  protected final String name = getClass().getSimpleName();
+  
+  protected BotBuddy buddy = null;
   protected BotBuddyCode.Builder builder = BotBuddyCode.builder();
-  protected int indent = 4;
   protected boolean isDryRun = false;
-  protected String name = getClass().getSimpleName();
-  protected int optionsIndent = 24;
   protected Path path = null;
   
-  public BotBuddyCodeApp(String[] args) {
+  public BotBuddyCodeApp(String[] args) throws AWTException {
     this.args = args.clone();
+    buddy = BotBuddy.builder().build();
+    
+    builder.buddy(buddy);
   }
   
-  public void interpretFile() throws AWTException,IOException,ParseCodeException {
-    try(BotBuddyCode bbc = builder.path(path).build()) {
+  public boolean interpretFile() throws AWTException,IOException,ParseCodeException {
+    if(args.length < 1) {
+      printHelp();
+      
+      return true;
+    }
+    if(path == null) {
+      printHelp("Error: No file specified.");
+      
+      return true;
+    }
+    
+    // Clear piped-in input
+    builder.input().path(path);
+    
+    try(BotBuddyCode bbc = builder.build()) {
       if(isDryRun) {
         System.out.println(bbc.interpretDryRun());
       }
       else {
         bbc.interpret();
       }
+      
+      return true;
+    }
+    finally {
+      buddy.releasePressed();
     }
   }
   
-  public void parseArgs() {
-    if(args.length < 1) {
-      printHelp();
-    }
+  public boolean interpretPipe() throws AWTException,IOException,ParseCodeException {
+    // Do not use try-with-resource and do not call close(), because using System.in
     
+    try {
+      BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+      
+      // If don't check this, then will wait for input
+      if(!input.ready()) {
+        // Nothing was piped in, like "echo 'get_coords' | java...BotBuddyCodeApp"
+        return false;
+      }
+      
+      BotBuddyCode bbc = builder.input(input).build();
+      
+      if(isDryRun) {
+        System.out.println(bbc.interpretDryRun());
+      }
+      else {
+        bbc.interpret();
+      }
+      
+      return bbc.hadInput() && path == null;
+    }
+    finally {
+      buddy.releasePressed();
+    }
+  }
+  
+  public boolean parseArgs() {
     for(String arg: args) {
       if(arg.equals("-h") || arg.equals("--help")) {
         printHelp();
+        
+        return true;
       }
       else if(arg.equals("-n") || arg.equals("--dry-run")) {
         isDryRun = true;
@@ -97,15 +161,21 @@ public class BotBuddyCodeApp {
       else {
         if(path != null) {
           printHelp("Error: Too many files specified; only one file is allowed.");
+          
+          return true;
         }
         
         path = Paths.get(arg.trim());
+        
+        if(Files.notExists(path)) {
+          printHelp("Error: File does not exist: " + path.toFile().getAbsolutePath());
+          
+          return true;
+        }
       }
     }
     
-    if(path == null) {
-      printHelp("Error: No file specified.");
-    }
+    return false;
   }
   
   public void printHelp() {
@@ -113,14 +183,10 @@ public class BotBuddyCodeApp {
   }
   
   public void printHelp(String errorMessage) {
-    if(errorMessage != null) {
-      println(errorMessage);
-      println();
-    }
-    
-    println("Usage: {n} [options] <file>");
+    println("Usage: {n} [options] <file> [options]");
     println();
     println("Interprets the contents of <file> using BotBuddyCode.");
+    println("Data can also be piped in, without using a file.");
     println();
     println("Options:");
     println("{i}-n, --dry-run {o} Do not execute any code, only output the interpretation");
@@ -130,8 +196,12 @@ public class BotBuddyCodeApp {
     println("Examples:");
     println("{i}{n} -n mydir/myfile.bbc");
     println("{i}{n} 'My Dir/My File.bbc'");
+    println("{i}echo 'get_coords' | {n}");
     
-    System.exit(0);
+    if(errorMessage != null) {
+      println();
+      println(errorMessage);
+    }
   }
   
   public void println() {
