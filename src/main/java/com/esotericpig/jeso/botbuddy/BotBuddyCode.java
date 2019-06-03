@@ -198,6 +198,9 @@ public class BotBuddyCode implements Closeable {
   protected int commentChar;
   protected int escapeChar;
   protected Executors executors;
+  protected boolean hadCode = false;
+  protected boolean hadInput = false;
+  protected boolean hadInstruction = false;
   protected BufferedReader input = null;
   protected String instructionName = null;
   protected String line = null;
@@ -354,10 +357,13 @@ public class BotBuddyCode implements Closeable {
     interpret(true);
   }
   
-  public String interpret(boolean isExecute) throws IOException,ParseCodeException {
+  public String interpret(boolean execute) throws IOException,ParseCodeException {
     lock.writeLock().lock();
     
     try {
+      hadCode = false;
+      hadInput = false;
+      hadInstruction = false;
       instructionName = null;
       line = null;
       lineNumber = 0;
@@ -366,9 +372,13 @@ public class BotBuddyCode implements Closeable {
       UserMethod userMethod = null;
       
       while(nextLine() != null) {
+        hadInput = true;
+        
         if(!seekToNonWhitespace()) {
           continue; // Ignore empty line or comment (handled in seek)
         }
+        
+        hadCode = true;
         
         // Instruction name
         LineOfCode loc = new LineOfCode(lineNumber,lineIndex);
@@ -385,7 +395,7 @@ public class BotBuddyCode implements Closeable {
           
           userMethod = addUserMethod(loc);
           
-          if(!isExecute) {
+          if(!execute) {
             output(userMethod);
           }
           
@@ -445,7 +455,9 @@ public class BotBuddyCode implements Closeable {
         
         // Execute/Output instruction
         if(userMethod == null) {
-          if(isExecute) {
+          hadInstruction = true;
+          
+          if(execute) {
             execute(instruction);
           }
           else {
@@ -455,7 +467,7 @@ public class BotBuddyCode implements Closeable {
         else {
           userMethod.instructions.add(instruction);
           
-          if(!isExecute) {
+          if(!execute) {
             outputWithIndent(instruction);
           }
         }
@@ -963,6 +975,17 @@ public class BotBuddyCode implements Closeable {
     }
   }
   
+  public boolean hadCode() {
+    lock.readLock().lock();
+    
+    try {
+      return hadCode;
+    }
+    finally {
+      lock.readLock().unlock();
+    }
+  }
+  
   public int getCommentChar() {
     lock.readLock().lock();
     
@@ -1025,11 +1048,44 @@ public class BotBuddyCode implements Closeable {
     }
   }
   
+  public boolean hadInput() {
+    lock.readLock().lock();
+    
+    try {
+      return hadInput;
+    }
+    finally {
+      lock.readLock().unlock();
+    }
+  }
+  
+  public boolean hadInstruction() {
+    lock.readLock().lock();
+    
+    try {
+      return hadInstruction;
+    }
+    finally {
+      lock.readLock().unlock();
+    }
+  }
+  
   public boolean hasLineChar() {
     lock.readLock().lock();
     
     try {
       return lineIndex < line.length();
+    }
+    finally {
+      lock.readLock().unlock();
+    }
+  }
+  
+  public boolean isReady() throws IOException {
+    lock.readLock().lock();
+    
+    try {
+      return input.ready();
     }
     finally {
       lock.readLock().unlock();
@@ -1138,6 +1194,14 @@ public class BotBuddyCode implements Closeable {
     
     public Builder executors(Executors executors) {
       this.executors = executors;
+      
+      return this;
+    }
+    
+    public Builder input() {
+      // Because input(null) is ambiguous
+      
+      this.input = null;
       
       return this;
     }
