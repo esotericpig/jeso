@@ -1,4 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <FindBugsFilter>
-  <!-- System.exit() called -->
-  <Bug pattern="DM_EXIT" />
+  <Match>
+    <Or>
+      <Class name="com.esotericpig.jeso.botbuddy.BotBuddyCodeApp" />
+    </Or>
+    
+    <Or>
+      <!-- new BufferedReader(new InputStreamReader(System.in)) -->
+      <Bug pattern="DM_DEFAULT_ENCODING" />
+    </Or>
+  </Match>
 </FindBugsFilter>
