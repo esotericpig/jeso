@@ -128,15 +128,15 @@ public class BotBuddy {
   public static final int DEFAULT_SHORT_DELAY = 110;
   public static final int DEFAULT_AUTO_DELAY = DEFAULT_SHORT_DELAY;
   
-  public static Builder builder() throws AWTException {
+  public static Builder builder() throws HeadlessException {
     return new Builder();
   }
   
-  public static Builder builder(Robot bot) {
+  public static Builder builder(Robot bot) throws HeadlessException {
     return new Builder(bot);
   }
   
-  public static Builder builder(GraphicsDevice screen) throws AWTException {
+  public static Builder builder(GraphicsDevice screen) throws AWTException,HeadlessException {
     return new Builder(screen);
   }
   
@@ -150,11 +150,11 @@ public class BotBuddy {
     return GraphicsEnvironment.isHeadless();
   }
   
-  public static int getXCoord() {
+  public static int getXCoord() throws HeadlessException,SecurityException {
     return getCoords().x;
   }
   
-  public static int getYCoord() {
+  public static int getYCoord() throws HeadlessException,SecurityException {
     return getCoords().y;
   }
   
@@ -177,7 +177,7 @@ public class BotBuddy {
   protected Deque<Stash> stashes = new LinkedList<>();
   protected Toolkit tool;
   
-  public BotBuddy() throws AWTException {
+  public BotBuddy() throws AWTException,HeadlessException {
     this(new Builder());
   }
   
@@ -205,7 +205,10 @@ public class BotBuddy {
     }
   }
   
-  public BotBuddy(Builder builder) {
+  public BotBuddy(Builder builder) throws AWTException,HeadlessException {
+    if(builder.bot == null) {
+      builder.bot(new Robot());
+    }
     if(builder.tool == null) {
       builder.tool(Toolkit.getDefaultToolkit());
     }
@@ -835,12 +838,7 @@ public class BotBuddy {
     protected int shortDelay = DEFAULT_SHORT_DELAY;
     protected Toolkit tool = null;
     
-    public Builder() throws AWTException {
-      this(new Robot());
-    }
-    
-    public Builder(Robot bot) throws HeadlessException {
-      bot(bot);
+    public Builder() throws HeadlessException {
       leftButton(InputEvent.BUTTON1_DOWN_MASK);
       
       switch(MouseInfo.getNumberOfButtons()) {
@@ -861,11 +859,17 @@ public class BotBuddy {
       defaultButton(leftButton);
     }
     
-    public Builder(GraphicsDevice screen) throws AWTException {
+    public Builder(Robot bot) throws HeadlessException {
+      this();
+      
+      bot(bot);
+    }
+    
+    public Builder(GraphicsDevice screen) throws AWTException,HeadlessException {
       this(new Robot(screen));
     }
     
-    public BotBuddy build() {
+    public BotBuddy build() throws AWTException,HeadlessException {
       return new BotBuddy(this);
     }
     
@@ -892,13 +896,21 @@ public class BotBuddy {
       return this;
     }
     
+    public Builder bot() {
+      // Because bot(null) is ambiguous
+      
+      this.bot = null;
+      
+      return this;
+    }
+    
     public Builder bot(Robot bot) {
       this.bot = bot;
       
       return this;
     }
     
-    public Builder bot(GraphicsDevice screen) throws AWTException {
+    public Builder bot(GraphicsDevice screen) throws AWTException,HeadlessException {
       this.bot = new Robot(screen);
       
       return this;
