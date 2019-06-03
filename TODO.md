@@ -43,4 +43,6 @@
     - [ ] In HACKING.md?
     - [ ] Add @since for all (use library version)
 - [ ] Mimic Ruby's [OptionParser](https://ruby-doc.org/stdlib-2.6.3/libdoc/optparse/rdoc/OptionParser.html), but add sub-commands capability? Now possible thanks to Java 8 lambdas.
-- [ ] Move BigDecBase, etc. from senpi to here (jeso.math)?
+- [ ] Move BigIntBase, etc. from senpi to here (jeso.math)?
+    - [ ] BigRealBase & Radix Point instead of BigDecBase & InvalidDotException
+        - [ ] Can use dot or comma (user-specified); default gets from locale
