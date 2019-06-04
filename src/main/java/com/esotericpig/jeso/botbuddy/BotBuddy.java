@@ -18,6 +18,7 @@
 
 package com.esotericpig.jeso.botbuddy;
 
+import com.esotericpig.jeso.Duplicable;
 import com.esotericpig.jeso.OSFamily;
 import com.esotericpig.jeso.Sys;
 
@@ -111,7 +112,7 @@ import java.util.ListIterator;
  * @see com.esotericpig.jeso.botbuddy.BotBuddyCode
  * @see com.esotericpig.jeso.botbuddy.BotBuddyCodeApp
  */
-public class BotBuddy {
+public class BotBuddy implements Duplicable<BotBuddy> {
   /**
    * For double clicks, etc.
    */
@@ -236,6 +237,10 @@ public class BotBuddy {
     if(builder.isAutoDelay) {
       setAutoDelay(builder.autoDelay);
     }
+  }
+  
+  public BotBuddy dup() {
+    return new BotBuddy(this);
   }
   
   public BotBuddy beep() {
@@ -1020,7 +1025,7 @@ public class BotBuddy {
     }
   }
   
-  public class Stash {
+  public class Stash implements Duplicable<Stash> {
     public int autoDelay;
     public boolean isStashed = false;
     
@@ -1033,6 +1038,10 @@ public class BotBuddy {
     public Stash(Stash stash) {
       autoDelay = stash.autoDelay;
       isStashed = stash.isStashed;
+    }
+    
+    public Stash dup() {
+      return new Stash(this);
     }
     
     public void clear() {
