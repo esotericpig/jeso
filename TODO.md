@@ -1,4 +1,4 @@
-# TODO | jeso
+# TODO | Jeso
 
 ## v1.0.0
 

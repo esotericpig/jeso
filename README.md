@@ -1,4 +1,4 @@
-# jeso
+# Jeso
 
 Java utils to make Java less verbose and more fun.
 
@@ -201,7 +201,7 @@ Similar projects:
 
 See [BotBuddyCodeTest.bbc](src/test/resources/BotBuddyCodeTest.bbc) for a quick example of functionality. If you were to interpret this file dryly, then it would produce this output: [BotBuddyCodeTestOutput.txt](src/test/resources/BotBuddyCodeTestOutput.txt).
 
-The idea was to make a very simple parser, without including the overhead of Groovy/JRuby into *jeso*. In a future, separate project, I may add Groovy/JRuby support.
+The idea was to make a very simple parser, without including the overhead of Groovy/JRuby into *Jeso*. In a future, separate project, I may add Groovy/JRuby support.
 
 It can handle Ruby-like string literals and [heredoc](https://en.wikipedia.org/wiki/Here_document), and simple methods (no params).
 
@@ -297,18 +297,18 @@ end_safe_mode
 ## [License](#contents)
 [GNU LGPL v3+](LICENSE)
 
-> jeso ([https://github.com/esotericpig/jeso](https://github.com/esotericpig/jeso))  
+> Jeso ([https://github.com/esotericpig/jeso](https://github.com/esotericpig/jeso))  
 > Copyright (c) 2019 Jonathan Bradley Whited (@esotericpig)  
 > 
-> jeso is free software: you can redistribute it and/or modify  
+> Jeso is free software: you can redistribute it and/or modify  
 > it under the terms of the GNU Lesser General Public License as published by  
 > the Free Software Foundation, either version 3 of the License, or  
 > (at your option) any later version.  
 > 
-> jeso is distributed in the hope that it will be useful,  
+> Jeso is distributed in the hope that it will be useful,  
 > but WITHOUT ANY WARRANTY; without even the implied warranty of  
 > MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the  
 > GNU Lesser General Public License for more details.  
 > 
 > You should have received a copy of the GNU Lesser General Public License  
-> along with jeso. If not, see <http://www.gnu.org/licenses/>.  
+> along with Jeso. If not, see <http://www.gnu.org/licenses/>.  
