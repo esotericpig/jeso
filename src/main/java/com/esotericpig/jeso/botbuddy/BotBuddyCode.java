@@ -263,27 +263,27 @@ public class BotBuddyCode implements Closeable {
     }
   }
   
-  public UserMethod addUserMethod(LineOfCode loc) throws ParseCodeException {
+  public UserMethod addUserMethod(Instruction instruction) throws ParseCodeException {
     lock.writeLock().lock();
     
     try {
-      LineOfCode prevLoc = new LineOfCode(lineNumber,lineIndex);
-      
-      if(!seekToNonWhitespace()) {
-        throw ParseCodeException.build(prevLoc,"Method has no name",instructionName);
+      if(instruction.args.length < 1) {
+        throw instruction.buildParseCodeException("Method has no name");
       }
       
-      prevLoc = new LineOfCode(lineNumber,lineIndex);
-      String methodName = Strs.trim(readToEndOfLine()).toString();
+      Arg methodNameArg = instruction.args[0];
+      String methodName = methodNameArg.value;
       
-      if(!methodName.equals(WHITESPACE_PATTERN.matcher(methodName).replaceAll(""))) {
-        throw ParseCodeException.build(prevLoc,"Method names cannot contain whitespaces",methodName);
+      if(instruction.args.length > 1) {
+        throw ParseCodeException.build(instruction.args[1].loc,"Methods cannot currently define params"
+          ,methodName);
       }
       
-      UserMethod userMethod = new UserMethod(loc,methodName);
+      UserMethod userMethod = new UserMethod(instruction.loc,methodName);
       
       if(userMethods.containsKey(userMethod.id)) {
-        throw ParseCodeException.build(prevLoc,"Method name is already defined",methodName);
+        throw ParseCodeException.build(methodNameArg.loc,"Method name is already defined as '" + userMethod.id
+          + "'",methodName);
       }
       
       userMethods.put(userMethod.id,userMethod);
@@ -388,20 +388,7 @@ public class BotBuddyCode implements Closeable {
         Instruction instruction = new Instruction(loc,instructionName);
         
         // Special keywords
-        if(instruction.id.equals("def")) {
-          if(userMethod != null) {
-            throw instruction.buildParseCodeException("Methods cannot be defined within methods");
-          }
-          
-          userMethod = addUserMethod(loc);
-          
-          if(!execute) {
-            output(userMethod);
-          }
-          
-          continue;
-        }
-        else if(instruction.id.equals("end")) {
+        if(instruction.id.equals("end")) {
           if(userMethod == null) {
             throw instruction.buildParseCodeException(
               "Invalid instruction; a method can only have one 'end'");
@@ -452,6 +439,21 @@ public class BotBuddyCode implements Closeable {
         }
         
         instruction.setArgs(args);
+        
+        // Special keywords
+        if(instruction.id.equals("def")) {
+          if(userMethod != null) {
+            throw instruction.buildParseCodeException("Methods cannot be defined within methods");
+          }
+          
+          userMethod = addUserMethod(instruction);
+          
+          if(!execute) {
+            output(userMethod);
+          }
+          
+          continue;
+        }
         
         // Execute/Output instruction
         if(userMethod == null) {
