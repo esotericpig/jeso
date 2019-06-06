@@ -11,7 +11,7 @@
         - `click 1853 1015`
     - [x] Make #doubleClick() more generic; use above method
     - [x] Store history of keys/mouse pressed, so can release them if UserIsActiveException during Safe Mode
-- [ ] Add appropriate logging (Logback?); search and remove printlns
+- [ ] Add appropriate logging (slf4j & Logback?); search and remove printlns
 - [ ] CSV class
 - [x] In Gradle, add a task to check/download the Wrapper checksum. [Release Checksums](https://gradle.org/release-checksums/)
 - [x] In Gradle, add a fat jar task that includes everything in one jar (javadoc, source, dependencies)
