@@ -45,6 +45,7 @@ Alternatively, you can build everything into one "fat" jar (including dependent 
 | [Arys](#arys) | Utility class for Arrays | - | [Arys.java](src/main/java/com/esotericpig/jeso/Arys.java) |
 | [Bools](#bools) | Utility class for Booleans | - | [Bools.java](src/main/java/com/esotericpig/jeso/Bools.java) |
 | [Duplicable](#duplicable) | Generic replacement for Cloneable/clone() | - | [Duplicable.java](src/main/java/com/esotericpig/jeso/Duplicable.java) |
+| [OSFamily](#osfamily) | Enum for guessing the OS family from a String | - | [OSFamily.java](src/main/java/com/esotericpig/jeso/OSFamily.java) |
 | [Strs](#strs) | Utility class for Strings | - | [Strs.java](src/main/java/com/esotericpig/jeso/Strs.java) |
 | [Sys](#sys) | Utility class for System | - | [Sys.java](src/main/java/com/esotericpig/jeso/Sys.java) |
 
@@ -196,6 +197,30 @@ class Alumnus extends Student {
     return sb.toString();
   }
 }
+```
+
+#### [OSFamily](#code)
+
+An enum for guessing the [OS family](https://en.wikipedia.org/wiki/Category:Operating_system_families) from a String.
+
+Most users will only need [Sys.OS_FAMILY](#sys).
+
+For easier reading, used `println` by itself:
+
+```Groovy
+Random rand = new Random();
+
+// Used for testing
+println( OSFamily.getRandValue(rand) );
+
+// - OSFamily.LINUX
+// - OSFamily.MACOS
+// - OSFamily.WINDOWS
+// - OSFamily.UNKNOWN
+println( OSFamily.guessFromName("GNU/Linux Fedora") );
+println( OSFamily.guessFromName("Mac OS X") );
+println( OSFamily.guessFromName("Microsoft Windows XP") );
+println( OSFamily.guessFromName("TempleOS") );
 ```
 
 #### [Strs](#code)
