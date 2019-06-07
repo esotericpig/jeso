@@ -90,7 +90,7 @@ public final class Arys {
       return "";
     }
     if(ary.length == 1) {
-      return ary[0].toString();
+      return (ary[0] == null) ? "null" : ary[0].toString();
     }
     
     StringBuilder sb = new StringBuilder();
@@ -98,7 +98,7 @@ public final class Arys {
     for(int i = 0;;) {
       T t = ary[i];
       
-      sb.append(t.toString());
+      sb.append(t);
       
       if((++i) >= ary.length) {
         break;
@@ -116,7 +116,7 @@ public final class Arys {
       return "";
     }
     if(ary.length == 1) {
-      return ary[0].toString();
+      return (ary[0] == null) ? "null" : ary[0].toString();
     }
     
     StringBuilder sb = new StringBuilder();
@@ -124,7 +124,7 @@ public final class Arys {
     for(int i = 0;;) {
       T t = ary[i];
       
-      sb.append(t.toString());
+      sb.append(t);
       
       if((++i) >= ary.length) {
         break;
