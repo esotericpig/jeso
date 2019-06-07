@@ -13,8 +13,6 @@ Name = Java + gesso + esoteric.
 - [Requirements](#requirements)
 - [Using](#using)
 - [Code](#code)
-    - [BotBuddy](#botbuddy)
-    - [BotBuddyCode](#botbuddycode)
 - [License](#license)
 
 ## [Requirements](#contents)
@@ -42,24 +40,132 @@ Alternatively, you can build everything into one "fat" jar (including dependent 
 
 ## [Code](#contents)
 
-| Class | Summary |
-| ----- | ------- |
-| [BotBuddy](#botbuddy) | A simple wrapper around [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html) |
-| [BotBuddyCode](#botbuddycode) | A very simple scripting "language" interpreter for [BotBuddy](#botbuddy) |
+| Class | Summary | Javadoc | File |
+| ----- | ------- | ------- | ---- |
+| [Arys](#arys) | Utility class for Arrays | - | [Arys.java](src/main/java/com/esotericpig/jeso/Arys.java) |
+| [Bools](#bools) | Utility class for Booleans | - | [Bools.java](src/main/java/com/esotericpig/jeso/Bools.java) |
+| [Duplicable](#duplicable) | Generic replacement for Cloneable/clone() | - | [Duplicable.java](src/main/java/com/esotericpig/jeso/Duplicable.java) |
+| [Strs](#strs) | Utility class for Strings | - | [Strs.java](src/main/java/com/esotericpig/jeso/Strs.java) |
+| [Sys](#sys) | Utility class for System | - | [Sys.java](src/main/java/com/esotericpig/jeso/Sys.java) |
 
-### [BotBuddy](#code)
+[BotBuddy Package](#botbuddy-package)
 
-[BotBuddy](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddy.java) is a simple wrapper around [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html).
+| Class | Summary | Javadoc | File |
+| ----- | ------- | ------- | ---- |
+| [BotBuddy](#botbuddy) | Wrapper around [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html) | - | [BotBuddy.java](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddy.java) |
+| [BotBuddyCode](#botbuddycode) | Very simple scripting "language" interpreter for [BotBuddy](#botbuddy) | - | [BotBuddyCode.java](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddyCode.java) |
+| [BotBuddyCodeApp](#botbuddycodeapp) | Simple CLI app for [BotBuddyCode](#botbuddycode) that can take in a file or read piped-in input (pipeline) | - | [BotBuddyCodeApp.java](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddyCodeApp.java) |
+
+[IO Package](#io-package)
+
+| Class | Summary | Javadoc | File |
+| ----- | ------- | ------- | ---- |
+| [StringListReader](#stringlistreader) | Reader for a list of Strings | - | [StringListReader.java](src/main/java/com/esotericpig/jeso/io/StringListReader.java) |
+
+#### [Arys](#code)
+
+A utility class for Arrays.
+
+#### [Bools](#code)
+
+A utility class for Booleans.
+
+```Java
+// ["1","on","t","true","y","yes"] are all true and case-insensitive
+Bools.parse("On"); // true
+```
+
+#### [Duplicable](#code)
+
+A Generic replacement for Cloneable/clone().
+
+Almost every Library has their own, so let's reinvent the wheel.
+
+[Java Cloning: Even Copy Constructors Are Not Enough](https://dzone.com/articles/java-cloning-even-copy-constructors-are-not-suffic) [DZone]  
+[CopyConstructorExample.java](https://github.com/njnareshjoshi/exercises/blob/master/src/org/programming/mitra/exercises/CopyConstructorExample.java) [GitHub]
+
+```Java
+import com.esotericpig.jeso.Duplicable;
+
+public class Testbed
+  public static void main(String[] args) {
+    Alumnus alum1 = new Alumnus("Bob","MySchool","MyJob");
+    Alumnus alum2 = alum1.dup();
+    
+    // Same school
+    alum2.name = "Fred";
+    alum2.job = "CoolJob";
+    
+    System.out.println(alum1);
+    System.out.println(alum2);
+  }
+}
+
+class User implements Duplicable<User> {
+  public String name;
+  
+  public User(String name) { this.name = name; }
+  public User(User user) { this.name = user.name; }
+  
+  public User dup() { return new User(this); }
+}
+
+class Student extends User {
+  public String school;
+  
+  public Student(String name,String school) { super(name); this.school = school; }
+  public Student(Student student) { super(student); this.school = student.school; }
+  
+  @Override
+  public Student dup() { return new Student(this); }
+}
+
+class Alumnus extends Student {
+  public String job;
+  
+  public Alumnus(String name,String school,String job) { super(name,school); this.job = job; }
+  public Alumnus(Alumnus alumnus) { super(alumnus); this.job = alumnus.job; }
+  
+  @Override
+  public Alumnus dup() { return new Alumnus(this); }
+  
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    
+    sb.append(name).append(":\t").append('[');
+    sb.append(school).append(',');
+    sb.append(job).append(']');
+    
+    return sb.toString();
+  }
+}
+```
+
+#### [Strs](#code)
+
+A utility class for Strings.
+
+#### [Sys](#code)
+
+A utility class for System.
+
+### [BotBuddy Package](#code)
+
+#### [BotBuddy](#code)
+
+A wrapper around [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html).
 
 **Warning** for **Linux** users:  
 
 - On Wayland, Java's Robot will not work. You will need to either use X11 or XWayland, until either OpenJDK or Wayland is fixed.
 
-For one example, it can be used for moving the mouse and pasting in text.
+It can be used for...
 
-- It can automate tedious tasks that a website/program has not implemented yet, such as inputting a CSV file into a website, row by row.
-- It can be used for automating tedious tasks in games, such as moving your character to a place to fish and then moving your character home to dump the fish.
-- It can be used for testing/QAing your desktop applications.
+- Moving the mouse and pasting in text.
+- Automating tedious tasks that a website/program has not implemented yet, such as inputting a CSV file into a website, row by row.
+- Automating tedious tasks in games, such as moving your character to a place to fish and then moving your character home to dump the fish.
+- Testing/QAing your desktop applications.
 
 Example usage:
 
@@ -195,9 +301,9 @@ Similar projects:
 - Robot-Utils by Denys Shynkarenko (@Denysss) [[GitHub](https://github.com/Denysss/Robot-Utils)]
 - Automaton by Renato Athaydes (@renatoathaydes) [[GitHub](https://github.com/renatoathaydes/Automaton)]
 
-### [BotBuddyCode](#code)
+#### [BotBuddyCode](#code)
 
-[BotBuddyCode](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddyCode.java) is a very simple scripting "language" interpreter for [BotBuddy](#botbuddy). It is **not** Turing complete.
+A very simple scripting "language" interpreter for [BotBuddy](#botbuddy). It is **not** Turing complete.
 
 See [BotBuddyCodeTest.bbc](src/test/resources/BotBuddyCodeTest.bbc) for a quick example of functionality. If you were to interpret this file dryly, then it would produce this output: [BotBuddyCodeTestOutput.txt](src/test/resources/BotBuddyCodeTestOutput.txt).
 
@@ -209,7 +315,7 @@ It can accept the following input:
 
 - [java.io.BufferedReader](https://docs.oracle.com/javase/8/docs/api/java/io/BufferedReader.html)
 - [java.nio.file.Path](https://docs.oracle.com/javase/8/docs/api/java/nio/file/Path.html) [use [java.nio.file.Paths.get(...)](https://docs.oracle.com/javase/8/docs/api/java/nio/file/Paths.html#get-java.lang.String-java.lang.String...-)]
-- List&lt;String&gt; using [com.esotericpig.jeso.io.StringListReader](src/main/java/com/esotericpig/jeso/io/StringListReader.java)
+- List&lt;String&gt; using [com.esotericpig.jeso.io.StringListReader](#stringlistreader)
 - String using [java.io.StringReader](https://docs.oracle.com/javase/8/docs/api/java/io/StringReader.html)
 
 Example usage with a file:
@@ -293,6 +399,76 @@ click 1851 1021
 
 end_safe_mode
 ```
+
+#### [BotBuddyCodeApp](#code)
+
+A simple CLI app for [BotBuddyCode](#botbuddycode) that can take in a file or read piped-in input (pipeline).
+
+Print help:
+
+- `java -cp 'build/libs/*' com.esotericpig.jeso.botbuddy.BotBuddyCodeApp --help`
+
+Help:
+
+```Console
+Usage: BotBuddyCodeApp [options] <file> [options]
+
+Interprets the contents of <file> using BotBuddyCode.
+Data can also be piped in, without using a file.
+
+Options:
+    -n, --dry-run            Do not execute any code, only output the interpretation
+    ---
+    -h, --help               Print this help
+
+Examples:
+    BotBuddyCodeApp -n mydir/myfile.bbc
+    BotBuddyCodeApp 'My Dir/My File.bbc'
+    echo 'get_coords' | BotBuddyCodeApp
+```
+
+Examples:
+
+```Console
+$ java -cp 'build/libs/*' com.esotericpig.jeso.botbuddy.BotBuddyCodeApp file.txt
+$ java -cp 'build/libs/*' com.esotericpig.jeso.botbuddy.BotBuddyCodeApp -n file.txt
+$ echo 'get_pixel 100 100' | java -cp 'build/libs/*' com.esotericpig.jeso.botbuddy.BotBuddyCodeApp
+$ echo 'get_pixel 100 100' | java -cp 'build/libs/*' com.esotericpig.jeso.botbuddy.BotBuddyCodeApp -n
+```
+
+### [IO Package](#code)
+
+#### [StringListReader](#code)
+
+A [java.io.Reader](https://docs.oracle.com/javase/8/docs/api/java/io/Reader.html) for a List of Strings.
+
+This was specifically made for [BotBuddyCode](#botbuddycode), but can be used wherever a Reader is.
+
+For each new String in a List, it will produce a newline (`\n`).
+
+Example usage:
+
+```Java
+List<String> list = new LinkedList<>();
+list.add("name = ' hello World '");
+list.add("name.strip!");
+list.add("name.capitalize!");
+list.add("");
+list.add("puts name");
+
+try(BufferedReader lin = new BufferedReader(new StringListReader(list))) {
+  String line = null;
+  
+  while((line = lin.readLine()) != null) {
+    System.out.println(line);
+  }
+}
+```
+
+Also see:
+
+- [StringListReaderTest](src/test/java/com/esotericpig/jeso/io/StringListReaderTest.java)
+- [BotBuddyCode.Builder.input(List&lt;String&gt; strList)](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddyCode.java)
 
 ## [License](#contents)
 [GNU LGPL v3+](LICENSE)
