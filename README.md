@@ -66,63 +66,60 @@ Alternatively, you can build everything into one "fat" jar (including dependent 
 
 A utility class for Arrays.
 
-```Java
+For easier reading, used `println` by itself.
+
+```Groovy
 String[] breakfast = {"coffee","coffee",null,"eggs","eggs",null,"toast","turkey sausage"};
 String[] newArray = null;
 Random rand = new Random();
 
 // Remove nulls; varargs
-System.out.println(Arrays.toString(Arys.compact(breakfast)));
+// - [coffee, coffee, eggs, eggs, toast, turkey sausage]
+println( Arrays.toString(Arys.compact(breakfast)) );
 
 // Move nulls to end; mutable
-System.out.println(Arrays.toString(Arys.compactMut(breakfast)));
+// - [coffee, coffee, eggs, eggs, toast, turkey sausage, null, null]
+println( Arrays.toString(Arys.compactMut(breakfast)) );
 
-// Join into a String: "123"; varargs
-System.out.println(Arys.join(1,2,3));
+// Join into a String; varargs
+// - 123
+println( Arys.join(1,2,3) );
 
 // Join into a String with a custom separator; varargs
-System.out.println(Arys.joins(',',breakfast));
-System.out.println(Arys.joins(" | ",breakfast));
+// - coffee,coffee,eggs,eggs,toast,turkey sausage,null,null
+// - coffee | coffee | eggs | eggs | toast | turkey sausage | null | null
+println( Arys.joins(',',breakfast) );
+println( Arys.joins(" | ",breakfast) );
 
 // Create a new array using Reflection
+// - [Ljava.lang.String;@][3]
 newArray = Arys.newArray(breakfast,3);
-System.out.println(newArray + "][" + newArray.length + "]");
+println( newArray + "][" + newArray.length + "]" );
 
 // Get a random element; varargs
-System.out.println(Arys.sample(breakfast));
-System.out.println(Arys.sample(rand,breakfast));
+// - eggs
+// - coffee
+println( Arys.sample(breakfast) );
+println( Arys.sample(rand,breakfast) );
 
 // Get multiple random elements; varargs
-System.out.println(Arrays.toString(Arys.samples(3,breakfast)));
-System.out.println(Arrays.toString(Arys.samples(3,rand,breakfast)));
+// - [eggs, null, coffee]
+// - [coffee, turkey sausage, eggs]
+println( Arrays.toString(Arys.samples(3,breakfast)) );
+println( Arrays.toString(Arys.samples(3,rand,breakfast)) );
 
 // Remove duplicate elements; varargs
-System.out.println(Arrays.toString(Arys.unique(breakfast)));
+// - [coffee, eggs, toast, turkey sausage, null]
+println( Arrays.toString(Arys.unique(breakfast)) );
 
 // Remove duplicate elements (pad with nulls); mutable
-System.out.println(Arrays.toString(Arys.uniqueMut(breakfast)));
+// - [coffee, eggs, toast, turkey sausage, null, null, null, null]
+println( Arrays.toString(Arys.uniqueMut(breakfast)) );
 
 // Create a new array from a List using Reflection
+// - [Ljava.lang.String;@][8]
 newArray = Arys.toArray(breakfast,Arrays.asList(breakfast));
-System.out.println(newArray + "][" + newArray.length + "]");
-```
-
-Example output:
-
-```Groovy
-[coffee, coffee, eggs, eggs, toast, turkey sausage]
-[coffee, coffee, eggs, eggs, toast, turkey sausage, null, null]
-123
-coffee,coffee,eggs,eggs,toast,turkey sausage,null,null
-coffee | coffee | eggs | eggs | toast | turkey sausage | null | null
-[Ljava.lang.String;@][3]
-eggs
-coffee
-[eggs, null, coffee]
-[coffee, turkey sausage, eggs]
-[coffee, eggs, toast, turkey sausage, null]
-[coffee, eggs, toast, turkey sausage, null, null, null, null]
-[Ljava.lang.String;@][8]
+println( newArray + "][" + newArray.length + "]" );
 ```
 
 #### [Bools](#code)
