@@ -222,6 +222,21 @@ println( "'" + Strs.trim(new StringBuilder("   Hello World   ")) + "'" );
 
 A utility class for System.
 
+For easier reading, used `println` by itself:
+
+```Groovy
+// "Unknown" if not set
+println( Sys.OS_NAME );
+
+// Uses the OSFamily enum
+println( Sys.OS_FAMILY );
+
+// Gets a System property and ignores SecurityException if thrown (will return the specified default value)
+// - If you use System.getProperty(...), then it can potentially throw a SecurityException,
+//   but you might want your app to continue to work even if "os.name" is blocked from being read
+println( Sys.getSafeProp("os.name",null) );
+```
+
 ### [BotBuddy Package](#code)
 
 #### [BotBuddy](#code)
