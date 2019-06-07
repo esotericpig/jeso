@@ -66,7 +66,7 @@ Alternatively, you can build everything into one "fat" jar (including dependent 
 
 A utility class for Arrays.
 
-For easier reading, used `println` by itself.
+For easier reading, used `println` by itself:
 
 ```Groovy
 String[] breakfast = {"coffee","coffee",null,"eggs","eggs",null,"toast","turkey sausage"};
@@ -201,6 +201,22 @@ class Alumnus extends Student {
 #### [Strs](#code)
 
 A utility class for Strings.
+
+For easier reading, used `println` by itself:
+
+```Groovy
+// Remove (left) leading whitespace; mutable
+// - 'Hello World   '
+println( "'" + Strs.ltrim(new StringBuilder("   Hello World   ")) + "'" );
+
+// Remove (right) trailing whitespace; mutable
+// - '   Hello World'
+println( "'" + Strs.rtrim(new StringBuilder("   Hello World   ")) + "'" );
+
+// Remove leading & trailing whitespace; mutable
+// - 'Hello World'
+println( "'" + Strs.trim(new StringBuilder("   Hello World   ")) + "'" );
+```
 
 #### [Sys](#code)
 
