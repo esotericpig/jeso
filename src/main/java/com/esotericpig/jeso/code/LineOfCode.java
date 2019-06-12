@@ -21,17 +21,17 @@ package com.esotericpig.jeso.code;
 /**
  * @author Jonathan Bradley Whited (@esotericpig)
  */
-public class LineOfCode {
+public final class LineOfCode {
   public static final LineOfCode FIRST = new LineOfCode();
   
-  protected final int column;
-  protected final int number;
+  private final int column;
+  private final int number;
   
   protected LineOfCode() {
     this(1,1);
   }
   
-  public LineOfCode(int number,int column) {
+  public LineOfCode(final int number,final int column) {
     this.column = column;
     this.number = number;
   }
@@ -40,12 +40,72 @@ public class LineOfCode {
     return new LineOfCode(number + 1,1);
   }
   
+  public LineOfCode next(final int maxColumn) {
+    return next(maxColumn,1);
+  }
+  
+  public LineOfCode next(final int maxColumn,final int columnInc) {
+    final int col = column + columnInc;
+    
+    if(col > maxColumn) {
+      return new LineOfCode(number + 1,1);
+    }
+    
+    return new LineOfCode(number,col);
+  }
+  
   public LineOfCode nextColumn() {
-    return new LineOfCode(number,column + 1);
+    return nextColumn(1);
+  }
+  
+  public LineOfCode nextColumn(final int columnInc) {
+    return new LineOfCode(number,column + columnInc);
   }
   
   public LineOfCode nextNumber() {
-    return new LineOfCode(number + 1,column);
+    return nextNumber(1);
+  }
+  
+  public LineOfCode nextNumber(final int numberInc) {
+    return new LineOfCode(number + numberInc,column);
+  }
+  
+  public LineOfCode prev() {
+    return (number <= 1) ? FIRST : (new LineOfCode(number - 1,1));
+  }
+  
+  public LineOfCode prev(final int maxColumn) {
+    return prev(maxColumn,1);
+  }
+  
+  public LineOfCode prev(final int maxColumn,final int columnDec) {
+    final int col = column - columnDec;
+    
+    if(col < 1) {
+      if(number <= 1) {
+        return FIRST;
+      }
+      
+      return new LineOfCode(number - 1,maxColumn);
+    }
+    
+    return new LineOfCode(number,col);
+  }
+  
+  public LineOfCode prevColumn() {
+    return prevColumn(1);
+  }
+  
+  public LineOfCode prevColumn(final int columnDec) {
+    return new LineOfCode(number,column - columnDec);
+  }
+  
+  public LineOfCode prevNumber() {
+    return prevNumber(1);
+  }
+  
+  public LineOfCode prevNumber(final int numberDec) {
+    return new LineOfCode(number - numberDec,column);
   }
   
   public int getColumn() {
