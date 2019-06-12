@@ -443,13 +443,6 @@ public class BotBuddy implements Duplicable<BotBuddy> {
     return paste(x,y,text).enter();
   }
   
-  public BotBuddy key(int keyCode) {
-    bot.keyPress(keyCode);
-    bot.keyRelease(keyCode);
-    
-    return checkIfSafe();
-  }
-  
   public BotBuddy leftClick() {
     bot.mousePress(leftButton);
     bot.mouseRelease(leftButton);
@@ -508,6 +501,14 @@ public class BotBuddy implements Duplicable<BotBuddy> {
     return move(x,y).pressButton(button);
   }
   
+  public BotBuddy pressButtons(int... buttons) {
+    for(int button: buttons) {
+      pressButton(button);
+    }
+    
+    return this;
+  }
+  
   public BotBuddy pressKey(int keyCode) {
     bot.keyPress(keyCode);
     
@@ -520,6 +521,14 @@ public class BotBuddy implements Duplicable<BotBuddy> {
   
   public BotBuddy pressKey(int x,int y,int keyCode) {
     return move(x,y).pressKey(keyCode);
+  }
+  
+  public BotBuddy pressKeys(int... keyCodes) {
+    for(int keyCode: keyCodes) {
+      pressKey(keyCode);
+    }
+    
+    return this;
   }
   
   public BufferedImage printScreen() throws SecurityException {
@@ -562,6 +571,14 @@ public class BotBuddy implements Duplicable<BotBuddy> {
     return this;
   }
   
+  public BotBuddy releaseButtons(int... buttons) {
+    for(int button: buttons) {
+      releaseButton(button);
+    }
+    
+    return this;
+  }
+  
   public BotBuddy releaseKey(int keyCode) {
     bot.keyRelease(keyCode);
     
@@ -584,6 +601,14 @@ public class BotBuddy implements Duplicable<BotBuddy> {
     return this;
   }
   
+  public BotBuddy releaseKeys(int... keyCodes) {
+    for(int keyCode: keyCodes) {
+      releaseKey(keyCode);
+    }
+    
+    return this;
+  }
+  
   public BotBuddy releasePressed() {
     // Release keys first as more important
     return releaseKeys().releaseButtons();
@@ -600,12 +625,47 @@ public class BotBuddy implements Duplicable<BotBuddy> {
     return move(x,y).rightClick();
   }
   
+  public BotBuddy rollButtons(int... buttons) {
+    pressButtons(buttons);
+    
+    for(int i = buttons.length - 1; i >= 0; --i) {
+      releaseButton(buttons[i]);
+    }
+    
+    return this;
+  }
+  
+  public BotBuddy rollKeys(int... keyCodes) {
+    pressKeys(keyCodes);
+    
+    for(int i = keyCodes.length - 1; i >= 0; --i) {
+      releaseKey(keyCodes[i]);
+    }
+    
+    return this;
+  }
+  
   public BotBuddy shortcut(Shortcut shortcut) {
     return shortcut.press(this);
   }
   
   public BotBuddy stash() {
     stashes.push(new Stash());
+    
+    return this;
+  }
+  
+  public BotBuddy type(int keyCode) {
+    bot.keyPress(keyCode);
+    bot.keyRelease(keyCode);
+    
+    return checkIfSafe();
+  }
+  
+  public BotBuddy type(int... keyCodes) {
+    for(int keyCode: keyCodes) {
+      type(keyCode);
+    }
     
     return this;
   }
@@ -1016,14 +1076,8 @@ public class BotBuddy implements Duplicable<BotBuddy> {
     public static final Shortcut PASTE_MACOS;
     
     static {
-      PASTE_DEFAULT = buddy -> buddy.pressKey(KeyEvent.VK_CONTROL)
-                                    .pressKey(KeyEvent.VK_V)
-                                    .releaseKey(KeyEvent.VK_V)
-                                    .releaseKey(KeyEvent.VK_CONTROL);
-      PASTE_MACOS = buddy -> buddy.pressKey(KeyEvent.VK_META)
-                                  .pressKey(KeyEvent.VK_V)
-                                  .releaseKey(KeyEvent.VK_V)
-                                  .releaseKey(KeyEvent.VK_META);
+      PASTE_DEFAULT = buddy -> buddy.rollKeys(KeyEvent.VK_CONTROL,KeyEvent.VK_V);
+      PASTE_MACOS = buddy -> buddy.rollKeys(KeyEvent.VK_META,KeyEvent.VK_V);
       PASTE = buddy -> {
         switch(buddy.getOSFamily()) {
           case MACOS: return PASTE_MACOS.press(buddy);

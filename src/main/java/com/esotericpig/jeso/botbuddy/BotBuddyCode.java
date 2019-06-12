@@ -1359,7 +1359,6 @@ public class BotBuddyCode implements Closeable {
           default: buddy.enter(inst.getInt(0),inst.getInt(1),inst.getStr(2)); break;
         }
       });
-      put("key",(buddy,inst) -> buddy.key(inst.getInt(0)));
       put("leftclick",(buddy,inst) -> {
         switch(inst.args.length) {
           case 0:  buddy.leftClick(); break;
@@ -1446,6 +1445,7 @@ public class BotBuddyCode implements Closeable {
         }
       });
       put("stash",(buddy,inst) -> buddy.stash());
+      put("type",(buddy,inst) -> buddy.type(inst.getInt(0)));
       put("unstash",(buddy,inst) -> buddy.unstash());
       put("waitforidle",(buddy,inst) -> buddy.waitForIdle());
       put("wheel",(buddy,inst) -> buddy.wheel(inst.getInt(0)));
