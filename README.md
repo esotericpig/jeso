@@ -67,8 +67,6 @@ Alternatively, you can build everything into one "fat" jar (including dependent 
 
 A utility class for Arrays.
 
-For easier reading, used `println` by itself:
-
 ```Groovy
 String[] breakfast = {"coffee","coffee",null,"eggs","eggs",null,"toast","turkey sausage"};
 String[] newArray = null;
@@ -103,10 +101,12 @@ println( newArray + "][" + newArray.length + "]" );
 println( Arys.sample(breakfast) );
 println( Arys.sample(rand,breakfast) );
 
-// Get multiple random elements; varargs
+// Get multiple random elements using a shuffle strategy (don't repeat); varargs
 // - [eggs, null, coffee]
+// - [coffee, null, turkey sausage, coffee, null, eggs, eggs, toast]
 // - [coffee, turkey sausage, eggs]
 println( Arrays.toString(Arys.samples(3,breakfast)) );
+println( Arrays.toString(Arys.samples(100,breakfast)) );
 println( Arrays.toString(Arys.samples(3,rand,breakfast)) );
 
 // Remove duplicate elements; varargs
@@ -205,8 +205,6 @@ An enum for guessing the [OS family](https://en.wikipedia.org/wiki/Category:Oper
 
 Most users will only need [Sys.OS_FAMILY](#sys).
 
-For easier reading, used `println` by itself:
-
 ```Groovy
 Random rand = new Random();
 
@@ -227,8 +225,6 @@ println( OSFamily.guessFromName("TempleOS") );
 
 A utility class for Strings.
 
-For easier reading, used `println` by itself:
-
 ```Groovy
 // Remove (left) leading whitespace; mutable
 // - 'Hello World   '
@@ -246,8 +242,6 @@ println( "'" + Strs.trim(new StringBuilder("   Hello World   ")) + "'" );
 #### [Sys](#code)
 
 A utility class for System.
-
-For easier reading, used `println` by itself:
 
 ```Groovy
 // "Unknown" if not set
