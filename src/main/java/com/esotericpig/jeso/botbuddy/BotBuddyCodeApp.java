@@ -72,15 +72,13 @@ public class BotBuddyCodeApp {
     }
   }
   
-  protected static final int indent = 4;
-  protected static final int optionsIndent = 24;
-  
-  protected final String[] args;
-  protected final String name = getClass().getSimpleName();
-  
+  protected String[] args;
   protected BotBuddy buddy = null;
   protected BotBuddyCode.Builder builder = BotBuddyCode.builder();
+  protected int indent = 4;
   protected boolean isDryRun = false;
+  protected String name = getClass().getSimpleName();
+  protected int optionsIndent = 24;
   protected Path path = null;
   
   public BotBuddyCodeApp(String[] args) throws AWTException {
