@@ -22,7 +22,9 @@
 - [ ] Strs.index(str,-1) and Strs.split(str,3,-2) (can do ranges, etc.).
 - [ ] Use Java reflection to interpolate vars in text like Ruby (but just very slow).
 - [ ] isEmpty() for String that tests null and strip (probably 2 methods).
-- [ ] Map method that will put if not exist and return new.
+- [x] Map method that will put if not exist and return new.
+    - This has already been solved in Java 8 with:
+        - `value = map.computeIfAbsent("key",k -> new TimeConsumingClass());`
 - [ ] Arrs.include?; Array *=; Arrs.reverse; Arrs.to_map; Maps.invert; Maps.zip; Arrs.flatten; %w(...) So pass in "Bob Fred George" and makes into an array. Arrs.count; Arrs.swap(index1,index2);
 - [ ] A class that adds up max length for formatting data?
     - Store the args into a list, then pass into printf.
