@@ -97,7 +97,7 @@ import java.util.ListIterator;
  * 
  * <p>Getting mouse coordinates:</p>
  * <ul>
- *   <li>Linux: Install `xdotool` and run `xdotool getmouselocation`</li>
+ *   <li>Linux: Install "xdotool" and do: {@code xdotool getmouselocation}</li>
  *   <li>Java:  {@link #getCoords()}, {@link #getXCoord()}, {@link #getYCoord()}</li>
  * </ul>
  * 
@@ -399,8 +399,8 @@ public class BotBuddy implements Duplicable<BotBuddy> {
   }
   
   public BotBuddy drag(int fromX,int fromY,int toX,int toY,int button) {
-    return pressMouse(fromX,fromY,button)
-           .releaseMouse(toX,toY,button);
+    return pressButton(fromX,fromY,button)
+           .releaseButton(toX,toY,button);
   }
   
   public BotBuddy endFastMode() {
@@ -494,6 +494,20 @@ public class BotBuddy implements Duplicable<BotBuddy> {
     return click(x,y).paste(text);
   }
   
+  public BotBuddy pressButton(int button) {
+    bot.mousePress(button);
+    
+    if(isReleaseMode) {
+      pressedButtons.addFirst(button);
+    }
+    
+    return checkIfSafe();
+  }
+  
+  public BotBuddy pressButton(int x,int y,int button) {
+    return move(x,y).pressButton(button);
+  }
+  
   public BotBuddy pressKey(int keyCode) {
     bot.keyPress(keyCode);
     
@@ -506,20 +520,6 @@ public class BotBuddy implements Duplicable<BotBuddy> {
   
   public BotBuddy pressKey(int x,int y,int keyCode) {
     return move(x,y).pressKey(keyCode);
-  }
-  
-  public BotBuddy pressMouse(int button) {
-    bot.mousePress(button);
-    
-    if(isReleaseMode) {
-      pressedButtons.addFirst(button);
-    }
-    
-    return checkIfSafe();
-  }
-  
-  public BotBuddy pressMouse(int x,int y,int button) {
-    return move(x,y).pressMouse(button);
   }
   
   public BufferedImage printScreen() throws SecurityException {
@@ -538,6 +538,20 @@ public class BotBuddy implements Duplicable<BotBuddy> {
   
   public BufferedImage printScreen(int x,int y,int width,int height) throws SecurityException {
     return printScreen(new Rectangle(x,y,width,height));
+  }
+  
+  public BotBuddy releaseButton(int button) {
+    bot.mouseRelease(button);
+    
+    if(isReleaseMode) {
+      pressedButtons.removeFirstOccurrence(button);
+    }
+    
+    return checkIfSafe();
+  }
+  
+  public BotBuddy releaseButton(int x,int y,int button) {
+    return move(x,y).releaseButton(button);
   }
   
   public BotBuddy releaseButtons() {
@@ -568,20 +582,6 @@ public class BotBuddy implements Duplicable<BotBuddy> {
     }
     
     return this;
-  }
-  
-  public BotBuddy releaseMouse(int button) {
-    bot.mouseRelease(button);
-    
-    if(isReleaseMode) {
-      pressedButtons.removeFirstOccurrence(button);
-    }
-    
-    return checkIfSafe();
-  }
-  
-  public BotBuddy releaseMouse(int x,int y,int button) {
-    return move(x,y).releaseMouse(button);
   }
   
   public BotBuddy releasePressed() {

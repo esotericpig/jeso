@@ -1381,16 +1381,16 @@ public class BotBuddyCode implements Closeable {
           default: buddy.paste(inst.getInt(0),inst.getInt(1),inst.getStr(2)); break;
         }
       });
+      put("pressbutton",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 1:  buddy.pressButton(inst.getInt(0)); break;
+          default: buddy.pressButton(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
+        }
+      });
       put("presskey",(buddy,inst) -> {
         switch(inst.args.length) {
           case 1:  buddy.pressKey(inst.getInt(0)); break;
           default: buddy.pressKey(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
-        }
-      });
-      put("pressmouse",(buddy,inst) -> {
-        switch(inst.args.length) {
-          case 1:  buddy.pressMouse(inst.getInt(0)); break;
-          default: buddy.pressMouse(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
         }
       });
       put("printscreen",(buddy,inst) -> {
@@ -1424,6 +1424,12 @@ public class BotBuddyCode implements Closeable {
           throw inst.buildParseCodeException("Failed to save screenshot: " + file.getAbsolutePath(),ex);
         }
       });
+      put("releasebutton",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 1:  buddy.releaseButton(inst.getInt(0)); break;
+          default: buddy.releaseButton(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
+        }
+      });
       put("releasebuttons",(buddy,inst) -> buddy.releaseButtons());
       put("releasekey",(buddy,inst) -> {
         switch(inst.args.length) {
@@ -1432,12 +1438,6 @@ public class BotBuddyCode implements Closeable {
         }
       });
       put("releasekeys",(buddy,inst) -> buddy.releaseKeys());
-      put("releasemouse",(buddy,inst) -> {
-        switch(inst.args.length) {
-          case 1:  buddy.releaseMouse(inst.getInt(0)); break;
-          default: buddy.releaseMouse(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
-        }
-      });
       put("releasepressed",(buddy,inst) -> buddy.releasePressed());
       put("rightclick",(buddy,inst) -> {
         switch(inst.args.length) {

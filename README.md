@@ -327,12 +327,12 @@ buddy.beep()
      .move(int x,int y)
      .paste([String text])
      .paste([int x,int y,String text])
+     .pressButton([int x,int y],int button)
      .pressKey([int x,int y],int keyCode)
-     .pressMouse([int x,int y],int button)
+     .releaseButton([int x,int y],int button)
      .releaseButtons()
      .releaseKey([int x,int y],int keyCode)
      .releaseKeys()
-     .releaseMouse([int x,int y],int button)
      .releasePressed()
      .rightClick([int x,int y])
      .shortcut(BotBuddy.Shortcut shortcut)
@@ -400,7 +400,8 @@ When writing your own scripts, you can use these helper methods:
 
 Alternatively, you can do one of the following for getting the mouse coordinates:
 
-- Linux: Install `xdotool` and run `xdotool getmouselocation`.
+- Linux:
+    - Install "xdotool" and do: `xdotool getmouselocation`
 
 Similar projects:
 
