@@ -252,6 +252,7 @@ public class BotBuddy implements Duplicable<BotBuddy> {
   public BotBuddy beginFastMode() {
     // Do NOT check if "getAutoDelay() == fastDelay" and bail because it will mess up #endFastMode()
     // - If #endFastMode() also checks it, then it will always be true (after this call)
+    // - This will also affect #doubleClick(int).
     return stash().setAutoDelay(fastDelay);
   }
   
@@ -370,19 +371,16 @@ public class BotBuddy implements Duplicable<BotBuddy> {
   }
   
   public BotBuddy doubleClick(int button) {
-    Stash stash = null;
+    final boolean stash = (getAutoDelay() != fastDelay);
     
-    if(getAutoDelay() != fastDelay) {
-      stash = new Stash();
-      setAutoDelay(fastDelay);
+    if(stash) {
+      beginFastMode();
     }
     
     click(button).click(button);
     
-    if(stash != null) {
-      stash.clear();
-      stash = null;
-      delayAuto();
+    if(stash) {
+      endFastMode();
     }
     
     return this;
@@ -406,7 +404,17 @@ public class BotBuddy implements Duplicable<BotBuddy> {
   }
   
   public BotBuddy endFastMode() {
-    return unstash();
+    final int fastDelay = getAutoDelay(); // See #beginFastMode()
+    
+    unstash();
+    
+    final int remainingDelay = getAutoDelay() - fastDelay;
+    
+    if(remainingDelay > 0) {
+      delay(remainingDelay);
+    }
+    
+    return this;
   }
   
   public BotBuddy endSafeMode() {
@@ -607,6 +615,7 @@ public class BotBuddy implements Duplicable<BotBuddy> {
     
     if(stash != null) {
       stash.clear();
+      stash = null;
     }
     
     return this;
@@ -1007,15 +1016,15 @@ public class BotBuddy implements Duplicable<BotBuddy> {
     public static final Shortcut PASTE_MACOS;
     
     static {
-      PASTE_DEFAULT = (buddy) -> buddy.pressKey(KeyEvent.VK_CONTROL)
-                                      .pressKey(KeyEvent.VK_V)
-                                      .releaseKey(KeyEvent.VK_V)
-                                      .releaseKey(KeyEvent.VK_CONTROL);
-      PASTE_MACOS = (buddy) -> buddy.pressKey(KeyEvent.VK_META)
+      PASTE_DEFAULT = buddy -> buddy.pressKey(KeyEvent.VK_CONTROL)
                                     .pressKey(KeyEvent.VK_V)
                                     .releaseKey(KeyEvent.VK_V)
-                                    .releaseKey(KeyEvent.VK_META);
-      PASTE = (buddy) -> {
+                                    .releaseKey(KeyEvent.VK_CONTROL);
+      PASTE_MACOS = buddy -> buddy.pressKey(KeyEvent.VK_META)
+                                  .pressKey(KeyEvent.VK_V)
+                                  .releaseKey(KeyEvent.VK_V)
+                                  .releaseKey(KeyEvent.VK_META);
+      PASTE = buddy -> {
         switch(buddy.getOSFamily()) {
           case MACOS: return PASTE_MACOS.press(buddy);
         }
