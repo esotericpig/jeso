@@ -196,7 +196,7 @@ public final class Arys {
   
   @SafeVarargs
   public static <T> T[] unique(T... ary) {
-    if(ary.length < 2) {
+    if(ary.length < 1) {
       return ary;
     }
     
