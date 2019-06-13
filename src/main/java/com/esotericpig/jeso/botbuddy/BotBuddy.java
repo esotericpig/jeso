@@ -444,25 +444,19 @@ public class BotBuddy implements Duplicable<BotBuddy> {
   }
   
   public BotBuddy leftClick() {
-    bot.mousePress(leftButton);
-    bot.mouseRelease(leftButton);
-    
-    return checkIfSafe();
+    return click(leftButton);
   }
   
   public BotBuddy leftClick(int x,int y) {
-    return move(x,y).leftClick();
+    return click(x,y,leftButton);
   }
   
   public BotBuddy middleClick() {
-    bot.mousePress(middleButton);
-    bot.mouseRelease(middleButton);
-    
-    return checkIfSafe();
+    return click(middleButton);
   }
   
   public BotBuddy middleClick(int x,int y) {
-    return move(x,y).middleClick();
+    return click(x,y,middleButton);
   }
   
   public BotBuddy move(int x,int y) {
@@ -615,14 +609,11 @@ public class BotBuddy implements Duplicable<BotBuddy> {
   }
   
   public BotBuddy rightClick() {
-    bot.mousePress(rightButton);
-    bot.mouseRelease(rightButton);
-    
-    return checkIfSafe();
+    return click(rightButton);
   }
   
   public BotBuddy rightClick(int x,int y) {
-    return move(x,y).rightClick();
+    return click(x,y,rightButton);
   }
   
   public BotBuddy rollButtons(int... buttons) {
