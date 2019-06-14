@@ -448,7 +448,7 @@ public class BotBuddy implements Duplicable<BotBuddy> {
   }
   
   public BotBuddy leftClick(int x,int y) {
-    return click(x,y,leftButton);
+    return move(x,y).leftClick();
   }
   
   public BotBuddy middleClick() {
@@ -456,7 +456,7 @@ public class BotBuddy implements Duplicable<BotBuddy> {
   }
   
   public BotBuddy middleClick(int x,int y) {
-    return click(x,y,middleButton);
+    return move(x,y).middleClick();
   }
   
   public BotBuddy move(int x,int y) {
@@ -613,7 +613,7 @@ public class BotBuddy implements Duplicable<BotBuddy> {
   }
   
   public BotBuddy rightClick(int x,int y) {
-    return click(x,y,rightButton);
+    return move(x,y).rightClick();
   }
   
   public BotBuddy rollButtons(int... buttons) {
