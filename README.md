@@ -54,8 +54,16 @@ Alternatively, you can build everything into one "fat" jar (including dependent 
 | Class | Summary | Javadoc | File |
 | ----- | ------- | ------- | ---- |
 | [BotBuddy](#botbuddy) | Wrapper around [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html) | - | [BotBuddy.java](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddy.java) |
+| BotBuddy.Shortcut | Functional interface for automatic operations for [BotBuddy](#botbuddy) | - | [BotBuddy.java#Shortcut](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddy.java) |
 | [BotBuddyCode](#botbuddycode) | Very simple scripting "language" interpreter for [BotBuddy](#botbuddy) | - | [BotBuddyCode.java](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddyCode.java) |
 | [BotBuddyCodeApp](#botbuddycodeapp) | Simple CLI app for [BotBuddyCode](#botbuddycode) that can take in a file or read piped-in input (pipeline) | - | [BotBuddyCodeApp.java](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddyCodeApp.java) |
+
+[Code Package](#code-package)
+
+| Class | Summary | Javadoc | File |
+| ----- | ------- | ------- | ---- |
+| LineOfCode | Immutable class that stores a Line Number and Line Column | - | [LineOfCode.java](src/main/java/com/esotericpig/jeso/code/LineOfCode.java) |
+| ParseCodeException | Runtime Exception that can store a [LineOfCode](#lineofcode) and build a detailed message with it | - | [ParseCodeException.java](src/main/java/com/esotericpig/jeso/code/ParseCodeException.java) |
 
 [IO Package](#io-package)
 
