@@ -250,10 +250,12 @@ println( Sys.OS_NAME );
 // Uses the OSFamily enum
 println( Sys.OS_FAMILY );
 
-// Gets a System property and ignores SecurityException if thrown (will return the specified default value)
-// - If you use System.getProperty(...), then it can potentially throw a SecurityException,
-//   but you might want your app to continue to work even if "os.name" is blocked from being read
-println( Sys.getSafeProp("os.name",null) );
+// Gets a System property and ignores SecurityException if thrown
+// (will return the specified default value or null)
+// - If you use System.getProperty(...), then it can potentially throw a SecurityException, but
+//   you might want your app to continue to work even if "os.name" is blocked from being read
+println( Sys.getSafeProp("os.name") ); // If not set, null is the default value
+println( Sys.getSafeProp("os.name","Unknown") );
 ```
 
 ### [BotBuddy Package](#code)

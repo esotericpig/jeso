@@ -25,6 +25,10 @@ public final class Sys {
   public static final String OS_NAME = getSafeProp("os.name","Unknown");
   public static final OSFamily OS_FAMILY = OSFamily.guessFromName(OS_NAME);
   
+  public static String getSafeProp(String key) {
+    return getSafeProp(key,null);
+  }
+  
   public static String getSafeProp(String key,String def) {
     try {
       return System.getProperty(key,def);
