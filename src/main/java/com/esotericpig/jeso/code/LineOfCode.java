@@ -44,7 +44,9 @@ public final class LineOfCode {
     return next(maxColumn,1);
   }
   
-  public LineOfCode next(final int maxColumn,final int columnInc) {
+  public LineOfCode next(final int maxColumn,int columnInc) {
+    columnInc = Math.abs(columnInc);
+    
     final int col = column + columnInc;
     
     if(col > maxColumn) {
@@ -78,7 +80,9 @@ public final class LineOfCode {
     return prev(maxColumn,1);
   }
   
-  public LineOfCode prev(final int maxColumn,final int columnDec) {
+  public LineOfCode prev(final int maxColumn,int columnDec) {
+    columnDec = Math.abs(columnDec);
+    
     final int col = column - columnDec;
     
     if(col < 1) {
