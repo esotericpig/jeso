@@ -324,6 +324,14 @@ public class BotBuddy implements Duplicable<BotBuddy> {
     return move(x,y).click(button);
   }
   
+  public BotBuddy clicks(int... buttons) {
+    for(int button: buttons) {
+      click(button);
+    }
+    
+    return this;
+  }
+  
   public BotBuddy copy(String text) {
     return copy(text,null);
   }
