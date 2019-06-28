@@ -661,7 +661,7 @@ public class BotBuddy implements Duplicable<BotBuddy> {
     return checkIfSafe();
   }
   
-  public BotBuddy type(int... keyCodes) {
+  public BotBuddy types(int... keyCodes) {
     for(int keyCode: keyCodes) {
       type(keyCode);
     }
