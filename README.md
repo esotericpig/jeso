@@ -40,36 +40,40 @@ Alternatively, you can build everything into one "fat" jar (including dependent 
 
 ## [Code](#contents)
 
-| Class | Summary | Javadoc | File |
-| ----- | ------- | ------- | ---- |
-| [Arys](#arys) | Utility class for Arrays | - | [Arys.java](src/main/java/com/esotericpig/jeso/Arys.java) |
-| [Bools](#bools) | Utility class for Booleans | - | [Bools.java](src/main/java/com/esotericpig/jeso/Bools.java) |
-| [Duplicable](#duplicable) | Generic replacement for Cloneable/clone() | - | [Duplicable.java](src/main/java/com/esotericpig/jeso/Duplicable.java) |
-| [OSFamily](#osfamily) | Enum for guessing the OS family from a String | - | [OSFamily.java](src/main/java/com/esotericpig/jeso/OSFamily.java) |
-| [Strs](#strs) | Utility class for Strings | - | [Strs.java](src/main/java/com/esotericpig/jeso/Strs.java) |
-| [Sys](#sys) | Utility class for System | - | [Sys.java](src/main/java/com/esotericpig/jeso/Sys.java) |
+[Jeso Javadoc](https://esotericpig.github.io/docs/jeso/javadoc/index.html)
 
-[BotBuddy Package](#botbuddy-package)
+Top Package [[Javadoc](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/package-summary.html)]
 
 | Class | Summary | Javadoc | File |
 | ----- | ------- | ------- | ---- |
-| [BotBuddy](#botbuddy) | Wrapper around [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html) | - | [BotBuddy.java](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddy.java) |
-| BotBuddy.Shortcut | Functional interface for automatic operations for [BotBuddy](#botbuddy) | - | [BotBuddy.java#Shortcut](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddy.java) |
-| [BotBuddyCode](#botbuddycode) | Very simple scripting "language" interpreter for [BotBuddy](#botbuddy) | - | [BotBuddyCode.java](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddyCode.java) |
-| [BotBuddyCodeApp](#botbuddycodeapp) | Simple CLI app for [BotBuddyCode](#botbuddycode) that can take in a file or read piped-in input (pipeline) | - | [BotBuddyCodeApp.java](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddyCodeApp.java) |
+| [Arys](#arys) | Utility class for Arrays | [Arys.html](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/Arys.html) | [Arys.java](src/main/java/com/esotericpig/jeso/Arys.java) |
+| [Bools](#bools) | Utility class for Booleans | [Bools.html](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/Bools.html) | [Bools.java](src/main/java/com/esotericpig/jeso/Bools.java) |
+| [Duplicable](#duplicable) | Generic replacement for Cloneable/clone() | [Duplicable.html](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/Duplicable.html) | [Duplicable.java](src/main/java/com/esotericpig/jeso/Duplicable.java) |
+| [OSFamily](#osfamily) | Enum for guessing the OS family from a String | [OSFamily.html](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/OSFamily.html) | [OSFamily.java](src/main/java/com/esotericpig/jeso/OSFamily.java) |
+| [Strs](#strs) | Utility class for Strings | [Strs.html](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/Strs.html) | [Strs.java](src/main/java/com/esotericpig/jeso/Strs.java) |
+| [Sys](#sys) | Utility class for System | [Sys.html](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/Sys.html) | [Sys.java](src/main/java/com/esotericpig/jeso/Sys.java) |
 
-[Code Package](#code-package)
-
-| Class | Summary | Javadoc | File |
-| ----- | ------- | ------- | ---- |
-| LineOfCode | Immutable class that stores a Line Number and Line Column | - | [LineOfCode.java](src/main/java/com/esotericpig/jeso/code/LineOfCode.java) |
-| ParseCodeException | Runtime Exception that can store a [LineOfCode](#lineofcode) and build a detailed message with it | - | [ParseCodeException.java](src/main/java/com/esotericpig/jeso/code/ParseCodeException.java) |
-
-[IO Package](#io-package)
+[BotBuddy Package](#botbuddy-package) [[Javadoc](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/botbuddy/package-summary.html)]
 
 | Class | Summary | Javadoc | File |
 | ----- | ------- | ------- | ---- |
-| [StringListReader](#stringlistreader) | Reader for a list of Strings | - | [StringListReader.java](src/main/java/com/esotericpig/jeso/io/StringListReader.java) |
+| [BotBuddy](#botbuddy) | Wrapper around [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html) | [BotBuddy.html](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/botbuddy/BotBuddy.html) | [BotBuddy.java](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddy.java) |
+| BotBuddy.Shortcut | Functional interface for automatic operations for [BotBuddy](#botbuddy) | [BotBuddy.Shortcut.html](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/botbuddy/BotBuddy.Shortcut.html) | [BotBuddy.java#Shortcut](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddy.java) |
+| [BotBuddyCode](#botbuddycode) | Very simple scripting "language" interpreter for [BotBuddy](#botbuddy) | [BotBuddyCode.html](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/botbuddy/BotBuddyCode.html) | [BotBuddyCode.java](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddyCode.java) |
+| [BotBuddyCodeApp](#botbuddycodeapp) | Simple CLI app for [BotBuddyCode](#botbuddycode) that can take in a file or read piped-in input (pipeline) | [BotBuddyCodeApp.html](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/botbuddy/BotBuddyCodeApp.html) | [BotBuddyCodeApp.java](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddyCodeApp.java) |
+
+[Code Package](#code-package) [[Javadoc](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/code/package-summary.html)]
+
+| Class | Summary | Javadoc | File |
+| ----- | ------- | ------- | ---- |
+| LineOfCode | Immutable class that stores a Line Number and Line Column | [LineOfCode.html](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/code/LineOfCode.html) | [LineOfCode.java](src/main/java/com/esotericpig/jeso/code/LineOfCode.java) |
+| ParseCodeException | Runtime Exception that can store a [LineOfCode](#lineofcode) and build a detailed message with it | [ParseCodeException.html](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/code/ParseCodeException.html) | [ParseCodeException.java](src/main/java/com/esotericpig/jeso/code/ParseCodeException.java) |
+
+[IO Package](#io-package) [[Javadoc](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/io/package-summary.html)]
+
+| Class | Summary | Javadoc | File |
+| ----- | ------- | ------- | ---- |
+| [StringListReader](#stringlistreader) | Reader for a list of Strings | [StringListReader.html](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/io/StringListReader.html) | [StringListReader.java](src/main/java/com/esotericpig/jeso/io/StringListReader.java) |
 
 #### [Arys](#code)
 
