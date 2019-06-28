@@ -1260,7 +1260,7 @@ public class BotBuddyCode implements Closeable {
      *   because a JUnit test will fail if an entry has been overwritten accidentally.
      * </pre>
      */
-    public static final int BASE_COUNT = 52;
+    public static final int BASE_COUNT = 70;
     
     protected Map<String,Executor> entries;
     
@@ -1325,6 +1325,7 @@ public class BotBuddyCode implements Closeable {
           default: buddy.click(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
         }
       });
+      put("clicks",(buddy,inst) -> buddy.clicks(inst.getInts()));
       put("copy",(buddy,inst) -> buddy.copy(inst.getStr(0)));
       put("delay",(buddy,inst) -> buddy.delay(inst.getInt(0)));
       put("delayauto",(buddy,inst) -> buddy.delayAuto());
@@ -1386,12 +1387,14 @@ public class BotBuddyCode implements Closeable {
           default: buddy.pressButton(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
         }
       });
+      put("pressbuttons",(buddy,inst) -> buddy.pressButtons(inst.getInts()));
       put("presskey",(buddy,inst) -> {
         switch(inst.args.length) {
           case 1:  buddy.pressKey(inst.getInt(0)); break;
           default: buddy.pressKey(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
         }
       });
+      put("presskeys",(buddy,inst) -> buddy.pressKeys(inst.getInts()));
       put("printscreen",(buddy,inst) -> {
         BufferedImage image = null;
         
@@ -1429,14 +1432,24 @@ public class BotBuddyCode implements Closeable {
           default: buddy.releaseButton(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
         }
       });
-      put("releasebuttons",(buddy,inst) -> buddy.releaseButtons());
+      put("releasebuttons",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 0:  buddy.releaseButtons(); break;
+          default: buddy.releaseButtons(inst.getInts()); break;
+        }
+      });
       put("releasekey",(buddy,inst) -> {
         switch(inst.args.length) {
           case 1:  buddy.releaseKey(inst.getInt(0)); break;
           default: buddy.releaseKey(inst.getInt(0),inst.getInt(1),inst.getInt(2)); break;
         }
       });
-      put("releasekeys",(buddy,inst) -> buddy.releaseKeys());
+      put("releasekeys",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 0:  buddy.releaseKeys(); break;
+          default: buddy.releaseKeys(inst.getInts()); break;
+        }
+      });
       put("releasepressed",(buddy,inst) -> buddy.releasePressed());
       put("rightclick",(buddy,inst) -> {
         switch(inst.args.length) {
@@ -1444,8 +1457,11 @@ public class BotBuddyCode implements Closeable {
           default: buddy.rightClick(inst.getInt(0),inst.getInt(1)); break;
         }
       });
+      put("rollbuttons",(buddy,inst) -> buddy.rollButtons(inst.getInts()));
+      put("rollkeys",(buddy,inst) -> buddy.rollKeys(inst.getInts()));
       put("stash",(buddy,inst) -> buddy.stash());
       put("type",(buddy,inst) -> buddy.type(inst.getInt(0)));
+      put("types",(buddy,inst) -> buddy.types(inst.getInts()));
       put("unstash",(buddy,inst) -> buddy.unstash());
       put("waitforidle",(buddy,inst) -> buddy.waitForIdle());
       put("wheel",(buddy,inst) -> buddy.wheel(inst.getInt(0)));
@@ -1506,6 +1522,15 @@ public class BotBuddyCode implements Closeable {
       });
       
       // Getters
+      put("getautodelay",(buddy,inst) -> System.out.println(buddy.getAutoDelay()));
+      put("isautodelay",(buddy,inst) -> System.out.println(buddy.isAutoDelay()));
+      put("isautowaitforidle",(buddy,inst) -> System.out.println(buddy.isAutoWaitForIdle()));
+      put("getdefaultbutton",(buddy,inst) -> System.out.println(buddy.getDefaultButton()));
+      put("getfastdelay",(buddy,inst) -> System.out.println(buddy.getFastDelay()));
+      put("getleftbutton",(buddy,inst) -> System.out.println(buddy.getLeftButton()));
+      put("getlongdelay",(buddy,inst) -> System.out.println(buddy.getLongDelay()));
+      put("getmiddlebutton",(buddy,inst) -> System.out.println(buddy.getMiddleButton()));
+      put("getosfamily",(buddy,inst) -> System.out.println(buddy.getOSFamily()));
       put("getpixel",(buddy,inst) -> {
         // Probably don't need alpha I think; probably always 255
         Color pixel = buddy.getPixel(inst.getInt(0),inst.getInt(1));
@@ -1520,7 +1545,9 @@ public class BotBuddyCode implements Closeable {
         
         System.out.println(sb);
       });
-      put("getosfamily",(buddy,inst) -> System.out.println(buddy.getOSFamily()));
+      put("isreleasemode",(buddy,inst) -> System.out.println(buddy.isReleaseMode()));
+      put("getrightbutton",(buddy,inst) -> System.out.println(buddy.getRightButton()));
+      put("issafemode",(buddy,inst) -> System.out.println(buddy.isSafeMode()));
       put("getscreenheight",(buddy,inst) -> System.out.println(buddy.getScreenHeight()));
       put("getscreensize",(buddy,inst) -> {
         Dimension size = buddy.getScreenSize();
@@ -1528,6 +1555,7 @@ public class BotBuddyCode implements Closeable {
         System.out.println("" + size.width + "x" + size.height);
       });
       put("getscreenwidth",(buddy,inst) -> System.out.println(buddy.getScreenWidth()));
+      put("getshortdelay",(buddy,inst) -> System.out.println(buddy.getShortDelay()));
     }
     
     public boolean contains(String id) {
@@ -1603,7 +1631,7 @@ public class BotBuddyCode implements Closeable {
       return TO_ID_PATTERN.matcher(name).replaceAll("").toLowerCase(Locale.ENGLISH);
     }
     
-    public Arg[] args;
+    public Arg[] args = new Arg[0];
     public String id;
     public LineOfCode loc;
     public String name;
@@ -1669,6 +1697,29 @@ public class BotBuddyCode implements Closeable {
       }
     }
     
+    public int[] getInts() throws ParseCodeException {
+      return getInts(1);
+    }
+    
+    public int[] getInts(int minArgCount) throws ParseCodeException {
+      int[] ints = new int[args.length];
+      
+      // Throw an exception if doesn't have the minimum number of args
+      for(int i = 0; i < minArgCount; ++i) {
+        int j = getInt(i); // Separate var, else ArrayIndexOutOfBoundsException
+        
+        ints[i] = j;
+      }
+      
+      for(int i = minArgCount; i < args.length; ++i) {
+        int j = getInt(i);
+        
+        ints[i] = j;
+      }
+      
+      return ints;
+    }
+    
     public String getStr(int index) throws ParseCodeException {
       return getArg(index).value;
     }
@@ -1696,8 +1747,6 @@ public class BotBuddyCode implements Closeable {
     
     public UserMethod(LineOfCode loc,String name) {
       super(loc,name);
-      
-      setArgs(new Arg[0]);
     }
   }
 }
