@@ -11,34 +11,50 @@ Name = Java + gesso + esoteric.
 ## Contents
 
 - [Requirements](#requirements)
+- [Setup](#setup)
+    - [Pre-Release](#pre-release)
 - [Using](#using)
-- [Code](#code)
 - [License](#license)
 
 ## [Requirements](#contents)
 
 - Java 8 or later
 
-## [Using](#contents)
+## [Setup](#contents)
 
-Currently, an official release hasn't been made yet, but you can go ahead and use it in your project by building a pre-release yourself:
+Please download & use the latest [Release](https://github.com/esotericpig/jeso/releases).
 
-- `$ ./gradlew(.bat) clean buildRelease -x check -x test`
+Gradle/Maven support is not available at this time, so you'll have to include the files manually.
 
-You can probably safely exclude "check" and "test" to build it faster, as those checks should have already been run when committing the code.
+### [Pre-Release](#contents)
+
+To build a pre-release, please do the following:
+
+```
+$ git clone 'https://github.com/esotericpig/jeso.git'
+$ cd jeso
+$ ./gradlew(.bat) clean buildRelease -x check -x test
+```
+
+You can probably safely exclude *check* and *test* (like in the above example) to build it faster (i.e., to not download & install development/test dependencies), as those checks should have already been run when committing the code.
 
 Then use the following files in your project:
 
-- build/libs/jeso-*.jar
-- build/libs/jeso-*-sources.jar
-- build/distributions/jeso-*-javadoc.zip
+| Release Files |
+| --- |
+| build/libs/jeso-x.x.x.jar |
+| build/libs/jeso-x.x.x-sources.jar |
+| build/distributions/jeso-x.x.x-javadoc.zip |
 
 Alternatively, you can build everything into one "fat" jar (including dependent jars):
 
-- `$ ./gradlew(.bat) clean buildFatRelease -x check -x test`
-- build/libs/jeso-*-all.jar
+`$ ./gradlew(.bat) clean buildFatRelease -x check -x test`
 
-## [Code](#contents)
+| Release Files |
+| --- |
+| build/libs/jeso-x.x.x-all.jar |
+
+## [Using](#contents)
 
 [Jeso Javadoc](https://esotericpig.github.io/docs/jeso/javadoc/index.html)
 
