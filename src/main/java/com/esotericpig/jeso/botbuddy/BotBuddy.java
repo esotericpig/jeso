@@ -202,7 +202,7 @@ public class BotBuddy implements Duplicable<BotBuddy> {
     tool = buddy.tool;
     
     for(Stash stash: buddy.stashes) {
-      stashes.addLast(new Stash(stash));
+      stashes.addLast(stash.dup());
     }
   }
   
