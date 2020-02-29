@@ -12,6 +12,10 @@ Name = Java + gesso + esoteric.
 
 - [Requirements](#requirements)
 - [Setup](#setup)
+    - [GitHub Packages](github-packages)
+        - [Gradle](#gradle)
+        - [Maven](#maven)
+    - [Manually](#manually)
     - [Pre-Release](#pre-release)
 - [Using](#using)
 - [License](#license)
@@ -22,9 +26,78 @@ Name = Java + gesso + esoteric.
 
 ## [Setup](#contents)
 
-Please download & use the latest [Release](https://github.com/esotericpig/jeso/releases).
+Pick your poison...
 
-Gradle/Maven support is not available at this time, so you'll have to include the files manually.
+### [GitHub Packages](#contents)
+
+You can view the packages for this project [here](https://github.com/esotericpig/jeso/packages).
+
+You can either use Gradle or Maven...
+
+#### [Gradle](#contents)
+
+I have tested this and can verify that it works.
+
+In your **build.gradle**:
+```
+repositories {
+  maven {
+    name = 'Jeso GitHub Package'
+    url = uri('https://maven.pkg.github.com/esotericpig/jeso')
+  }
+}
+
+dependencies {
+  // TODO: Edit the version appropriately!
+  implementation 'com.esotericpig.jeso:jeso:X.X.X'
+}
+```
+
+#### [Maven](#contents)
+
+I haven't tested this, but it should work. If it doesn't, please create an [issue](https://github.com/esotericpig/jeso/issues).
+
+In your **pom.xml** (edit the version appropriately!):
+```
+<repositories>
+  <repository>
+    <id>github</id>
+    <name>Jeso GitHub Package</name>
+    <url>https://maven.pkg.github.com/esotericpig/jeso</url>
+  </repository>
+</repositories>
+
+<dependencies>
+  <dependency>
+    <groupId>com.esotericpig</groupId>
+    <artifactId>jeso</artifactId>
+    <version>X.X.X</version>
+  </dependency>
+</dependencies>
+```
+
+Install the package:
+```
+$ mvn install
+```
+
+### [Manually](#contents)
+
+Download the latest [Release](https://github.com/esotericpig/jeso/releases).
+
+Then import the following files into your project:
+
+| Release Files |
+| --- |
+| build/libs/jeso-x.x.x.jar |
+| build/libs/jeso-x.x.x-sources.jar |
+| build/distributions/jeso-x.x.x-javadoc.zip |
+
+Alternatively, you can just import this one file, but it also includes dependent jars (if any):
+
+| Release Files |
+| --- |
+| build/libs/jeso-x.x.x-all.jar |
 
 ### [Pre-Release](#contents)
 
@@ -38,7 +111,7 @@ $ ./gradlew(.bat) clean buildRelease -x check -x test
 
 You can probably safely exclude *check* and *test* (like in the above example) to build it faster (i.e., to not download & install development/test dependencies), as those checks should have already been run when committing the code.
 
-Then use the following files in your project:
+Then import the following files into your project:
 
 | Release Files |
 | --- |
@@ -46,7 +119,7 @@ Then use the following files in your project:
 | build/libs/jeso-x.x.x-sources.jar |
 | build/distributions/jeso-x.x.x-javadoc.zip |
 
-Alternatively, you can build everything into one "fat" jar (including dependent jars):
+Alternatively, you can build everything into one "fat" jar, which includes dependent jars (if any):
 
 `$ ./gradlew(.bat) clean buildFatRelease -x check -x test`
 
@@ -91,11 +164,13 @@ Top Package [[Javadoc](https://esotericpig.github.io/docs/jeso/javadoc/com/esote
 | ----- | ------- | ------- | ---- |
 | [StringListReader](#stringlistreader) | Reader for a list of Strings | [StringListReader.html](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/io/StringListReader.html) | [StringListReader.java](src/main/java/com/esotericpig/jeso/io/StringListReader.java) |
 
-#### [Arys](#code)
+#### [Arys](#using)
 
 A utility class for Arrays.
 
 ```Groovy
+import com.esotericpig.jeso.Arys;
+
 String[] breakfast = {"coffee","coffee",null,"eggs","eggs",null,"toast","turkey sausage"};
 String[] newArray = null;
 Random rand = new Random();
@@ -151,16 +226,18 @@ newArray = Arys.toArray(breakfast,Arrays.asList(breakfast));
 println( newArray + "][" + newArray.length + "]" );
 ```
 
-#### [Bools](#code)
+#### [Bools](#using)
 
 A utility class for Booleans.
 
 ```Java
+import com.esotericpig.jeso.Bools;
+
 // ["1","on","t","true","y","yes"] are all true and case-insensitive
 Bools.parse("On"); // true
 ```
 
-#### [Duplicable](#code)
+#### [Duplicable](#using)
 
 A Generic replacement for Cloneable/clone().
 
@@ -227,13 +304,15 @@ class Alumnus extends Student {
 }
 ```
 
-#### [OSFamily](#code)
+#### [OSFamily](#using)
 
 An enum for guessing the [OS family](https://en.wikipedia.org/wiki/Category:Operating_system_families) from a String.
 
 Most users will only need [Sys.OS_FAMILY](#sys).
 
 ```Groovy
+import com.esotericpig.jeso.OSFamily;
+
 Random rand = new Random();
 
 // Used for testing
@@ -249,11 +328,13 @@ println( OSFamily.guessFromName("Microsoft Windows XP") );
 println( OSFamily.guessFromName("TempleOS") );
 ```
 
-#### [Strs](#code)
+#### [Strs](#using)
 
 A utility class for Strings.
 
 ```Groovy
+import com.esotericpig.jeso.Strs;
+
 // Remove (left) leading whitespace; mutable
 // - 'Hello World   '
 println( "'" + Strs.ltrim(new StringBuilder("   Hello World   ")) + "'" );
@@ -267,11 +348,13 @@ println( "'" + Strs.rtrim(new StringBuilder("   Hello World   ")) + "'" );
 println( "'" + Strs.trim(new StringBuilder("   Hello World   ")) + "'" );
 ```
 
-#### [Sys](#code)
+#### [Sys](#using)
 
 A utility class for System.
 
 ```Groovy
+import com.esotericpig.jeso.Sys;
+
 // "Unknown" if not set
 println( Sys.OS_NAME );
 
@@ -286,9 +369,9 @@ println( Sys.getSafeProp("os.name") ); // If not set, null is the default value
 println( Sys.getSafeProp("os.name","Unknown") );
 ```
 
-### [BotBuddy Package](#code)
+### [BotBuddy Package](#using)
 
-#### [BotBuddy](#code)
+#### [BotBuddy](#using)
 
 A wrapper around [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html).
 
@@ -444,7 +527,7 @@ Similar projects:
 - Robot-Utils by Denys Shynkarenko (@Denysss) [[GitHub](https://github.com/Denysss/Robot-Utils)]
 - Automaton by Renato Athaydes (@renatoathaydes) [[GitHub](https://github.com/renatoathaydes/Automaton)]
 
-#### [BotBuddyCode](#code)
+#### [BotBuddyCode](#using)
 
 A very simple scripting "language" interpreter for [BotBuddy](#botbuddy). It is **not** Turing complete.
 
@@ -463,6 +546,8 @@ It can accept the following input:
 
 Example usage with a file:
 ```Java
+import com.esotericpig.jeso.botbuddy.BotBuddyCode;
+
 try(BotBuddyCode bbc = BotBuddyCode.builder(Paths.get("file.txt")).build()) {
   // Don't execute any code, just output result of interpreting:
   System.out.println(bbc.interpretDryRun());
@@ -543,7 +628,7 @@ click 1851 1021
 end_safe_mode
 ```
 
-#### [BotBuddyCodeApp](#code)
+#### [BotBuddyCodeApp](#using)
 
 A simple CLI app for [BotBuddyCode](#botbuddycode) that can take in a file or read piped-in input (pipeline).
 
@@ -579,9 +664,9 @@ $ echo 'get_pixel 100 100' | java -cp 'build/libs/*' com.esotericpig.jeso.botbud
 $ echo 'get_pixel 100 100' | java -cp 'build/libs/*' com.esotericpig.jeso.botbuddy.BotBuddyCodeApp -n
 ```
 
-### [IO Package](#code)
+### [IO Package](#using)
 
-#### [StringListReader](#code)
+#### [StringListReader](#using)
 
 A [java.io.Reader](https://docs.oracle.com/javase/8/docs/api/java/io/Reader.html) for a List of Strings.
 
@@ -592,6 +677,8 @@ For each new String in a List, it will produce a newline (`\n`).
 Example usage:
 
 ```Java
+import com.esotericpig.jeso.io.StringListReader;
+
 List<String> list = new LinkedList<>();
 list.add("name = ' hello World '");
 list.add("name.strip!");
