@@ -1,6 +1,6 @@
 /**
  * This file is part of Jeso.
- * Copyright (c) 2019 Jonathan Bradley Whited (@esotericpig)
+ * Copyright (c) 2019-2020 Jonathan Bradley Whited (@esotericpig)
  * 
  * Jeso is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -20,6 +20,7 @@ plugins {
   id 'java-library'
   id 'com.github.spotbugs' version '2.0.0'
   id 'com.diffplug.gradle.spotless' version '3.23.0'
+  id 'maven-publish'
 }
 
 import java.util.regex.Pattern
@@ -30,8 +31,9 @@ import java.util.regex.Pattern
 version                 = '0.3.3'
 ext.author              = 'Jonathan Bradley Whited (@esotericpig)'
 ext.license             = 'LGPL-3.0-or-later'
+ext.ownerName           = 'esotericpig'
 
-ext.homepage            = 'https://github.com/esotericpig/jeso'
+ext.homepage            = "https://github.com/${ext.ownerName}/jeso"
 ext.summary             = 'Java utils'
 description             = 'Java utils to make Java less verbose.'
 
@@ -262,12 +264,38 @@ task(rsyncToGhp,type: Exec) {
   }
   
   args += 'build/docs/javadoc/'
-  args += "../esotericpig.github.io/docs/${project.name}/javadoc"
+  args += "../${project.ext.ownerName}.github.io/docs/${project.name}/javadoc"
   
   doLast {
     if(isDryRun) {
       println()
       println 'Execute "./gradlew rsyncToGhp -Pdeploy=true" for actually deploying (non-dry-run)'
+    }
+  }
+}
+
+/**
+ * Publishing
+ */
+publishing {
+  repositories {
+    maven {
+      name = 'GitHubPackages'
+      url = uri("https://maven.pkg.github.com/${project.ext.ownerName}/${project.name}")
+      
+      // In ~/.gradle/gradle.properties:
+      //   gpr.user='your GitHub username'
+      //   gpr.key='your GitHub token'
+      credentials {
+        username = project.findProperty('gpr.user') ?: System.getenv("USERNAME")
+        password = project.findProperty('gpr.key') ?: System.getenv("PASSWORD")
+      }
+    }
+  }
+  
+  publications {
+    gpr(MavenPublication) {
+      from(components.java)
     }
   }
 }
