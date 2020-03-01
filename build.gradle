@@ -284,8 +284,8 @@ publishing {
       url = uri("https://maven.pkg.github.com/${project.ext.ownerName}/${project.name}")
       
       // In ~/.gradle/gradle.properties:
-      //   gpr.user='your GitHub username'
-      //   gpr.key='your GitHub token'
+      //   gpr.user=username # Your GitHub username
+      //   gpr.key=token     # Your GitHub token (or password)
       credentials {
         username = project.findProperty('gpr.user') ?: System.getenv("USERNAME")
         password = project.findProperty('gpr.key') ?: System.getenv("PASSWORD")
