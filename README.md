@@ -18,6 +18,11 @@ Name = Java + gesso + esoteric.
     - [Manually](#manually)
     - [Pre-Release](#pre-release)
 - [Using](#using)
+    - [Top Package](#top-package)
+    - [BotBuddy Package](#botbuddy-package)
+    - [Code Package](#code-package)
+    - [IO Package](#io-package)
+- [Hacking](#hacking)
 - [License](#license)
 
 ## [Requirements](#contents)
@@ -187,7 +192,7 @@ Alternatively, you can build everything into one "fat" jar, which includes depen
 
 [Jeso Javadoc](https://esotericpig.github.io/docs/jeso/javadoc/index.html)
 
-Top Package [[Javadoc](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/package-summary.html)]
+[Top Package](#top-package) [[Javadoc](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/package-summary.html)]
 
 | Class | Summary | Javadoc | File |
 | ----- | ------- | ------- | ---- |
@@ -219,6 +224,8 @@ Top Package [[Javadoc](https://esotericpig.github.io/docs/jeso/javadoc/com/esote
 | Class | Summary | Javadoc | File |
 | ----- | ------- | ------- | ---- |
 | [StringListReader](#stringlistreader) | Reader for a list of Strings | [StringListReader.html](https://esotericpig.github.io/docs/jeso/javadoc/com/esotericpig/jeso/io/StringListReader.html) | [StringListReader.java](src/main/java/com/esotericpig/jeso/io/StringListReader.java) |
+
+### [Top Package](#using)
 
 #### [Arys](#using)
 
