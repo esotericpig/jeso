@@ -32,18 +32,33 @@ Pick your poison...
 
 You can view the packages for this project [here](https://github.com/esotericpig/jeso/packages).
 
-You can either use Gradle or Maven...
+You can either use Gradle or Maven.
+
+It takes a bit more setup, but worth it since you can use any GitHub library/package afterwards.
 
 #### [Gradle](#contents)
 
-I have tested this and can verify that it works.
+See [here](https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-gradle-for-use-with-github-packages) for more information.
 
-In your **build.gradle**:
+If you don't want to use your GitHub password (recommended), first [create a token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line#creating-a-token) with at least the **read:packages** scope.
+
+In **~/.gradle/gradle.properties**:
+```Properties
+gpr.user=username # Your GitHub username
+gpr.key=token     # Your GitHub token (or password)
 ```
+
+In your project's **build.gradle**:
+```Groovy
 repositories {
   maven {
     name = 'Jeso GitHub Package'
     url = uri('https://maven.pkg.github.com/esotericpig/jeso')
+    
+    credentials {
+      username = project.findProperty('gpr.user') ?: System.getenv("USERNAME")
+      password = project.findProperty('gpr.key') ?: System.getenv("PASSWORD")
+    }
   }
 }
 
@@ -55,31 +70,72 @@ dependencies {
 
 #### [Maven](#contents)
 
-I haven't tested this, but it should work. If it doesn't, please create an [issue](https://github.com/esotericpig/jeso/issues).
+See [here](https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-apache-maven-for-use-with-github-packages) for more information.
 
-In your **pom.xml** (edit the version appropriately!):
+If you don't want to use your GitHub password (recommended), first [create a token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line#creating-a-token) with at least the **read:packages** scope.
+
+In **~/.m2/settings.xml**:
+```XML
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                      http://maven.apache.org/xsd/settings-1.0.0.xsd">
+  
+  <activeProfiles>
+    <activeProfile>github</activeProfile>
+  </activeProfiles>
+
+  <profiles>
+    <profile>
+      <id>github</id>
+      
+      <repositories>
+        <repository>
+          <id>central</id>
+          <url>https://repo1.maven.org/maven2</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+        
+        <repository>
+          <id>github</id>
+          <name>Jeso GitHub Package</name>
+          <url>https://maven.pkg.github.com/esotericpig/jeso</url>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+  
+  <servers>
+    <server>
+      <id>github</id>
+      <!-- TODO: Your GitHub username -->
+      <username>USERNAME</username>
+      <!-- TODO: Your GitHub token (or password) -->
+      <password>TOKEN</password>
+    </server>
+  </servers>
+</settings>
 ```
-<repositories>
-  <repository>
-    <id>github</id>
-    <name>Jeso GitHub Package</name>
-    <url>https://maven.pkg.github.com/esotericpig/jeso</url>
-  </repository>
-</repositories>
 
+In your project's **pom.xml**:
+```XML
 <dependencies>
   <dependency>
-    <groupId>com.esotericpig</groupId>
+    <groupId>com.esotericpig.jeso</groupId>
     <artifactId>jeso</artifactId>
+    <!-- TODO: Edit the version appropriately! -->
     <version>X.X.X</version>
   </dependency>
 </dependencies>
 ```
 
-Install the package:
+Install the package*:
 ```
 $ mvn install
 ```
+
+*If you have bad internet, you'll need to call this multiple times until it downloads.
 
 ### [Manually](#contents)
 
@@ -699,6 +755,32 @@ Also see:
 
 - [StringListReaderTest](src/test/java/com/esotericpig/jeso/io/StringListReaderTest.java)
 - [BotBuddyCode.Builder.input(List&lt;String&gt; strList)](src/main/java/com/esotericpig/jeso/botbuddy/BotBuddyCode.java)
+
+## [Hacking](#contents)
+
+For Windows, use **./gradlew.bat** instead.
+```
+$ git clone 'https://github.com/esotericpig/jeso.git'
+$ cd jeso
+$ ./gradlew tasks
+
+$ ./gradlew check
+$ ./gradlew test
+
+$ ./gradlew build
+$ ./gradlew buildRelease
+$ ./gradlew buildFatRelease
+
+$ ./gradlew publish
+
+$ ./gradlew javadocZip
+$ ./gradlew sourcesJar
+
+$ ./gradlew checkGradleW
+$ ./gradlew wgetGradleWSums
+
+$ ./gradlew rsyncToGhp
+```
 
 ## [License](#contents)
 [GNU LGPL v3+](LICENSE)
