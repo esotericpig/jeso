@@ -1473,7 +1473,7 @@ public class BotBuddyCode implements Closeable {
         }
         else {
           for(Arg arg: inst.args) {
-            System.out.print(arg.value);
+            System.out.println(arg.value);
           }
           System.out.println();
         }
