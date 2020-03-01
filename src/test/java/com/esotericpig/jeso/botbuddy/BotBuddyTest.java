@@ -125,9 +125,6 @@ public class BotBuddyTest {
     
     BotBuddy.Builder builder = null;
     
-    builder = new BotBuddy.Builder();
-    builder = new BotBuddy.Builder(new Robot());
-    
     builder = BotBuddy.builder();
     builder = BotBuddy.builder(new Robot());
     
@@ -206,11 +203,8 @@ public class BotBuddyTest {
     
     BotBuddy buddy = null;
     
-    buddy = new BotBuddy();
-    buddy = new BotBuddy(buddy);
-    buddy = new BotBuddy(BotBuddy.builder());
-    buddy = new BotBuddy(new BotBuddy.Builder());
     buddy = BotBuddy.builder().build();
+    buddy = buddy.dup();
     
     buddy.beginFastMode().endFastMode();
     buddy.beginSafeMode().endSafeMode();

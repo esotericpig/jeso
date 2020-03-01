@@ -211,7 +211,7 @@ public class BotBuddyCode implements Closeable {
   protected StringBuilder output = new StringBuilder();
   protected Map<String,UserMethod> userMethods = new HashMap<>();
   
-  public BotBuddyCode(Builder builder) throws AWTException,IOException {
+  protected BotBuddyCode(Builder builder) throws AWTException,IOException {
     if(builder.buddy == null) {
       builder.buddy(BotBuddy.builder().build());
     }
@@ -1133,34 +1133,34 @@ public class BotBuddyCode implements Closeable {
     protected BufferedReader input = null;
     protected Path path = null;
     
-    public Builder() {
+    protected Builder() {
     }
     
-    public Builder(BufferedReader input) {
+    protected Builder(BufferedReader input) {
       this();
       
       input(input);
     }
     
-    public Builder(Path path) {
+    protected Builder(Path path) {
       this();
       
       path(path);
     }
     
-    public Builder(Path path,Charset charset) {
+    protected Builder(Path path,Charset charset) {
       this();
       
       path(path,charset);
     }
     
-    public Builder(CharSequence str) {
+    protected Builder(CharSequence str) {
       this();
       
       input(str);
     }
     
-    public Builder(List<String> strList) {
+    protected Builder(List<String> strList) {
       this();
       
       input(strList);

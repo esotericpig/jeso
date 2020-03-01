@@ -330,7 +330,7 @@ class User implements Duplicable<User> {
   public String name;
   
   public User(String name) { this.name = name; }
-  public User(User user) { this.name = user.name; }
+  protected User(User user) { this.name = user.name; }
   
   public User dup() { return new User(this); }
 }
@@ -339,7 +339,7 @@ class Student extends User {
   public String school;
   
   public Student(String name,String school) { super(name); this.school = school; }
-  public Student(Student student) { super(student); this.school = student.school; }
+  protected Student(Student student) { super(student); this.school = student.school; }
   
   @Override
   public Student dup() { return new Student(this); }
@@ -349,7 +349,7 @@ class Alumnus extends Student {
   public String job;
   
   public Alumnus(String name,String school,String job) { super(name,school); this.job = job; }
-  public Alumnus(Alumnus alumnus) { super(alumnus); this.job = alumnus.job; }
+  protected Alumnus(Alumnus alumnus) { super(alumnus); this.job = alumnus.job; }
   
   @Override
   public Alumnus dup() { return new Alumnus(this); }

@@ -57,11 +57,8 @@ import java.util.ListIterator;
  *   buddy.paste(999,493,"Fish").enter(1427,500,"Sakana");
  *   buddy.click(1853,1015).delayLong();
  * 
- * You can construct a class in many ways:
- *   BotBuddy.builder().build();           // Recommended way
- *   new BotBuddy();                       // Convenience method for less code
- *   new BotBuddy.Builder().build();       // Not recommended, but fine
- *   new BotBuddy(new BotBuddy.Builder()); // Not recommended, but fine
+ * Construct a class:
+ *   BotBuddy.builder().build();
  * 
  * There's a Safe Mode that throws {@link UserIsActiveException} if the user moves the mouse.
  * In addition, the pressed keys and pressed mouse buttons are stored internally if
@@ -178,11 +175,7 @@ public class BotBuddy implements Duplicable<BotBuddy> {
   protected Deque<Stash> stashes = new LinkedList<>();
   protected Toolkit tool;
   
-  public BotBuddy() throws AWTException,HeadlessException {
-    this(new Builder());
-  }
-  
-  public BotBuddy(BotBuddy buddy) {
+  protected BotBuddy(BotBuddy buddy) {
     // Do NOT copy over #pressedButtons and #pressedKeys, as it could cause a double release
     
     bot = buddy.bot;
@@ -206,7 +199,7 @@ public class BotBuddy implements Duplicable<BotBuddy> {
     }
   }
   
-  public BotBuddy(Builder builder) throws AWTException,HeadlessException {
+  protected BotBuddy(Builder builder) throws AWTException,HeadlessException {
     if(builder.bot == null) {
       builder.bot(new Robot());
     }
@@ -911,7 +904,7 @@ public class BotBuddy implements Duplicable<BotBuddy> {
     protected int shortDelay = DEFAULT_SHORT_DELAY;
     protected Toolkit tool = null;
     
-    public Builder() throws HeadlessException {
+    protected Builder() throws HeadlessException {
       leftButton(InputEvent.BUTTON1_DOWN_MASK);
       
       switch(MouseInfo.getNumberOfButtons()) {
@@ -932,13 +925,13 @@ public class BotBuddy implements Duplicable<BotBuddy> {
       defaultButton(leftButton);
     }
     
-    public Builder(Robot bot) throws HeadlessException {
+    protected Builder(Robot bot) throws HeadlessException {
       this();
       
       bot(bot);
     }
     
-    public Builder(GraphicsDevice screen) throws AWTException,HeadlessException {
+    protected Builder(GraphicsDevice screen) throws AWTException,HeadlessException {
       this(new Robot(screen));
     }
     
@@ -1097,7 +1090,7 @@ public class BotBuddy implements Duplicable<BotBuddy> {
       isStashed = true;
     }
     
-    public Stash(Stash stash) {
+    protected Stash(Stash stash) {
       autoDelay = stash.autoDelay;
       isStashed = stash.isStashed;
     }
