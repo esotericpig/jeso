@@ -6,8 +6,6 @@ Inspired largely by Ruby.
 
 Name = Java + gesso + esoteric.
 
-**Note:** currently in development on v0.3.3.
-
 ## Contents
 
 - [Requirements](#requirements)
