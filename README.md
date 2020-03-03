@@ -142,21 +142,21 @@ $ mvn install
 
 ### [Manually](#contents)
 
-Download the latest [Release](https://github.com/esotericpig/jeso/releases).
+Download the **Assets** from the latest [Release](https://github.com/esotericpig/jeso/releases).
 
 Then import the following files into your project:
 
-| Release Files |
+| Asset Files |
 | --- |
-| build/libs/jeso-x.x.x.jar |
-| build/libs/jeso-x.x.x-sources.jar |
-| build/distributions/jeso-x.x.x-javadoc.zip |
+| jeso-x.x.x.jar |
+| jeso-x.x.x-sources.jar |
+| jeso-x.x.x-javadoc.zip |
 
 Alternatively, you can just import this one file, but it also includes dependent jars (if any):
 
-| Release Files |
+| Asset Files |
 | --- |
-| build/libs/jeso-x.x.x-all.jar |
+| jeso-x.x.x-all.jar |
 
 ### [Pre-Release](#contents)
 
