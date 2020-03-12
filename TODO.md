@@ -9,6 +9,7 @@
     - [ ] Change BotBuddyCode wording to call it a DSL in README/doc? (domain-specific language)
 - [ ] `math`/`csv` packages will be in own projects
 - [ ] Move TODOs appropriately to these projects
+- [ ] Add all projects to jcenter/maven/whatever
 
 ## v1.0.0 [on hold]
 
