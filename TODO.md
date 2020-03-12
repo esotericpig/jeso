@@ -1,6 +1,16 @@
 # TODO | Jeso
 
-## v1.0.0
+## Important!
+
+- [ ] Move out `Duplicable` into its own project
+- [ ] Move out `BotBuddy` into its own project
+    - Will still use `jeso` as a dependency
+    - Will not include Ruby/Groovy support (that would go in new projects botbuddy-ruby/groovy)
+    - [ ] Change BotBuddyCode wording to call it a DSL in README/doc? (domain-specific language)
+- [ ] `math`/`csv` packages will be in own projects
+- [ ] Move TODOs appropriately to these projects
+
+## v1.0.0 [on hold]
 
 - [x] BotBuddy
     - [x] Add safe mode (if user moves mouse)
@@ -15,7 +25,7 @@
 - [ ] CSV class
 - [x] In Gradle, add a task to check/download the Wrapper checksum. [Release Checksums](https://gradle.org/release-checksums/)
 - [x] In Gradle, add a fat jar task that includes everything in one jar (javadoc, source, dependencies)
-- [ ] Arrs/Cols/Strs (one class?):
+- [ ] Arys/Cols/Strs:
     - sample(), unique(), compact(), join(). max_length(...)
 - [ ] Look at own code and see where a generic method could be better.
 - [ ] Look at top stackoverflow Qs in Java.
@@ -25,7 +35,7 @@
 - [x] Map method that will put if not exist and return new.
     - This has already been solved in Java 8 with:
         - `value = map.computeIfAbsent("key",k -> new TimeConsumingClass());`
-- [ ] Arrs.include?; Array *=; Arrs.reverse; Arrs.to_map; Maps.invert; Maps.zip; Arrs.flatten; %w(...) So pass in "Bob Fred George" and makes into an array. Arrs.count; Arrs.swap(index1,index2);
+- [ ] Arys.include?; Array *=; Arys.reverse; Arys.to_map; Maps.invert; Maps.zip; Arys.flatten; %w(...) So pass in "Bob Fred George" and makes into an array. Arys.count; Arys.swap(index1,index2);
 - [ ] A class that adds up max length for formatting data?
     - Store the args into a list, then pass into printf.
     - f = new Format(System.out);
