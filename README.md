@@ -142,7 +142,7 @@ $ mvn install
 
 ### [Manually](#contents)
 
-Download the **Assets** from the latest [Release](https://github.com/esotericpig/jeso/releases).
+Download the **Assets** from the latest [Release](https://github.com/esotericpig/jeso/releases/latest).
 
 Then import the following files into your project:
 
