@@ -1,7 +1,5 @@
 # Jeso
 
-![GitHub Action Tests](https://github.com/esotericpig/jeso/workflows/test-java/badge.svg)
-
 Java utils to make Java less verbose and more fun.
 
 Inspired largely by Ruby.
