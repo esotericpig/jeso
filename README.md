@@ -1,5 +1,7 @@
 # Jeso
 
+[![Build Status](https://travis-ci.org/esotericpig/jeso.svg?branch=master)](https://travis-ci.org/esotericpig/jeso)
+
 Java utils to make Java less verbose and more fun.
 
 Inspired largely by Ruby.
