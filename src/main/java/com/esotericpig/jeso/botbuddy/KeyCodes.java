@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 
 /**
  * FIXME: Will this (VK_SHIFT, etc.) work for Mac OS X?
+ * <p>
  * FIXME: '#' (VK_NUMBER_SIGN) is 'Shift+3' on US keyboard, but no 'Shift' on UK keyboard
  *        - have to make it generic somehow (classes?) and choose (class)
  *          - default auto-chooses w/ KeyEvent.getKeyModifiersText()
@@ -162,6 +163,9 @@ public final class KeyCodes {
   }
   
   /**
+   * @param  keyChar code point to look up
+   * @param  getExKeyCode true to call KeyEvent#getExtendedKeyCodeForChar() and
+   *                      try that way if null; may still return null
    * @return null if not found, else int[] of keyChar's key codes
    */
   public static int[] getCharCodes(int keyChar,boolean getExKeyCode) {
@@ -217,6 +221,10 @@ public final class KeyCodes {
   
   /**
    * This is only meant to be used for developing this class (or your own).
+   * 
+   * @param  keyChar code point key
+   * @param  keyCodes of KeyEvent value
+   * @return result of Map#put(...)
    */
   public static int[] putCharCodesSafely(int keyChar,int[] keyCodes) {
     if(CHAR_CODES.containsKey(keyChar)) {
@@ -236,6 +244,8 @@ public final class KeyCodes {
    * Don't use Java reflection to build/generate CODES because it can possibly
    * throw SecurityException, IllegalAccessException, etc. Instead, use this
    * method to see what it would generate and then copy &amp; paste the results.
+   * 
+   * @throws IllegalAccessException if can't do reflection
    */
   public static void generateAndPrintCharCodes() throws IllegalAccessException {
     Map<String,String> codes = new LinkedHashMap<>();
