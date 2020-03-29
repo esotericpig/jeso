@@ -162,7 +162,7 @@ public final class KeyCodes {
   }
   
   /**
-   * @return empty int[] if doesn't exist (not null)
+   * @return null if not found, else int[] of keyChar's key codes
    */
   public static int[] getCharCodes(int keyChar,boolean getExKeyCode) {
     int[] keyCodes = CHAR_CODES.get(keyChar);
@@ -171,7 +171,7 @@ public final class KeyCodes {
       int keyCode = KeyEvent.getExtendedKeyCodeForChar(keyChar);
       
       if(keyCode == KeyEvent.VK_UNDEFINED) {
-        keyCodes = new int[] {};
+        keyCodes = null;
       }
       else {
         List<Integer> keyCodeList = new ArrayList<>();
