@@ -18,6 +18,7 @@
 
 package com.esotericpig.jeso.botbuddy;
 
+import com.esotericpig.jeso.Chars;
 import com.esotericpig.jeso.Duplicable;
 import com.esotericpig.jeso.OSFamily;
 import com.esotericpig.jeso.Sys;
@@ -665,7 +666,7 @@ public class BotBuddy implements Duplicable<BotBuddy> {
       
       if(keyCodes == null) {
         if(ensure) {
-          paste(text); // Ensure success
+          paste(Chars.toString(keyChar)); // Ensure success
         }
       }
       else {
@@ -679,11 +680,11 @@ public class BotBuddy implements Duplicable<BotBuddy> {
   }
   
   public BotBuddy type(int x,int y,int keyCode) {
-    return move(x,y).type(keyCode);
+    return click(x,y).type(keyCode);
   }
   
   public BotBuddy type(int x,int y,String text) {
-    return move(x,y).type(text);
+    return click(x,y).type(text);
   }
   
   public BotBuddy types(int... keyCodes) {
@@ -699,7 +700,7 @@ public class BotBuddy implements Duplicable<BotBuddy> {
   }
   
   public BotBuddy typeUnsurely(int x,int y,String text) {
-    return move(x,y).typeUnsurely(text);
+    return click(x,y).typeUnsurely(text);
   }
   
   public BotBuddy unstash() {
