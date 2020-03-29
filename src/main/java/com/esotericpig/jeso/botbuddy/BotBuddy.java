@@ -1,6 +1,6 @@
 /**
  * This file is part of Jeso.
- * Copyright (c) 2019 Jonathan Bradley Whited (@esotericpig)
+ * Copyright (c) 2019-2020 Jonathan Bradley Whited (@esotericpig)
  * 
  * Jeso is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -654,12 +654,52 @@ public class BotBuddy implements Duplicable<BotBuddy> {
     return checkIfSafe();
   }
   
+  public BotBuddy type(String text) {
+    return type(text,true);
+  }
+  
+  protected BotBuddy type(String text,boolean ensure) {
+    for(int i = 0; i < text.length();) {
+      int keyChar = text.codePointAt(i);
+      int[] keyCodes = KeyCodes.getCharCodes(keyChar,!ensure);
+      
+      if(keyCodes == null) {
+        if(ensure) {
+          paste(text); // Ensure success
+        }
+      }
+      else {
+        rollKeys(keyCodes); // Roll the keys like #paste() does: '$' => Shift + 4
+      }
+      
+      i += Character.charCount(keyChar);
+    }
+    
+    return this;
+  }
+  
+  public BotBuddy type(int x,int y,int keyCode) {
+    return move(x,y).type(keyCode);
+  }
+  
+  public BotBuddy type(int x,int y,String text) {
+    return move(x,y).type(text);
+  }
+  
   public BotBuddy types(int... keyCodes) {
     for(int keyCode: keyCodes) {
       type(keyCode);
     }
     
     return this;
+  }
+  
+  public BotBuddy typeUnsurely(String text) {
+    return type(text,false);
+  }
+  
+  public BotBuddy typeUnsurely(int x,int y,String text) {
+    return move(x,y).typeUnsurely(text);
   }
   
   public BotBuddy unstash() {

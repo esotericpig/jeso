@@ -1,6 +1,6 @@
 /**
  * This file is part of Jeso.
- * Copyright (c) 2019 Jonathan Bradley Whited (@esotericpig)
+ * Copyright (c) 2019-2020 Jonathan Bradley Whited (@esotericpig)
  * 
  * Jeso is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -1260,7 +1260,7 @@ public class BotBuddyCode implements Closeable {
      *   because a JUnit test will fail if an entry has been overwritten accidentally.
      * </pre>
      */
-    public static final int BASE_COUNT = 70;
+    public static final int BASE_COUNT = 71;
     
     protected Map<String,Executor> entries;
     
@@ -1460,8 +1460,33 @@ public class BotBuddyCode implements Closeable {
       put("rollbuttons",(buddy,inst) -> buddy.rollButtons(inst.getInts()));
       put("rollkeys",(buddy,inst) -> buddy.rollKeys(inst.getInts()));
       put("stash",(buddy,inst) -> buddy.stash());
-      put("type",(buddy,inst) -> buddy.type(inst.getInt(0)));
+      put("type",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 3:
+            try {
+              buddy.type(inst.getInt(0),inst.getInt(1),inst.getInt(2));
+            }
+            catch(ParseCodeException ex) {
+              buddy.type(inst.getInt(0),inst.getInt(1),inst.getStr(2));
+            }
+            break;
+          default:
+            try {
+              buddy.type(inst.getInt(0));
+            }
+            catch(ParseCodeException ex) {
+              buddy.type(inst.getStr(0));
+            }
+            break;
+        }
+      });
       put("types",(buddy,inst) -> buddy.types(inst.getInts()));
+      put("typeunsurely",(buddy,inst) -> {
+        switch(inst.args.length) {
+          case 3:  buddy.typeUnsurely(inst.getInt(0),inst.getInt(1),inst.getStr(2)); break;
+          default: buddy.typeUnsurely(inst.getStr(0)); break;
+        }
+      });
       put("unstash",(buddy,inst) -> buddy.unstash());
       put("waitforidle",(buddy,inst) -> buddy.waitForIdle());
       put("wheel",(buddy,inst) -> buddy.wheel(inst.getInt(0)));

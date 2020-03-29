@@ -517,8 +517,10 @@ buddy.beep()
      .rollKeys(int... keyCodes)
      .shortcut(BotBuddy.Shortcut shortcut)
      .stash()
-     .type(int keyCode)
+     .type([int x,int y],int keyCode)
+     .type([int x,int y],String text)
      .types(int... keyCodes)
+     .typeUnsurely([int x,int y],String text)
      .unstash()
      .waitForIdle()
      .wheel(int amount)
@@ -793,7 +795,7 @@ $ ./gradlew rsyncToGhp
 [GNU LGPL v3+](LICENSE)
 
 > Jeso ([https://github.com/esotericpig/jeso](https://github.com/esotericpig/jeso))  
-> Copyright (c) 2019 Jonathan Bradley Whited (@esotericpig)  
+> Copyright (c) 2019-2020 Jonathan Bradley Whited (@esotericpig)  
 > 
 > Jeso is free software: you can redistribute it and/or modify  
 > it under the terms of the GNU Lesser General Public License as published by  
