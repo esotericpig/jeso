@@ -235,7 +235,7 @@ public final class KeyCodes {
   /**
    * Don't use Java reflection to build/generate CODES because it can possibly
    * throw SecurityException, IllegalAccessException, etc. Instead, use this
-   * method to see what it would generate and then copy & paste the results.
+   * method to see what it would generate and then copy &amp; paste the results.
    */
   public static void generateAndPrintCharCodes() throws IllegalAccessException {
     Map<String,String> codes = new LinkedHashMap<>();
