@@ -174,10 +174,7 @@ public final class KeyCodes {
     if(keyCodes == null && getExKeyCode) {
       int keyCode = KeyEvent.getExtendedKeyCodeForChar(keyChar);
       
-      if(keyCode == KeyEvent.VK_UNDEFINED) {
-        keyCodes = null;
-      }
-      else {
+      if(keyCode != KeyEvent.VK_UNDEFINED) {
         List<Integer> keyCodeList = new ArrayList<>();
         String[] keyModsText = KeyEvent.getKeyModifiersText(keyCode)
           .trim().toLowerCase(Locale.ENGLISH).split("\\s+")[0].split("\\+");
@@ -230,8 +227,8 @@ public final class KeyCodes {
     if(CHAR_CODES.containsKey(keyChar)) {
       String keyStr = Chars.toString(keyChar);
       String keyText = Arrays.stream(keyCodes)
-        .mapToObj(KeyEvent::getKeyText)
-        .collect(Collectors.joining(", "));
+                             .mapToObj(KeyEvent::getKeyText)
+                             .collect(Collectors.joining(", "));
       
       System.err.println("Warning: keyChar[" + keyStr + "] already exists; ignoring keyCodes["
         + keyText + "]");
