@@ -36,11 +36,12 @@ import java.util.Scanner;
  * 
  * You can first test this using a text editor.
  * 
- * Compiling on Linux (after building the Jar):
- *   $ javac -cp .:../build/libs/* TenFastFingers.java
+ * Compiling (after building the Jar):
+ *   $ javac -cp '../../build/libs/*' TenFastFingers.java
  * 
- * Running on Linux:
- *   $ java -cp .:../build/libs/* TenFastFingers
+ * Running:
+ *   [@linux]$   java -cp '.:../../build/libs/*' TenFastFingers
+ *   [@windows]$ java -cp '.;../../build/libs/*' TenFastFingers
  * </pre>
  * 
  * @author Jonathan Bradley Whited (@esotericpig)
