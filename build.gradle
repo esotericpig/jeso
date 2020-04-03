@@ -92,7 +92,7 @@ spotless {
 /**
  * Tasks
  */
-defaultTasks 'clean','buildRelease'
+defaultTasks 'clean','buildRelease','buildFatRelease'
 
 task(buildFatRelease,type: Jar,dependsOn: ['classes','test','check','javadoc']) {
   group       'Build'
@@ -256,7 +256,7 @@ task(rsyncToGhp,type: Exec) {
   executable 'rsync'
   
   args += '-ahv'
-  args += '--delete-after'
+  //args += '--delete-after'
   args += '--progress'
   
   if(isDryRun) {
