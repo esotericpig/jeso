@@ -110,7 +110,7 @@ import java.util.ListIterator;
  * @see com.esotericpig.jeso.botbuddy.BotBuddyCode
  * @see com.esotericpig.jeso.botbuddy.BotBuddyCodeApp
  */
-public class BotBuddy implements Duplicable<BotBuddy> {
+public class BotBuddy implements AutoCloseable,Duplicable<BotBuddy> {
   /**
    * For double clicks, etc.
    */
@@ -235,6 +235,11 @@ public class BotBuddy implements Duplicable<BotBuddy> {
   
   public BotBuddy dup() {
     return new BotBuddy(this);
+  }
+  
+  @Override
+  public void close() {
+    releasePressed();
   }
   
   public BotBuddy beep() {

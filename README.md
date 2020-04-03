@@ -570,6 +570,15 @@ catch(UserIsActiveException ex) {
 }
 ```
 
+`BotBuddy` also implements `AutoCloseable` so that you can use try-with-resource:
+
+```Java
+// This will automatically call buddy.releasePressed() for you
+try(BotBuddy buddy = BotBuddy.builder().build()) {
+  // ...
+}
+```
+
 If your program clicks into a virtual machine, you can change the OS to change the keyboard shortcut keys (e.g., paste):
 
 ```Java
