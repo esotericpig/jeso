@@ -1462,6 +1462,7 @@ public class BotBuddyCode implements Closeable {
       put("stash",(buddy,inst) -> buddy.stash());
       put("type",(buddy,inst) -> {
         switch(inst.args.length) {
+          // @since 0.3.5
           case 3:
             try {
               buddy.type(inst.getInt(0),inst.getInt(1),inst.getInt(2));
@@ -1481,6 +1482,7 @@ public class BotBuddyCode implements Closeable {
         }
       });
       put("types",(buddy,inst) -> buddy.types(inst.getInts()));
+      // @since 0.3.5
       put("typeunsurely",(buddy,inst) -> {
         switch(inst.args.length) {
           case 3:  buddy.typeUnsurely(inst.getInt(0),inst.getInt(1),inst.getStr(2)); break;

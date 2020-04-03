@@ -237,6 +237,9 @@ public class BotBuddy implements AutoCloseable,Duplicable<BotBuddy> {
     return new BotBuddy(this);
   }
   
+  /**
+   * @since 0.3.6
+   */
   @Override
   public void close() {
     releasePressed();
@@ -660,10 +663,16 @@ public class BotBuddy implements AutoCloseable,Duplicable<BotBuddy> {
     return checkIfSafe();
   }
   
+  /**
+   * @since 0.3.5
+   */
   public BotBuddy type(String text) {
     return type(text,true);
   }
   
+  /**
+   * @since 0.3.5
+   */
   protected BotBuddy type(String text,boolean ensure) {
     for(int i = 0; i < text.length();) {
       int keyChar = text.codePointAt(i);
@@ -684,10 +693,16 @@ public class BotBuddy implements AutoCloseable,Duplicable<BotBuddy> {
     return this;
   }
   
+  /**
+   * @since 0.3.5
+   */
   public BotBuddy type(int x,int y,int keyCode) {
     return click(x,y).type(keyCode);
   }
   
+  /**
+   * @since 0.3.5
+   */
   public BotBuddy type(int x,int y,String text) {
     return click(x,y).type(text);
   }
@@ -700,10 +715,16 @@ public class BotBuddy implements AutoCloseable,Duplicable<BotBuddy> {
     return this;
   }
   
+  /**
+   * @since 0.3.5
+   */
   public BotBuddy typeUnsurely(String text) {
     return type(text,false);
   }
   
+  /**
+   * @since 0.3.5
+   */
   public BotBuddy typeUnsurely(int x,int y,String text) {
     return click(x,y).typeUnsurely(text);
   }
