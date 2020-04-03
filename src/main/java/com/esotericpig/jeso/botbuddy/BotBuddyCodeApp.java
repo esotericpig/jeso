@@ -33,8 +33,8 @@ import java.nio.file.Paths;
 /**
  * <pre>
  * To run this app and view its options:{@code
- *   java -cp build/libs/jeso-*.jar com.esotericpig.jeso.botbuddy.BotBuddyCodeApp --help}
- * </pre>
+ *   $ java -cp 'build/libs/*' com.esotericpig.jeso.botbuddy.BotBuddyCodeApp --help
+ * }</pre>
  * 
  * @author Jonathan Bradley Whited (@esotericpig)
  */
