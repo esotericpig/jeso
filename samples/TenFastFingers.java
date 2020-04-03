@@ -69,17 +69,9 @@ public class TenFastFingers {
       
       // coords
       if(cmdLetter == 'c') {
-        try {
-          Point coords = BotBuddy.getCoords();
-          
-          System.out.println("coords: (" + coords.x + ", " + coords.y + ")");
-          
-          startCoords = coords;
-        }
-        catch(Exception e) {
-          System.err.println("error: " + e.getLocalizedMessage());
-          e.printStackTrace();
-        }
+        startCoords = BotBuddy.getCoords();
+        
+        System.out.println("coords: (" + startCoords.x + ", " + startCoords.y + ")");
       }
       // type
       else if(cmdLetter == 't' && parts.length >= 1) {
