@@ -1,6 +1,7 @@
 # Jeso
 
 [![Build Status](https://travis-ci.org/esotericpig/jeso.svg?branch=master)](https://travis-ci.org/esotericpig/jeso)
+[![Javadoc](https://img.shields.io/badge/doc-javadoc-%23A0522D.svg)](https://esotericpig.github.io/docs/jeso/javadoc/index.html)
 
 Java utils to make Java less verbose and more fun.
 
