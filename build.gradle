@@ -213,6 +213,9 @@ javadoc {
     locale      = project.ext.locale
     memberLevel = JavadocMemberLevel.PROTECTED // Show public & protected (don't show private)
     version     = true
+    
+    // FIXME: remove this after v1.0.0
+    addStringOption('Xdoclint:none','-quiet')
   }
 }
 
