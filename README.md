@@ -442,6 +442,8 @@ A wrapper around [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java
 
 - On Wayland, Java's Robot will not work. You will need to either use X11 or XWayland, until either OpenJDK or Wayland is fixed.
 
+See the [samples](samples/botbuddy) for a quick peek.
+
 It can be used for...
 
 - Moving the mouse and pasting in text.
