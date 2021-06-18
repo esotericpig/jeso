@@ -1,7 +1,8 @@
 # Jeso
 
-[![Build Status](https://travis-ci.org/esotericpig/jeso.svg?branch=master)](https://travis-ci.org/esotericpig/jeso)
 [![Javadoc](https://img.shields.io/badge/doc-javadoc-%23A0522D.svg)](https://esotericpig.github.io/docs/jeso/javadoc/index.html)
+[![Source Code](https://img.shields.io/badge/source-github-%23211F1F.svg)](https://github.com/esotericpig/jeso)
+[![License](https://img.shields.io/github/license/esotericpig/jeso.svg)](LICENSE)
 
 Java utils to make Java less verbose and more fun.
 
@@ -60,7 +61,7 @@ repositories {
   maven {
     name = 'Jeso GitHub Package'
     url = uri('https://maven.pkg.github.com/esotericpig/jeso')
-    
+
     credentials {
       username = project.findProperty('gpr.user') ?: System.getenv("USERNAME")
       password = project.findProperty('gpr.key') ?: System.getenv("PASSWORD")
@@ -86,7 +87,7 @@ In **~/.m2/settings.xml**:
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
                       http://maven.apache.org/xsd/settings-1.0.0.xsd">
-  
+
   <activeProfiles>
     <activeProfile>github</activeProfile>
   </activeProfiles>
@@ -94,7 +95,7 @@ In **~/.m2/settings.xml**:
   <profiles>
     <profile>
       <id>github</id>
-      
+
       <repositories>
         <repository>
           <id>central</id>
@@ -102,7 +103,7 @@ In **~/.m2/settings.xml**:
           <releases><enabled>true</enabled></releases>
           <snapshots><enabled>false</enabled></snapshots>
         </repository>
-        
+
         <repository>
           <id>github</id>
           <name>Jeso GitHub Package</name>
@@ -111,7 +112,7 @@ In **~/.m2/settings.xml**:
       </repositories>
     </profile>
   </profiles>
-  
+
   <servers>
     <server>
       <id>github</id>
@@ -317,11 +318,11 @@ public class Testbed
   public static void main(String[] args) {
     Alumnus alum1 = new Alumnus("Bob","MySchool","MyJob");
     Alumnus alum2 = alum1.dup();
-    
+
     // Same school
     alum2.name = "Fred";
     alum2.job = "CoolJob";
-    
+
     System.out.println(alum1);
     System.out.println(alum2);
   }
@@ -329,40 +330,40 @@ public class Testbed
 
 class User implements Duplicable<User> {
   public String name;
-  
+
   public User(String name) { this.name = name; }
   protected User(User user) { this.name = user.name; }
-  
+
   public User dup() { return new User(this); }
 }
 
 class Student extends User {
   public String school;
-  
+
   public Student(String name,String school) { super(name); this.school = school; }
   protected Student(Student student) { super(student); this.school = student.school; }
-  
+
   @Override
   public Student dup() { return new Student(this); }
 }
 
 class Alumnus extends Student {
   public String job;
-  
+
   public Alumnus(String name,String school,String job) { super(name,school); this.job = job; }
   protected Alumnus(Alumnus alumnus) { super(alumnus); this.job = alumnus.job; }
-  
+
   @Override
   public Alumnus dup() { return new Alumnus(this); }
-  
+
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    
+
     sb.append(name).append(":\t").append('[');
     sb.append(school).append(',');
     sb.append(job).append(']');
-    
+
     return sb.toString();
   }
 }
@@ -567,7 +568,7 @@ try {
 catch(UserIsActiveException ex) {
   // Release all keys and/or mouse buttons pressed down by the automatic operations
   buddy.releasePressed();
-  
+
   // If you move your mouse, "Daddy" will not be executed
   System.out.println("User is active! Stopping all automatic operations.");
 }
@@ -765,7 +766,7 @@ list.add("puts name");
 
 try(BufferedReader lin = new BufferedReader(new StringListReader(list))) {
   String line = null;
-  
+
   while((line = lin.readLine()) != null) {
     System.out.println(line);
   }
@@ -807,7 +808,7 @@ $ ./gradlew rsyncToGhp
 [GNU LGPL v3+](LICENSE)
 
 > Jeso ([https://github.com/esotericpig/jeso](https://github.com/esotericpig/jeso))  
-> Copyright (c) 2019-2020 Jonathan Bradley Whited (@esotericpig)  
+> Copyright (c) 2019-2021 Jonathan Bradley Whited  
 > 
 > Jeso is free software: you can redistribute it and/or modify  
 > it under the terms of the GNU Lesser General Public License as published by  

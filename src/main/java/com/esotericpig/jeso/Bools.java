@@ -1,19 +1,8 @@
-/**
+/*
  * This file is part of Jeso.
- * Copyright (c) 2019 Jonathan Bradley Whited (@esotericpig)
- * 
- * Jeso is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * Jeso is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public License
- * along with Jeso. If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (c) 2019-2021 Jonathan Bradley Whited
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
  */
 
 package com.esotericpig.jeso;
@@ -24,24 +13,24 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * @author Jonathan Bradley Whited (@esotericpig)
+ * @author Jonathan Bradley Whited
  */
 public final class Bools {
   public static final List<String> TRUE_BOOL_STRS = Collections.unmodifiableList(Arrays.asList(
-    "1","on","t","true","y","yes"));
-  
+      "1","on","t","true","y","yes"));
+
   public static boolean parse(String str) {
     str = str.trim().toLowerCase(Locale.ENGLISH);
-    
+
     for(String tbs: TRUE_BOOL_STRS) {
       if(str.equals(tbs)) {
         return true;
       }
     }
-    
+
     return false;
   }
-  
+
   private Bools() {
     throw new UtilClassException();
   }

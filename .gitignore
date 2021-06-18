@@ -52,3 +52,8 @@ hs_err_pid*
 ###
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar
+
+###
+# IDEs, etc.
+###
+.idea/

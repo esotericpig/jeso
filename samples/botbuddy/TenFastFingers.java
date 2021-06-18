@@ -1,19 +1,8 @@
-/**
+/*
  * This file is part of Jeso.
- * Copyright (c) 2020 Jonathan Bradley Whited (@esotericpig)
- * 
- * Jeso is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * Jeso is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public License
- * along with Jeso. If not, see <https://www.gnu.org/licenses/>.
+ * Copyright (c) 2020-2021 Jonathan Bradley Whited
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
  */
 
 import com.esotericpig.jeso.botbuddy.BotBuddy;
@@ -30,66 +19,65 @@ import java.util.Scanner;
 /**
  * <pre>
  * This is a CLI app for cheating at an online typing game.
- * 
+ *
  * When running, a prompt will appear.
  * Commands:
  * - q, quit, e, exit    exit the app
  * - c, coords           output and set the starting coordinates
  * - t, type <words>     type the following words
- * 
+ *
  * Usual steps:
  * 1) Hover your mouse cursor over where the words should be typed in
  *    and run the "c" command.
  * 2) Then enter "t word word word..." and the words will automatically
  *    be typed in.
- * 
+ *
  * Example:
  *   > c
  *   coords: (1107,486)
  *   > t big put way year made along here plant had face an family
  *   > q
- * 
+ *
  * You can either type in the words manually or copy & paste them from
  * the XHR data from Chrome's Developer tools.
- * 
+ *
  * You can first test this using a text editor.
- * 
+ *
  * Compiling (after building the Jar):
  *   $ javac -cp '../../build/libs/*' TenFastFingers.java
- * 
+ *
  * Running:
  *   [@linux]$   java -cp '.:../../build/libs/*' TenFastFingers
  *   [@windows]$ java -cp '.;../../build/libs/*' TenFastFingers
  * </pre>
- * 
- * @author Jonathan Bradley Whited (@esotericpig)
- * 
+ *
+ * @author Jonathan Bradley Whited
  * @see https://10fastfingers.com/multiplayer
  */
 public class TenFastFingers {
   public static void main(String[] args) {
     Point startCoords = new Point(1107,719); // term @ 24 height w/ bottom aligned to input tag
     Scanner stdin = new Scanner(System.in);
-    
+
     while(true) {
       System.out.print("> ");
       String line = stdin.nextLine().trim();
-      
+
       if(line.isEmpty()) { break; }
-      
+
       String[] parts = line.split("\\s+");
       String cmd = parts[0].toLowerCase(Locale.ENGLISH);
       int cmdLetter = cmd.codePointAt(0);
-      
+
       // exit, quit
       if(cmdLetter == 'e' || cmdLetter == 'q') { break; }
-      
+
       parts = Arrays.copyOfRange(parts,1,parts.length);
-      
+
       // coords
       if(cmdLetter == 'c') {
         startCoords = BotBuddy.getCoords();
-        
+
         System.out.println("coords: (" + startCoords.x + ", " + startCoords.y + ")");
       }
       // type
@@ -99,13 +87,13 @@ public class TenFastFingers {
             .click(startCoords.x,startCoords.y)
             .delayAuto()
             .setAutoDelay(5);
-          
+
           for(String word: parts) {
             bb.type(word)
               .type(KeyEvent.VK_SPACE)
               .delay(20);
           }
-          
+
           bb.endSafeMode();
         }
         catch(UserIsActiveException e) {

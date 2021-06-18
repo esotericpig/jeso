@@ -1,19 +1,8 @@
-/**
+/*
  * This file is part of Jeso.
- * Copyright (c) 2019-2020 Jonathan Bradley Whited (@esotericpig)
- * 
- * Jeso is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * Jeso is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public License
- * along with Jeso. If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (c) 2019-2021 Jonathan Bradley Whited
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
  */
 
 plugins {
@@ -29,7 +18,7 @@ import java.util.regex.Pattern
  * Properties
  */
 version                 = '0.3.6'
-ext.author              = 'Jonathan Bradley Whited (@esotericpig)'
+ext.author              = 'Jonathan Bradley Whited'
 ext.license             = 'LGPL-3.0-or-later'
 ext.ownerName           = 'esotericpig'
 
@@ -69,17 +58,17 @@ repositories {
 dependencies {
   // External Dependencies (put on user's classpath)
   //api ':'
-  
+
   // Internal Dependencies (not put on user's classpath)
   //implementation ':'
-  
+
   // Test Dependencies
   testImplementation "org.junit.jupiter:junit-jupiter:${project.ext.junitJupiterVersion}"
 }
 
 spotbugs {
   toolVersion = '3.1.12'
-  
+
   excludeFilter = file('spotbugs_exclude.xml')
 }
 
@@ -97,12 +86,12 @@ defaultTasks 'clean','buildRelease','buildFatRelease'
 task(buildFatRelease,type: Jar,dependsOn: ['classes','test','check','javadoc']) {
   group       'Build'
   description 'Assembles everything necessary for a release into one "fat" jar.'
-  
+
   // Include dependencies (jars) to final jar; a "fat jar"
   from configurations.compile.collect {
     it.isDirectory() ? it : zipTree(it)
   }
-  
+
   classifier 'all'
   from javadoc.destinationDir
   from sourceSets.main.allSource
@@ -118,18 +107,18 @@ task(buildRelease,dependsOn: ['build','test','check','jar','javadoc','javadocZip
 task(checkGradleW) {
   group       'Checksum'
   description "Check the SHA-256 sum of the Gradle Wrapper Jar (${project.ext.gradlewJarPath.replace("${projectDir}",'')})."
-  
+
   doLast {
     ant.checksum(file: project.ext.gradlewJarPath,algorithm: 'SHA-256',property: 'gradlewJarSum')
-    
+
     String gradlewJarSum = ant.properties['gradlewJarSum']
     String gradlewSumSum = new File(project.ext.gradlewSumPath).getText('UTF-8').split('\\s+')[0]
-    
+
     String gradlewJarPath = project.ext.gradlewJarPath.replace("${projectDir}",'') + ':'
     String gradlewSumPath = project.ext.gradlewSumPath.replace("${projectDir}",'') + ':'
-    
+
     int maxLen = -Math.max(gradlewJarPath.length(),gradlewSumPath.length())
-    
+
     println '[Gradle Wrapper Jar Checksum]'
     printf "%${maxLen}s %s%n",gradlewJarPath,gradlewJarSum
     printf "%${maxLen}s %s%n",gradlewSumPath,gradlewSumSum
@@ -150,22 +139,22 @@ compileTestJava {
 task(wgetGradleWSums) {
   group       'Checksum'
   description 'Download the SHA-256 sums for the Gradle Wrapper Jars.'
-  
+
   doLast{
     String checksums = new URL('https://gradle.org/release-checksums/').getText('UTF-8')
     String version = "v${project.gradle.gradleVersion}"
-    
+
     int index = checksums.indexOf(version)
     int gradlebIndex = checksums.indexOf('Binary-only',index)
     int gradlecIndex = checksums.indexOf('Complete',index)
     int gradlewIndex = checksums.indexOf('Wrapper',index)
-    
+
     // Split on "<code>" or "</code>"
     Pattern pattern = Pattern.compile('\\s*\\<\\s*\\/?\\s*code\\s*\\>\\s*',Pattern.CASE_INSENSITIVE)
     String gradlebSum = pattern.split(checksums.substring(gradlebIndex,gradlebIndex + 200))[1]
     String gradlecSum = pattern.split(checksums.substring(gradlecIndex,gradlecIndex + 200))[1]
     String gradlewSum = pattern.split(checksums.substring(gradlewIndex,gradlewIndex + 200))[1]
-    
+
     println "[Gradle Checksums for ${version}]"
     println "Put this in " + project.ext.gradlewPropPath.replace("${projectDir}",'') + ':'
     println "  distributionSha256Sum=${gradlebSum}"
@@ -181,25 +170,25 @@ tasks.withType(Jar) {
     attributes(
       // Add dependencies to classpath
       'Class-Path':             configurations.compile.collect { it.getName() }.join(' '),
-      
+
       'Specification-Title':    project.name,
       'Specification-Version':  project.version,
       'Specification-Author':   project.ext.author,
       'Specification-Vendor':   project.ext.author,
       'Specification-License':  project.ext.license,
-      
+
       'Implementation-Title':   project.group,
       'Implementation-Version': project.version,
       'Implementation-Author':  project.ext.author,
       'Implementation-Vendor':  project.ext.author,
       'Implementation-License': project.ext.license,
-      
+
       'Lib-Homepage':           project.ext.homepage,
       'Lib-Summary':            project.ext.summary,
       'Lib-Description':        project.description,
     )
   }
-  
+
   from("${projectDir}/") {
     include 'LICENSE','README.md'
   }
@@ -213,7 +202,7 @@ javadoc {
     locale      = project.ext.locale
     memberLevel = JavadocMemberLevel.PROTECTED // Show public & protected (don't show private)
     version     = true
-    
+
     // FIXME: remove this after v1.0.0
     addStringOption('Xdoclint:none','-quiet')
   }
@@ -222,7 +211,7 @@ javadoc {
 task(javadocZip,type: Zip,dependsOn: javadoc) {
   group       'Documentation'
   description 'Assembles a Zip archive containing the Javadoc.'
-  
+
   classifier 'javadoc'
   from javadoc.destinationDir
 }
@@ -230,7 +219,7 @@ task(javadocZip,type: Zip,dependsOn: javadoc) {
 task(sourcesJar,type: Jar,dependsOn: classes) {
   group       'Documentation'
   description 'Assembles a Jar archive containing the main source code (*.java).'
-  
+
   classifier 'sources'
   from sourceSets.main.allSource
 }
@@ -242,7 +231,7 @@ tasks.withType(com.github.spotbugs.SpotBugsTask) {
 
 test {
   useJUnitPlatform()
-  
+
   testLogging {
     events 'passed','skipped','failed'
   }
@@ -253,22 +242,22 @@ test {
 task(rsyncToGhp,type: Exec) {
   group       'Deploy'
   description "Rsync docs to my GitHub Page's repo; not useful for others"
-  
+
   boolean isDryRun = !project.hasProperty('deploy') || !deploy
-  
+
   executable 'rsync'
-  
+
   args += '-ahv'
   //args += '--delete-after'
   args += '--progress'
-  
+
   if(isDryRun) {
     args += '--dry-run'
   }
-  
+
   args += 'build/docs/javadoc/'
   args += "../${project.ext.ownerName}.github.io/docs/${project.name}/javadoc"
-  
+
   doLast {
     if(isDryRun) {
       println()
@@ -285,7 +274,7 @@ publishing {
     maven {
       name = 'GitHubPackages'
       url = uri("https://maven.pkg.github.com/${project.ext.ownerName}/${project.name}")
-      
+
       // In ~/.gradle/gradle.properties:
       //   gpr.user=username # Your GitHub username
       //   gpr.key=token     # Your GitHub token (or password)
@@ -295,7 +284,7 @@ publishing {
       }
     }
   }
-  
+
   publications {
     gpr(MavenPublication) {
       from(components.java)

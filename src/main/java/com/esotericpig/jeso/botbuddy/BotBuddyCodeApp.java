@@ -1,19 +1,8 @@
-/**
+/*
  * This file is part of Jeso.
- * Copyright (c) 2019 Jonathan Bradley Whited (@esotericpig)
- * 
- * Jeso is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * Jeso is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public License
- * along with Jeso. If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (c) 2019-2021 Jonathan Bradley Whited
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
  */
 
 package com.esotericpig.jeso.botbuddy;
@@ -35,14 +24,14 @@ import java.nio.file.Paths;
  * To run this app and view its options:{@code
  *   $ java -cp 'build/libs/*' com.esotericpig.jeso.botbuddy.BotBuddyCodeApp --help
  * }</pre>
- * 
- * @author Jonathan Bradley Whited (@esotericpig)
+ *
+ * @author Jonathan Bradley Whited
  */
 public class BotBuddyCodeApp {
   public static void main(String[] args) {
     try {
       BotBuddyCodeApp app = new BotBuddyCodeApp(args);
-      
+
       if(app.parseArgs()) {
         return;
       }
@@ -55,7 +44,7 @@ public class BotBuddyCodeApp {
     }
     catch(ParseCodeException ex) {
       System.out.println("ParseCodeError: " + ex.getMessage());
-      
+
       if(ex.getCause() != null) {
         ex.getCause().printStackTrace();
       }
@@ -65,13 +54,13 @@ public class BotBuddyCodeApp {
     }
     catch(Exception ex) {
       ex.printStackTrace();
-      
+
       if(ex.getCause() != null) {
         ex.getCause().printStackTrace();
       }
     }
   }
-  
+
   protected String[] args;
   protected BotBuddy buddy = null;
   protected BotBuddyCode.Builder builder = BotBuddyCode.builder();
@@ -80,29 +69,29 @@ public class BotBuddyCodeApp {
   protected String name = getClass().getSimpleName();
   protected int optionsIndent = 24;
   protected Path path = null;
-  
+
   public BotBuddyCodeApp(String[] args) throws AWTException {
     this.args = args.clone();
     buddy = BotBuddy.builder().build();
-    
+
     builder.buddy(buddy);
   }
-  
+
   public boolean interpretFile() throws AWTException,IOException,ParseCodeException {
     if(args.length < 1) {
       printHelp();
-      
+
       return true;
     }
     if(path == null) {
       printHelp("Error: No file specified.");
-      
+
       return true;
     }
-    
+
     // Clear piped-in input
     builder.input().path(path);
-    
+
     try(BotBuddyCode bbc = builder.build()) {
       if(isDryRun) {
         System.out.println(bbc.interpretDryRun());
@@ -110,47 +99,47 @@ public class BotBuddyCodeApp {
       else {
         bbc.interpret();
       }
-      
+
       return true;
     }
     finally {
       buddy.releasePressed();
     }
   }
-  
+
   public boolean interpretPipe() throws AWTException,IOException,ParseCodeException {
     // Do not use try-with-resource and do not call close(), because using System.in
-    
+
     try {
       BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
-      
+
       // If don't check this, then will wait for input
       if(!input.ready()) {
         // Nothing was piped in, like "echo 'get_coords' | java...BotBuddyCodeApp"
         return false;
       }
-      
+
       BotBuddyCode bbc = builder.input(input).build();
-      
+
       if(isDryRun) {
         System.out.println(bbc.interpretDryRun());
       }
       else {
         bbc.interpret();
       }
-      
+
       return bbc.hadInput() && path == null;
     }
     finally {
       buddy.releasePressed();
     }
   }
-  
+
   public boolean parseArgs() {
     for(String arg: args) {
       if(arg.equals("-h") || arg.equals("--help")) {
         printHelp();
-        
+
         return true;
       }
       else if(arg.equals("-n") || arg.equals("--dry-run")) {
@@ -159,27 +148,27 @@ public class BotBuddyCodeApp {
       else {
         if(path != null) {
           printHelp("Error: Too many files specified; only one file is allowed.");
-          
+
           return true;
         }
-        
+
         path = Paths.get(arg.trim());
-        
+
         if(Files.notExists(path)) {
           printHelp("Error: File does not exist: " + path.toFile().getAbsolutePath());
-          
+
           return true;
         }
       }
     }
-    
+
     return false;
   }
-  
+
   public void printHelp() {
     printHelp(null);
   }
-  
+
   public void printHelp(String errorMessage) {
     println("Usage: {n} [options] <file> [options]");
     println();
@@ -195,40 +184,40 @@ public class BotBuddyCodeApp {
     println("{i}{n} -n mydir/myfile.bbc");
     println("{i}{n} 'My Dir/My File.bbc'");
     println("{i}echo 'get_coords' | {n}");
-    
+
     if(errorMessage != null) {
       println();
       println(errorMessage);
     }
   }
-  
+
   public void println() {
     System.out.println();
   }
-  
+
   public void println(String message) {
     StringBuilder sb = new StringBuilder(message.length());
     int totalIndent = 0;
-    
-    for(int i = 0; i < message.length();) {
+
+    for(int i = 0; i < message.length(); ) {
       int cp = message.codePointAt(i);
-      
+
       i += Character.charCount(cp);
-      
+
       if(cp == '{') {
         int j = message.indexOf('}',i);
-        
+
         if(j < 0) {
           throw ParseCodeException.build(1,i,"No matching curly brace: " + message);
         }
-        
+
         String id = message.substring(i,j);
-        
+
         if(id.equals("i")) {
           for(int k = 0; k < indent; ++k) {
             sb.append(' ');
           }
-          
+
           totalIndent += indent;
         }
         else if(id.equals("n")) {
@@ -242,14 +231,14 @@ public class BotBuddyCodeApp {
         else {
           throw ParseCodeException.build(1,i,"Invalid message format ID: " + message);
         }
-        
+
         i = j + 1; // +1 for '}'
       }
       else {
         sb.appendCodePoint(cp);
       }
     }
-    
+
     System.out.println(sb);
   }
 }

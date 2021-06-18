@@ -1,19 +1,8 @@
-/**
+/*
  * This file is part of Jeso.
- * Copyright (c) 2019 Jonathan Bradley Whited (@esotericpig)
- * 
- * Jeso is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * Jeso is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public License
- * along with Jeso. If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (c) 2019-2021 Jonathan Bradley Whited
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
  */
 
 package com.esotericpig.jeso.botbuddy;
@@ -38,48 +27,48 @@ import org.junit.jupiter.api.Test;
  * <pre>
  * On a headless server, all of these tests will not run.
  * </pre>
- * 
- * @author Jonathan Bradley Whited (@esotericpig)
+ *
+ * @author Jonathan Bradley Whited
  */
 public class BotBuddyTest {
   public static final int MAX_BUTTONS = 11;
-  
+
   /**
    * Max milliseconds for delays.
    */
   public static final int MAX_MS = 55000;
-  
+
   public static boolean isHeadless() {
     boolean isHeadless = BotBuddy.isHeadless();
-    
+
     if(isHeadless) {
       // TODO: add test name; make more meaningful
       System.out.println("This environment is headless. Ignoring Robot test.");
     }
-    
+
     return isHeadless;
   }
-  
+
   protected Random rand;
-  
+
   @BeforeEach
   public void setUpEach() {
     rand = new Random();
   }
-  
+
   @AfterEach
   public void tearDownEach() {
     rand = null;
   }
-  
+
   @Test
   public void testAccessors() throws AWTException {
     if(isHeadless()) {
       return;
     }
-    
+
     BotBuddy buddy = BotBuddy.builder().build();
-    
+
     int autoDelay = rand.nextInt(MAX_MS);
     Robot bot = new Robot();
     Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -95,11 +84,11 @@ public class BotBuddyTest {
     int rightButton = rand.nextInt(MAX_BUTTONS);
     int shortDelay = rand.nextInt(MAX_MS - 1) + 1; // Must be > 0 for isAutoDelay
     Toolkit tool = Toolkit.getDefaultToolkit();
-    
+
     buddy.clearPressed();
     buddy.clearPressedButtons();
     buddy.clearPressedKeys();
-    
+
     assertEquals(autoDelay,buddy.setAutoDelay(autoDelay).getAutoDelay());
     assertEquals(bot,buddy.setBot(bot).getBot());
     assertEquals(clip,buddy.setClip(clip).getClip());
@@ -116,18 +105,18 @@ public class BotBuddyTest {
     assertEquals(shortDelay,buddy.setShortDelay(shortDelay).getShortDelay());
     assertEquals(tool,buddy.setTool(tool).getTool());
   }
-  
+
   @Test
   public void testBuilder() throws AWTException {
     if(isHeadless()) {
       return;
     }
-    
+
     BotBuddy.Builder builder = null;
-    
+
     builder = BotBuddy.builder();
     builder = BotBuddy.builder(new Robot());
-    
+
     int autoDelay = rand.nextInt(MAX_MS - 1) + 1; // Must be > 0 for isAutoDelay
     Robot bot = new Robot();
     Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -143,7 +132,7 @@ public class BotBuddyTest {
     int rightButton = rand.nextInt(MAX_BUTTONS);
     int shortDelay = rand.nextInt(MAX_MS);
     Toolkit tool = Toolkit.getDefaultToolkit();
-    
+
     builder = builder.autoDelay(autoDelay)
                      .autoDelay(isAutoDelay)
                      .autoWaitForIdle(isAutoWaitForIdle)
@@ -159,7 +148,7 @@ public class BotBuddyTest {
                      .rightButton(rightButton)
                      .shortDelay(shortDelay)
                      .tool(tool);
-    
+
     assertEquals(autoDelay,builder.autoDelay);
     assertEquals(bot,builder.bot);
     assertEquals(clip,builder.clip);
@@ -175,9 +164,9 @@ public class BotBuddyTest {
     assertEquals(rightButton,builder.rightButton);
     assertEquals(shortDelay,builder.shortDelay);
     assertEquals(tool,builder.tool);
-    
+
     BotBuddy buddy = builder.build();
-    
+
     assertEquals(autoDelay,buddy.getAutoDelay());
     assertEquals(bot,buddy.getBot());
     assertEquals(clip,buddy.getClip());
@@ -194,23 +183,23 @@ public class BotBuddyTest {
     assertEquals(shortDelay,buddy.getShortDelay());
     assertEquals(tool,buddy.getTool());
   }
-  
+
   @Test
   public void testMainMethods() throws AWTException {
     if(isHeadless()) {
       return;
     }
-    
+
     BotBuddy buddy = null;
-    
+
     buddy = BotBuddy.builder().build();
     buddy = buddy.dup();
-    
+
     buddy.beginFastMode().endFastMode();
     buddy.beginSafeMode().endSafeMode();
     buddy.stash().stash().stash()
          .unstash().unstash().unstash().unstash(); // 4th unstash() should not throw an error
-    
+
     // Don't do assertEquals(), as the mouse might have moved in that time
     System.out.println("Coords:  " + BotBuddy.getCoords());
     System.out.println("X coord: " + BotBuddy.getXCoord());
