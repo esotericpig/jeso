@@ -18,6 +18,7 @@ repositories {
   //google()
 }
 
+group   = 'com.esotericpig.jeso' // Must be set for publishing!
 version = '0.3.7'
 
 project.ext {
@@ -200,7 +201,7 @@ tasks.withType(Jar) {
       'Specification-Vendor':   project.author,
       'Specification-License':  project.license,
 
-      'Implementation-Title':   "com.esotericpig.${project.name}",
+      'Implementation-Title':   project.group,
       'Implementation-Version': project.version,
       'Implementation-Author':  project.author,
       'Implementation-Vendor':  project.author,
