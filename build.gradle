@@ -7,88 +7,111 @@
 
 plugins {
   id 'java-library'
-  id 'com.github.spotbugs' version '2.0.0'
-  id 'com.diffplug.gradle.spotless' version '3.23.0'
+  id 'com.github.spotbugs'   version '4.7.+'
+  id 'com.diffplug.spotless' version '5.14.+'
   id 'maven-publish'
 }
 
-import java.util.regex.Pattern
-
-/**
- * Properties
- */
-version                 = '0.3.6'
-ext.author              = 'Jonathan Bradley Whited'
-ext.license             = 'LGPL-3.0-or-later'
-ext.ownerName           = 'esotericpig'
-
-ext.homepage            = "https://github.com/${ext.ownerName}/jeso"
-ext.summary             = 'Java utils'
-description             = 'Java utils to make Java less verbose.'
-
-group                   = "com.esotericpig.${project.name}"
-sourceCompatibility     = '1.8' // Source language to interpret (*.java)
-targetCompatibility     = '1.8' // Bytecode to output (*.class)
-
-ext.charset             = 'UTF-8'
-ext.encoding            = 'UTF-8'
-ext.locale              = 'en_US'
-
-ext.compilerArgs        = ['-Xlint:deprecation','-Xlint:unchecked']
-
-// Dependencies
-ext.junitJupiterVersion = '5.4.2'
-
-// Javadoc
-javadoc.title           = "${project.name.capitalize()} v${project.version}"
-
-// Checksums
-ext.gradlewPath         = "${projectDir}/gradle/wrapper"
-ext.gradlewJarPath      = "${ext.gradlewPath}/gradle-wrapper.jar"
-ext.gradlewPropPath     = "${ext.gradlewPath}/gradle-wrapper.properties"
-ext.gradlewSumPath      = "${ext.gradlewJarPath}.sha256"
-
-/**
- * Repositories and Dependencies
- */
 repositories {
-  jcenter()
+  mavenCentral()
+  //maven { url 'https://jitpack.io' }
+  //google()
+}
+
+version = '0.3.7'
+
+project.ext {
+  author      = 'Jonathan Bradley Whited'
+  license     = 'LGPL-3.0-or-later'
+  homepage    = 'https://github.com/esotericpig/jeso'
+  summary     = 'Java utils'
+  description = 'Java utils to make Java less verbose.'
+
+  javaVersion  = 8
+  charset      = 'UTF-8'
+  encoding     = 'UTF-8'
+  locale       = 'en_US'
+  compilerArgs = [] //['-Xlint:deprecation','-Xlint:unchecked']
+
+  javadoc.title = "${project.name.capitalize()} v${version}"
+}
+
+compileJava {
+  encoding = project.encoding
+  options.release.set(project.javaVersion)
+  options.compilerArgs += project.compilerArgs
+}
+
+compileTestJava {
+  encoding = project.encoding
+  options.release.set(project.javaVersion)
+  options.compilerArgs += project.compilerArgs
 }
 
 dependencies {
-  // External Dependencies (put on user's classpath)
-  //api ':'
+  // Dependencies exported to consumers, found on their compile classpath.
+  //api 'org.apache.commons:commons-math3:3.6.+'
+  //api fileTree(dir: 'libs',include: ['**/*.jar'])
 
-  // Internal Dependencies (not put on user's classpath)
-  //implementation ':'
+  // Dependencies used internally, not exposed to consumers' own compile classpath.
+  //implementation 'com.google.guava:guava:30.0-jre'
 
-  // Test Dependencies
-  testImplementation "org.junit.jupiter:junit-jupiter:${project.ext.junitJupiterVersion}"
+  // JUnit Jupiter API for testing.
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.+'
+
+  // JUnit Jupiter Engine for testing.
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }
 
-spotbugs {
-  toolVersion = '3.1.12'
+tasks.named('test') {
+  // Use JUnit platform for unit tests.
+  useJUnitPlatform()
 
-  excludeFilter = file('spotbugs_exclude.xml')
-}
-
-spotless {
-  java {
-    removeUnusedImports()
+  testLogging {
+    events 'passed','skipped','failed'
   }
 }
 
-/**
- * Tasks
- */
+spotbugs {
+  excludeFilter = file('spotbugs_exclude.xml')
+}
+
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
+  reports {
+    xml.enabled = false
+
+    html {
+      enabled = true
+      stylesheet = 'fancy-hist.xsl'
+    }
+  }
+}
+
+spotless {
+  encoding project.encoding
+
+  java {
+    // FIXME: Doesn't work with Java v16+ for now.
+    //removeUnusedImports()
+    //importOrder()
+    indentWithSpaces()
+    trimTrailingWhitespace()
+    endWithNewline()
+  }
+}
+
+/*========
+ * Tasks *
+ ========*/
+
 defaultTasks 'clean','buildRelease','buildFatRelease'
 
 task(buildFatRelease,type: Jar,dependsOn: ['classes','test','check','javadoc']) {
   group       'Build'
   description 'Assembles everything necessary for a release into one "fat" jar.'
 
-  // Include dependencies (jars) to final jar; a "fat jar"
-  from configurations.compile.collect {
+  // Include dependencies (jars) to final jar; a "fat jar".
+  from configurations.runtimeClasspath.collect {
     it.isDirectory() ? it : zipTree(it)
   }
 
@@ -98,7 +121,7 @@ task(buildFatRelease,type: Jar,dependsOn: ['classes','test','check','javadoc']) 
   from sourceSets.main.output
 }
 
-// Do not use "GradleBuild" because then you cannot do "-x check"
+// Do not use "GradleBuild" because then you cannot do "-x check".
 task(buildRelease,dependsOn: ['build','test','check','jar','javadoc','javadocZip','sourcesJar']) {
   group       'Build'
   description 'Assembles everything necessary for a release: Jar, Javadoc Zip, Sources Jar, etc.'
@@ -106,90 +129,90 @@ task(buildRelease,dependsOn: ['build','test','check','jar','javadoc','javadocZip
 
 task(checkGradleW) {
   group       'Checksum'
-  description "Check the SHA-256 sum of the Gradle Wrapper Jar (${project.ext.gradlewJarPath.replace("${projectDir}",'')})."
+  description 'Check the SHA-256 sum of the Gradle Wrapper Jar.'
 
   doLast {
-    ant.checksum(file: project.ext.gradlewJarPath,algorithm: 'SHA-256',property: 'gradlewJarSum')
+    ant.checksum(file: "$rootDir/gradle/wrapper/gradle-wrapper.jar"
+        ,algorithm: 'SHA-256',property: 'gradlewJarSum')
 
     String gradlewJarSum = ant.properties['gradlewJarSum']
-    String gradlewSumSum = new File(project.ext.gradlewSumPath).getText('UTF-8').split('\\s+')[0]
+    String gradlewSumSum = new File(
+        "$rootDir/gradle/wrapper/gradle-wrapper.jar.sha256")
+        .getText('UTF-8').split('\\s+')[0]
 
-    String gradlewJarPath = project.ext.gradlewJarPath.replace("${projectDir}",'') + ':'
-    String gradlewSumPath = project.ext.gradlewSumPath.replace("${projectDir}",'') + ':'
-
-    int maxLen = -Math.max(gradlewJarPath.length(),gradlewSumPath.length())
-
-    println '[Gradle Wrapper Jar Checksum]'
-    printf "%${maxLen}s %s%n",gradlewJarPath,gradlewJarSum
-    printf "%${maxLen}s %s%n",gradlewSumPath,gradlewSumSum
-    printf "%${maxLen}s %s%n","Do they match?",gradlewJarSum.equals(gradlewSumSum) ? 'OK' : 'NOT a match!'
+    println()
+    println('[[ Gradle Wrapper Jar Checksum ]]')
+    println()
+    println("/gradle/wrapper/gradle-wrapper.jar         $gradlewJarSum")
+    println("/gradle/wrapper/gradle-wrapper.jar.sha256  $gradlewSumSum")
+    println("Do they match?                             "
+        + (gradlewJarSum.equals(gradlewSumSum) ? 'OK' : 'NOT a match!'))
   }
 }
 
-compileJava {
-  encoding = project.ext.encoding
-  options.compilerArgs += project.ext.compilerArgs
-}
-
-compileTestJava {
-  encoding = project.ext.encoding
-  options.compilerArgs += project.ext.compilerArgs
-}
+import java.util.regex.Pattern
 
 task(wgetGradleWSums) {
   group       'Checksum'
   description 'Download the SHA-256 sums for the Gradle Wrapper Jars.'
 
-  doLast{
-    String checksums = new URL('https://gradle.org/release-checksums/').getText('UTF-8')
-    String version = "v${project.gradle.gradleVersion}"
+  doLast {
+    String checksums = new URL('https://gradle.org/release-checksums').getText('UTF-8')
+    String gradleVersion = "v${project.gradle.gradleVersion}"
 
-    int index = checksums.indexOf(version)
+    int index = checksums.indexOf(gradleVersion + '<')
     int gradlebIndex = checksums.indexOf('Binary-only',index)
     int gradlecIndex = checksums.indexOf('Complete',index)
     int gradlewIndex = checksums.indexOf('Wrapper',index)
 
-    // Split on "<code>" or "</code>"
-    Pattern pattern = Pattern.compile('\\s*\\<\\s*\\/?\\s*code\\s*\\>\\s*',Pattern.CASE_INSENSITIVE)
+    // Split on "<code>" or "</code>".
+    Pattern pattern = Pattern.compile(
+        '\\s*<\\s*\\/?\\s*code\\s*>\\s*',Pattern.CASE_INSENSITIVE)
     String gradlebSum = pattern.split(checksums.substring(gradlebIndex,gradlebIndex + 200))[1]
     String gradlecSum = pattern.split(checksums.substring(gradlecIndex,gradlecIndex + 200))[1]
     String gradlewSum = pattern.split(checksums.substring(gradlewIndex,gradlewIndex + 200))[1]
 
-    println "[Gradle Checksums for ${version}]"
-    println "Put this in " + project.ext.gradlewPropPath.replace("${projectDir}",'') + ':'
-    println "  distributionSha256Sum=${gradlebSum}"
-    println "Save this to " + project.ext.gradlewSumPath.replace("${projectDir}",'') + ':'
-    println "  ${gradlewSum} ${new File(gradlewJarPath).getName()}"
-    println 'Complete (-all) Zip:'
-    println "  ${gradlecSum}"
+    println()
+    println("[[ Gradle Checksums for ${gradleVersion} ]]")
+    println()
+    println("Put this in /gradle/wrapper/gradle-wrapper.properties:")
+    println("distributionSha256Sum=${gradlebSum}")
+    println()
+    println("Save this to /gradle/wrapper/gradle-wrapper.jar.sha256:")
+    println("${gradlewSum} gradle-wrapper.jar")
+    println()
+    println('Complete (-all) Zip:')
+    println("${gradlecSum}")
   }
 }
 
 tasks.withType(Jar) {
   manifest {
     attributes(
-      // Add dependencies to classpath
-      'Class-Path':             configurations.compile.collect { it.getName() }.join(' '),
+      // Add dependencies to classpath.
+      'Class-Path': configurations.runtimeClasspath.collect {
+        it.getName()
+      }.join(' '),
 
       'Specification-Title':    project.name,
       'Specification-Version':  project.version,
-      'Specification-Author':   project.ext.author,
-      'Specification-Vendor':   project.ext.author,
-      'Specification-License':  project.ext.license,
+      'Specification-Author':   project.author,
+      'Specification-Vendor':   project.author,
+      'Specification-License':  project.license,
 
-      'Implementation-Title':   project.group,
+      'Implementation-Title':   "com.esotericpig.${project.name}",
       'Implementation-Version': project.version,
-      'Implementation-Author':  project.ext.author,
-      'Implementation-Vendor':  project.ext.author,
-      'Implementation-License': project.ext.license,
+      'Implementation-Author':  project.author,
+      'Implementation-Vendor':  project.author,
+      'Implementation-License': project.license,
 
-      'Lib-Homepage':           project.ext.homepage,
-      'Lib-Summary':            project.ext.summary,
-      'Lib-Description':        project.description,
+      'Lib-Homepage':           project.homepage,
+      'Lib-Summary':            project.summary,
+      'Lib-Description':        project.ext.description,
     )
   }
 
-  from("${projectDir}/") {
+  from("${rootDir}/") {
     include 'LICENSE','README.md'
   }
 }
@@ -197,13 +220,13 @@ tasks.withType(Jar) {
 javadoc {
   options {
     author      = true
-    charSet     = project.ext.charset
-    encoding    = project.ext.encoding
-    locale      = project.ext.locale
-    memberLevel = JavadocMemberLevel.PROTECTED // Show public & protected (don't show private)
+    charSet     = project.charset
+    encoding    = project.encoding
+    locale      = project.locale
+    memberLevel = JavadocMemberLevel.PROTECTED // Show public & protected (don't show private).
     version     = true
 
-    // FIXME: remove this after v1.0.0
+    // FIXME: Remove this after v1.0.0.
     addStringOption('Xdoclint:none','-quiet')
   }
 }
@@ -224,21 +247,12 @@ task(sourcesJar,type: Jar,dependsOn: classes) {
   from sourceSets.main.allSource
 }
 
-tasks.withType(com.github.spotbugs.SpotBugsTask) {
-  reports.xml.enabled = false
-  reports.html.enabled = true
-}
+/*=============
+ * Publishing *
+ =============*/
 
-test {
-  useJUnitPlatform()
-
-  testLogging {
-    events 'passed','skipped','failed'
-  }
-}
-
-// Execute "./gradlew rsyncToGhp" for a dry run
-// Execute "./gradlew rsyncToGhp -Pdeploy=true" for actually deploying
+// Execute "./gradlew rsyncToGhp" for a dry run.
+// Execute "./gradlew rsyncToGhp -Pdeploy=true" for actually deploying.
 task(rsyncToGhp,type: Exec) {
   group       'Deploy'
   description "Rsync docs to my GitHub Page's repo; not useful for others"
@@ -256,24 +270,21 @@ task(rsyncToGhp,type: Exec) {
   }
 
   args += 'build/docs/javadoc/'
-  args += "../${project.ext.ownerName}.github.io/docs/${project.name}/javadoc"
+  args += "../esotericpig.github.io/docs/${project.name}/javadoc"
 
   doLast {
     if(isDryRun) {
       println()
-      println 'Execute "./gradlew rsyncToGhp -Pdeploy=true" for actually deploying (non-dry-run)'
+      println('Execute "./gradlew rsyncToGhp -Pdeploy=true" for actually deploying (non-dry-run)')
     }
   }
 }
 
-/**
- * Publishing
- */
 publishing {
   repositories {
     maven {
       name = 'GitHubPackages'
-      url = uri("https://maven.pkg.github.com/${project.ext.ownerName}/${project.name}")
+      url = uri("https://maven.pkg.github.com/esotericpig/${project.name}")
 
       // In ~/.gradle/gradle.properties:
       //   gpr.user=username # Your GitHub username
