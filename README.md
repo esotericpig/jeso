@@ -808,7 +808,7 @@ $ ./gradlew rsyncToGhp
 [GNU LGPL v3+](LICENSE)
 
 > Jeso ([https://github.com/esotericpig/jeso](https://github.com/esotericpig/jeso))  
-> Copyright (c) 2019-2021 Jonathan Bradley Whited  
+> Copyright (c) 2019-2022 Jonathan Bradley Whited  
 > 
 > Jeso is free software: you can redistribute it and/or modify  
 > it under the terms of the GNU Lesser General Public License as published by  

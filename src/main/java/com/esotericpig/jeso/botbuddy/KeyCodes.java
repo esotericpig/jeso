@@ -1,6 +1,6 @@
 /*
  * This file is part of Jeso.
- * Copyright (c) 2020-2021 Jonathan Bradley Whited
+ * Copyright (c) 2020-2022 Jonathan Bradley Whited
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  */
@@ -10,6 +10,7 @@ package com.esotericpig.jeso.botbuddy;
 import com.esotericpig.jeso.Chars;
 import com.esotericpig.jeso.UtilClassException;
 
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
 import java.lang.reflect.Field;
@@ -165,7 +166,7 @@ public final class KeyCodes {
 
       if(keyCode != KeyEvent.VK_UNDEFINED) {
         List<Integer> keyCodeList = new ArrayList<>();
-        String[] keyModsText = KeyEvent.getKeyModifiersText(keyCode)
+        String[] keyModsText = InputEvent.getModifiersExText(keyCode)
             .trim().toLowerCase(Locale.ENGLISH).split("\\s+")[0].split("\\+");
 
         for(String keyModText: keyModsText) {
@@ -173,9 +174,9 @@ public final class KeyCodes {
 
           switch(keyModText) {
             case "alt": kc = KeyEvent.VK_ALT; break;
-            case "button1": kc = KeyEvent.BUTTON1_MASK; break;
-            case "button2": kc = KeyEvent.BUTTON2_MASK; break;
-            case "button3": kc = KeyEvent.BUTTON3_MASK; break;
+            case "button1": kc = KeyEvent.BUTTON1_DOWN_MASK; break;
+            case "button2": kc = KeyEvent.BUTTON2_DOWN_MASK; break;
+            case "button3": kc = KeyEvent.BUTTON3_DOWN_MASK; break;
             case "ctrl": kc = KeyEvent.VK_CONTROL; break;
             case "graph": kc = KeyEvent.VK_ALT_GRAPH; break;
             case "meta": kc = KeyEvent.VK_META; break;
