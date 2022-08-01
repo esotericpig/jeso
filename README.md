@@ -1,5 +1,6 @@
 # Jeso
 
+[![CI Status](https://github.com/esotericpig/jeso/actions/workflows/ci.yml/badge.svg)](https://github.com/esotericpig/jeso/actions/workflows/ci.yml)
 [![Javadoc](https://img.shields.io/badge/doc-javadoc-%23A0522D.svg)](https://esotericpig.github.io/docs/jeso/javadoc/index.html)
 [![Source Code](https://img.shields.io/badge/source-github-%23211F1F.svg)](https://github.com/esotericpig/jeso)
 [![License](https://img.shields.io/github/license/esotericpig/jeso.svg)](LICENSE)
