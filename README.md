@@ -15,9 +15,8 @@ Name = Java + gesso + esoteric.
 
 - [Requirements](#requirements)
 - [Setup](#setup)
+    - [JitPack](#jitpack)
     - [GitHub Packages](#github-packages)
-        - [Gradle](#gradle)
-        - [Maven](#maven)
     - [Manually](#manually)
     - [Pre-Release](#pre-release)
 - [Using](#using)
