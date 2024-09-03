@@ -4,10 +4,19 @@
     <Or>
       <Class name="com.esotericpig.jeso.botbuddy.BotBuddyCodeApp" />
     </Or>
-    
+
     <Or>
       <!-- new BufferedReader(new InputStreamReader(System.in)) -->
       <Bug pattern="DM_DEFAULT_ENCODING" />
+    </Or>
+  </Match>
+
+  <!-- FIXME: Added these temporarily for migration to new SpotBugs version. -->
+  <Match>
+    <Or>
+      <Bug pattern="CT_CONSTRUCTOR_THROW" />
+      <Bug pattern="EI_EXPOSE_REP" />
+      <Bug pattern="EI_EXPOSE_REP2" />
     </Or>
   </Match>
 </FindBugsFilter>

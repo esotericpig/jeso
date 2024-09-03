@@ -7,8 +7,8 @@
 
 plugins {
   id 'java-library'
-  id 'com.github.spotbugs'   version '4.7.+'
-  id 'com.diffplug.spotless' version '5.14.+'
+  id 'com.github.spotbugs'   version '6.0.+'
+  id 'com.diffplug.spotless' version '6.25.+'
   id 'maven-publish'
 }
 
@@ -19,7 +19,7 @@ repositories {
 }
 
 group   = 'com.esotericpig.jeso' // Must be set for publishing!
-version = '0.3.7'
+version = '0.3.8'
 
 project.ext {
   author      = 'Jonathan Bradley Whited'
@@ -52,7 +52,7 @@ dependencies {
   //implementation 'com.google.guava:guava:30.0-jre'
 
   // JUnit Jupiter API for testing.
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.+'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.+'
 
   // JUnit Jupiter Engine for testing.
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
@@ -91,9 +91,8 @@ spotless {
   encoding project.encoding
 
   java {
-    // FIXME: Doesn't work with Java v16+ for now.
-    //removeUnusedImports()
-    //importOrder()
+    removeUnusedImports()
+    importOrder()
     indentWithSpaces()
     trimTrailingWhitespace()
     endWithNewline()
@@ -115,7 +114,7 @@ task(buildFatRelease,type: Jar,dependsOn: ['classes','test','check','javadoc']) 
     it.isDirectory() ? it : zipTree(it)
   }
 
-  classifier 'all'
+  archiveClassifier = 'all'
   from javadoc.destinationDir
   from sourceSets.main.allSource
   from sourceSets.main.output
@@ -233,7 +232,7 @@ task(javadocZip,type: Zip,dependsOn: javadoc) {
   group       'Documentation'
   description 'Assembles a Zip archive containing the Javadoc.'
 
-  classifier 'javadoc'
+  archiveClassifier = 'javadoc'
   from javadoc.destinationDir
 }
 
@@ -241,7 +240,7 @@ task(sourcesJar,type: Jar,dependsOn: classes) {
   group       'Documentation'
   description 'Assembles a Jar archive containing the main source code (*.java).'
 
-  classifier 'sources'
+  archiveClassifier = 'sources'
   from sourceSets.main.allSource
 }
 
