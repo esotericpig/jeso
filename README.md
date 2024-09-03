@@ -35,13 +35,52 @@ Name = Java + gesso + esoteric.
 
 Pick your poison...
 
+### [JitPack](#contents)
+
+This is the recommended and easiest way.
+
+See [jitpack.io/#esotericpig/jeso](https://jitpack.io/#esotericpig/jeso).
+
+Here's an example using Gradle:
+
+```Groovy
+// If in 'settings.gradle', use `dependencyResolutionManagement{}`.
+// If in 'build.gradle', don't use `dependencyResolutionManagement{}`, but just `repositories{}`.
+dependencyResolutionManagement {
+  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+
+  repositories {
+    //mavenCentral()
+    //google()
+    maven { url 'https://jitpack.io' }
+    mavenLocal()
+  }
+}
+
+// In 'build.gradle':
+dependencies {
+  implementation 'com.github.esotericpig:jeso:0.3.10'
+}
+```
+
+Optionally, for [security reasons](https://docs.jitpack.io/intro/#building-with-jitpack), you can also add excludes to the non-JitPack repos (or just specify JitPack first):
+
+```Groovy
+dependencyResolutionManagement {
+  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+
+  repositories {
+    mavenCentral { content { excludeGroupByRegex "com\\.github\\.esotericpig.*" } }
+    google { content { excludeGroupByRegex "com\\.github\\.esotericpig.*" } }
+    maven { url 'https://jitpack.io' }
+    mavenLocal()
+  }
+}
+```
+
 ### [GitHub Packages](#contents)
 
-You can view the packages for this project [here](https://github.com/esotericpig/jeso/packages).
-
-You can either use Gradle or Maven.
-
-It takes a bit more setup, but worth it since you can use any GitHub library/package afterwards.
+You can view the GitHub packages for this project [here](https://github.com/esotericpig/jeso/packages).
 
 #### [Gradle](#contents)
 
@@ -182,9 +221,32 @@ Then import the following files into your project:
 | build/libs/jeso-x.x.x-sources.jar |
 | build/distributions/jeso-x.x.x-javadoc.zip |
 
+Alternatively, you can use `publishToMavenLocal` and `mavenLocal()`:
+
+```
+$ ./gradlew(.bat) publishToMavenLocal
+
+// In 'settings.gradle':
+dependencyResolutionManagement {
+  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+
+  repositories {
+    // ...
+    mavenLocal()
+  }
+}
+
+// In 'build.gradle':
+dependencies {
+  implementation 'com.github.esotericpig:jeso:0.3.10'
+}
+```
+
 Alternatively, you can build everything into one "fat" jar, which includes dependent jars (if any):
 
-`$ ./gradlew(.bat) clean buildFatRelease -x check -x test`
+```
+$ ./gradlew(.bat) clean buildFatRelease -x check -x test
+```
 
 | Release Files |
 | --- |
@@ -781,6 +843,7 @@ Also see:
 ## [Hacking](#contents)
 
 For Windows, use **./gradlew.bat** instead.
+
 ```
 $ git clone 'https://github.com/esotericpig/jeso.git'
 $ cd jeso
@@ -803,6 +866,15 @@ $ ./gradlew wgetGradleWSums
 
 $ ./gradlew rsyncToGhp
 ```
+
+Publishing:
+- Replace all instances of the old version number in `build.gradle` & `README.md`.
+- `./gradlew clean buildRelease buildFatRelease javadocZip sourcesJar`
+- `gh release create v0.0.0 build/libs/jeso-*.jar build/distributions/jeso-*.zip`
+  - Replace `v0.0.0` with the new version.
+- `git fetch && git pull`
+- Build it on [JitPack](https://jitpack.io/#esotericpig/jeso).
+- `GITHUB_ACTOR=esotericpig GITHUB_TOKEN=<token> ./gradlew publish`
 
 ## [License](#contents)
 [GNU LGPL v3+](LICENSE)
