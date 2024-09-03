@@ -18,8 +18,8 @@ repositories {
   //google()
 }
 
-group   = 'com.esotericpig.jeso' // Must be set for publishing!
-version = '0.3.8'
+group   = 'com.github.esotericpig' // Must be set for publishing!
+version = '0.3.10'
 
 project.ext {
   author      = 'Jonathan Bradley Whited'
@@ -35,12 +35,6 @@ project.ext {
   compilerArgs = [] //['-Xlint:deprecation','-Xlint:unchecked']
 
   javadoc.title = "${project.name.capitalize()} v${version}"
-}
-
-java {
-  toolchain {
-    languageVersion = JavaLanguageVersion.of(17)
-  }
 }
 
 tasks.withType(JavaCompile) {
