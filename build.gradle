@@ -282,13 +282,9 @@ publishing {
     maven {
       name = 'GitHubPackages'
       url = uri("https://maven.pkg.github.com/esotericpig/${project.name}")
-
-      // In ~/.gradle/gradle.properties:
-      //   gpr.user=username # Your GitHub username
-      //   gpr.key=token     # Your GitHub token (or password)
       credentials {
-        username = project.findProperty('gpr.user') ?: System.getenv("USERNAME")
-        password = project.findProperty('gpr.key') ?: System.getenv("PASSWORD")
+        username = System.getenv("GITHUB_ACTOR")
+        password = System.getenv("GITHUB_TOKEN")
       }
     }
   }
