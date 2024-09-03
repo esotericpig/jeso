@@ -9,7 +9,6 @@ package com.esotericpig.jeso.io;
 
 import java.io.IOException;
 import java.io.Reader;
-
 import java.util.List;
 import java.util.ListIterator;
 

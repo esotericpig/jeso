@@ -8,13 +8,10 @@
 package com.esotericpig.jeso.botbuddy;
 
 import com.esotericpig.jeso.code.ParseCodeException;
-
 import java.awt.AWTException;
-
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.IOException;
-
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;

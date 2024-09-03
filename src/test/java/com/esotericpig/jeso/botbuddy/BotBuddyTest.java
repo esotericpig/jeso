@@ -10,15 +10,11 @@ package com.esotericpig.jeso.botbuddy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.esotericpig.jeso.OSFamily;
-
 import java.awt.AWTException;
 import java.awt.Robot;
 import java.awt.Toolkit;
-
 import java.awt.datatransfer.Clipboard;
-
 import java.util.Random;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

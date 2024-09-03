@@ -10,35 +10,25 @@ package com.esotericpig.jeso.botbuddy;
 import com.esotericpig.jeso.Bools;
 import com.esotericpig.jeso.OSFamily;
 import com.esotericpig.jeso.Strs;
-
 import com.esotericpig.jeso.code.LineOfCode;
 import com.esotericpig.jeso.code.ParseCodeException;
-
 import com.esotericpig.jeso.io.StringListReader;
-
 import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
-
 import java.awt.image.BufferedImage;
-
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
-
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
-
 import java.time.ZonedDateTime;
-
 import java.time.format.DateTimeFormatter;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -46,12 +36,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import java.util.regex.Pattern;
-
 import javax.imageio.ImageIO;
 
 /**

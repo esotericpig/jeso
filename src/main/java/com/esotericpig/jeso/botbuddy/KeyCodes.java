@@ -9,13 +9,10 @@ package com.esotericpig.jeso.botbuddy;
 
 import com.esotericpig.jeso.Chars;
 import com.esotericpig.jeso.UtilClassException;
-
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -23,7 +20,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
 import java.util.stream.Collectors;
 
 /**
