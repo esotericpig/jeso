@@ -110,7 +110,7 @@ repositories {
 
 dependencies {
   // TODO: Edit the version appropriately!
-  implementation 'com.esotericpig.jeso:jeso:X.X.X'
+  implementation 'com.github.esotericpig:jeso:X.X.X'
 }
 ```
 
@@ -168,7 +168,7 @@ In your project's **pom.xml**:
 ```XML
 <dependencies>
   <dependency>
-    <groupId>com.esotericpig.jeso</groupId>
+    <groupId>com.github.esotericpig</groupId>
     <artifactId>jeso</artifactId>
     <!-- TODO: Edit the version appropriately! -->
     <version>X.X.X</version>
@@ -875,6 +875,7 @@ Publishing:
 - `git fetch && git pull`
 - Build it on [JitPack](https://jitpack.io/#esotericpig/jeso).
 - `GITHUB_ACTOR=esotericpig GITHUB_TOKEN=<token> ./gradlew publish`
+- `./gradlew rsyncToGhp`
 
 ## [License](#contents)
 [GNU LGPL v3+](LICENSE)
