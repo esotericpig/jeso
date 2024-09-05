@@ -869,7 +869,7 @@ $ ./gradlew rsyncToGhp
 
 Publishing:
 - Replace all instances of the old version number in `build.gradle` & `README.md`.
-- `./gradlew clean buildRelease buildFatRelease javadocZip sourcesJar`
+- `./gradlew clean buildRelease buildFatRelease`
 - `gh release create v0.0.0 build/libs/jeso-*.jar build/distributions/jeso-*.zip`
   - Replace `v0.0.0` with the new version.
 - `git fetch && git pull`
