@@ -63,7 +63,7 @@ dependencies {
 }
 ```
 
-Optionally, for [security reasons](https://docs.jitpack.io/intro/#building-with-jitpack), you can also add excludes to the non-JitPack repos (or just specify JitPack first):
+Optionally, for [security reasons](https://docs.jitpack.io/intro/#building-with-jitpack), you can also add excludes to the non-JitPack repos:
 
 ```Groovy
 dependencyResolutionManagement {
