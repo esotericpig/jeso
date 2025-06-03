@@ -5,7 +5,7 @@
 
 ###
 # Gradle
-# - https://github.com/github/gitignore/blob/master/Gradle.gitignore
+# - https://github.com/github/gitignore/blob/main/Gradle.gitignore
 ###
 .gradle
 /build/
@@ -21,7 +21,7 @@ gradle-app.setting
 
 ###
 # Java
-# - https://github.com/github/gitignore/blob/master/Java.gitignore
+# - https://github.com/github/gitignore/blob/main/Java.gitignore
 ###
 # Compiled class file
 *.class
